@@ -15,6 +15,8 @@ export default function Painel() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [statsError, setStatsError] = useState('')
 
+  const [isAdmin, setIsAdmin] = useState(false)
+
   useEffect(() => {
     let active = true
     ;(async () => {
@@ -34,6 +36,17 @@ export default function Painel() {
       } finally {
         if (active) setStatsLoading(false)
       }
+    })()
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      try {
+        const me = await api.get('/api/me')
+        if (active) setIsAdmin(!!me?.is_admin)
+      } catch { /* silencioso */ }
     })()
     return () => { active = false }
   }, [])
@@ -83,6 +96,14 @@ export default function Painel() {
             >
               Câmeras
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/painel/admin')}
+                className="rounded-lg border border-blue-500 px-4 py-2 font-medium text-blue-200 hover:bg-blue-500 hover:text-white"
+              >
+                Admin
+              </button>
+            )}
             <button
               onClick={testApi}
               disabled={testing}
