@@ -6,6 +6,7 @@ import App from './App.jsx'
 import Login from './pages/Login.jsx'
 import Painel from './pages/Painel.jsx'
 import Cameras from './pages/Cameras.jsx'
+import Admin from './pages/Admin.jsx'
 import { AuthProvider, ProtectedRoute } from './auth/AuthContext.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -28,6 +29,14 @@ createRoot(document.getElementById('root')).render(
             element={
               <ProtectedRoute>
                 <Cameras />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/painel/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
               </ProtectedRoute>
             }
           />
