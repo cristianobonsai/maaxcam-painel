@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
 
+const API_URL = 'https://api.maaxcam.com.br'
 const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false }
 
 function minDuration(nCams) {
@@ -12,6 +14,7 @@ function minDuration(nCams) {
 
 export default function Grupos() {
   const navigate = useNavigate()
+  const { session } = useAuth()
   const [me, setMe] = useState(null)
   const [groups, setGroups] = useState([])
   const [cameras, setCameras] = useState([])
@@ -88,6 +91,59 @@ export default function Grupos() {
       await load()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Erro ao excluir.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function startRelay(g) {
+    if (!g.youtube_key) { setError('Configure a YouTube key do grupo antes de iniciar.'); return }
+    if ((g.cameras?.length ?? 0) === 0) { setError('Adicione ao menos uma câmera antes de iniciar.'); return }
+    if (!window.confirm(`Iniciar a transmissão do grupo "${g.name}" no YouTube? Isso para os relays individuais das câmeras do grupo (exclusividade) e usa mais CPU.`)) return
+    setBusy(true); setError('')
+    try {
+      if (!g.enabled) await api.put(`/api/groups/${g.id}`, { enabled: true })
+      await api.post(`/api/groups/${g.id}/relay/start`)
+      await load()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Erro ao iniciar o relay.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function stopRelay(g) {
+    if (!window.confirm(`Parar a transmissão do grupo "${g.name}"? Tira o grupo do ar no YouTube e desabilita o grupo (pra o monitor não religar em até 2 min).`)) return
+    setBusy(true); setError('')
+    try {
+      await api.put(`/api/groups/${g.id}`, { enabled: false })
+      await api.post(`/api/groups/${g.id}/relay/stop`)
+      await load()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Erro ao parar o relay.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function uploadAudio(g, inputEl) {
+    const file = inputEl.files?.[0]
+    if (!file) return
+    if (!session?.access_token) { setError('Sessão expirada, faça login novamente.'); return }
+    setBusy(true); setError('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch(`${API_URL}/api/groups/${g.id}/audio`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: fd,
+      })
+      if (!res.ok) throw new Error(`Upload falhou (HTTP ${res.status}).`)
+      inputEl.value = ''
+      await load()
+    } catch (e) {
+      setError(e.message || 'Erro no upload do áudio.')
     } finally {
       setBusy(false)
     }
@@ -354,6 +410,37 @@ export default function Grupos() {
                             + Adicionar câmera
                           </button>
                         )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-700 pt-3">
+                        {g.relay_active ? (
+                          <button onClick={() => stopRelay(g)} disabled={busy}
+                            className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">
+                            Parar relay
+                          </button>
+                        ) : (
+                          <button onClick={() => startRelay(g)} disabled={busy || !g.youtube_key || cams.length === 0}
+                            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50">
+                            Iniciar relay
+                          </button>
+                        )}
+                        {!g.relay_active && (!g.youtube_key || cams.length === 0) && (
+                          <span className="text-xs text-slate-400">
+                            {!g.youtube_key && cams.length === 0
+                              ? 'configure a YouTube key e adicione câmeras para iniciar'
+                              : !g.youtube_key
+                              ? 'configure a YouTube key para iniciar'
+                              : 'adicione câmeras para iniciar'}
+                          </span>
+                        )}
+                        <div className="ml-auto flex items-center gap-2 text-xs text-slate-400">
+                          <span>Áudio: <span className="text-slate-300">{g.audio_file ? g.audio_file.split('/').pop() : 'nenhum'}</span></span>
+                          <label className="cursor-pointer rounded-lg border border-slate-600 px-2 py-1 text-slate-300 hover:border-blue-500">
+                            Enviar .mp3
+                            <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy}
+                              onChange={(e) => uploadAudio(g, e.target)} />
+                          </label>
+                        </div>
                       </div>
                     </div>
                   )
