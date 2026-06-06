@@ -93,6 +93,9 @@ export default function Grupos() {
                           <div key={c.id} className="flex items-center justify-between gap-3 text-sm">
                             <span className="truncate text-slate-200">
                               {i + 1}. {c.camera_name || c.camera_id}
+                              {c.camera_name && (
+                                <span className="ml-2 text-xs text-slate-500">{c.camera_id}</span>
+                              )}
                             </span>
                             <span className="shrink-0 text-slate-400">{c.duration_seconds}s</span>
                           </div>
