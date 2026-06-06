@@ -41,15 +41,19 @@ export default function Painel() {
             Bem-vindo, <span className="text-white">{user?.email}</span>.
           </p>
           <p className="mt-4 text-sm text-slate-400">
-            As telas de câmeras e grupos chegam na Fase 4. Por enquanto, isto confirma que o
-            login está funcionando de ponta a ponta.
+            Acesse suas câmeras pelo botão abaixo. Mais telas (grupos, dashboard) vêm a seguir.
           </p>
-
           <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate('/painel/cameras')}
+              className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600"
+            >
+              Câmeras
+            </button>
             <button
               onClick={testApi}
               disabled={testing}
-              className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+              className="rounded-lg border border-slate-600 px-4 py-2 text-slate-300 hover:border-blue-500 disabled:opacity-50"
             >
               {testing ? 'Testando...' : 'Testar conexão com a API'}
             </button>
@@ -60,7 +64,6 @@ export default function Painel() {
               Sair
             </button>
           </div>
-
           {apiResult && (
             <pre className="mt-4 overflow-auto rounded-lg border border-slate-600 bg-slate-900 p-4 text-xs text-emerald-300">
               {apiResult}
