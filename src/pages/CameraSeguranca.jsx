@@ -89,7 +89,7 @@ export default function CameraSeguranca() {
         <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-3">
           <h2 className="font-display text-lg">Verificar transmissão</h2>
           <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-            <iframe key={data.playback_id + data.stream_privacy} src={embedUrl} className="w-full h-full" allow="autoplay; fullscreen" />
+            <iframe key={data.playback_id + data.stream_privacy} src={previewUrl} className="w-full h-full" allow="autoplay; fullscreen" />
           </div>
           <p className="text-xs text-slate-500">Se a imagem aparecer, a câmera está enviando para o servidor.</p>
         </section>
