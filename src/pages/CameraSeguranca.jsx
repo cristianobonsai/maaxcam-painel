@@ -66,7 +66,7 @@ export default function CameraSeguranca() {
 
   return (
     <div className="h-screen overflow-y-auto bg-atmosphere text-slate-200 p-4 sm:p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6 relative z-10">
         <div className="flex items-center justify-between">
           <div>
             <button onClick={() => navigate('/painel/cameras')} className="text-sm text-blue-400 hover:underline cursor-pointer">← Câmeras</button>
