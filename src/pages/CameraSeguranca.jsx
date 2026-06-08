@@ -62,6 +62,7 @@ export default function CameraSeguranca() {
 
   const isPrivate = data.stream_privacy === 'private'
   const embedUrl = `${PLAY_BASE}/embed/${data.playback_id}`
+  const previewUrl = data.preview_token ? `${embedUrl}?token=${data.preview_token}` : embedUrl
   const iframeSnippet = `<iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`
 
   return (
