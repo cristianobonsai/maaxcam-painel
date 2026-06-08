@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 
 const PLAY_BASE = 'https://play.maaxcam.com.br'
@@ -31,6 +31,7 @@ function Field({ label, value, hint }) {
 
 export default function CameraSeguranca() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -68,7 +69,7 @@ export default function CameraSeguranca() {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <Link to="/painel/cameras" className="text-sm text-blue-400 hover:underline">← Câmeras</Link>
+            <button onClick={() => navigate('/painel/cameras')} className="text-sm text-blue-400 hover:underline cursor-pointer">← Câmeras</button>
             <h1 className="font-display text-2xl mt-1">{data.name || data.camera_id}</h1>
             <div className="text-xs text-slate-500">{data.camera_id}</div>
           </div>
@@ -100,7 +101,7 @@ export default function CameraSeguranca() {
             <button disabled={busy} onClick={() => run(() => api.put(`/api/cameras/${id}/security/privacy`, { stream_privacy: 'private' }))}
               className={`rounded-md px-4 py-2 text-sm ${isPrivate ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Privado</button>
           </div>
-          <p className="text-xs text-slate-500">{isPrivate ? 'Privado: só toca em domínios autorizados (sites) ou IPs autorizados (servidores).' : 'Público: qualquer pessoa com o link/iframe assiste.'}</p>
+          <p className="text-xs text-slate-500">{isPrivate ? 'Privado: você controla quem assiste — libere sites (domínios) e servidores (IPs/tokens) nas opções que aparecem abaixo.' : 'Público: qualquer pessoa com o link ou o iframe assiste. Selecione Privado para liberar os controles de acesso.'}</p>
         </section>
 
         <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-3">
@@ -117,6 +118,7 @@ export default function CameraSeguranca() {
           <Field label="URL HLS pública" value={data.hls_url} hint={isPrivate ? 'Câmera privada: esta URL só funciona com um token (abaixo) e de um IP autorizado.' : 'Câmera pública: funciona direto.'} />
         </section>
 
+        {isPrivate && (<>
         <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-3">
           <h2 className="font-display text-lg">Domínios autorizados (sites)</h2>
           <p className="text-xs text-slate-500">Quando privada, o iframe só toca nestes domínios.</p>
@@ -187,6 +189,7 @@ export default function CameraSeguranca() {
             {data.tokens.length === 0 && <li className="text-xs text-slate-500">Nenhum token.</li>}
           </ul>
         </section>
+        </>)}
       </div>
     </div>
   )
