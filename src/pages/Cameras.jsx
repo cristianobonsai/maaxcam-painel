@@ -203,9 +203,10 @@ export default function Cameras() {
                 <div className="mt-1 text-sm text-slate-400">{c.camera_id}</div>
                 {c.location && <div className="mt-1 text-sm text-slate-500">{c.location}</div>}
 
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <button onClick={() => openEdit(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500">Editar</button>
                   <button onClick={() => handleDelete(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-red-300 hover:border-red-500">Excluir</button>
+                  <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-blue-300 hover:border-blue-500">Segurança</Link>
                 </div>
 
                 <div className="mt-2 flex gap-2">
