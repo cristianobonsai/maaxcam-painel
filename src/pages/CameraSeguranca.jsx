@@ -40,6 +40,7 @@ export default function CameraSeguranca() {
   const [newCidr, setNewCidr] = useState('')
   const [newCidrLabel, setNewCidrLabel] = useState('')
   const [newTokenLabel, setNewTokenLabel] = useState('')
+  const [ytKey, setYtKey] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
@@ -49,8 +50,20 @@ export default function CameraSeguranca() {
   }, [id])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (data) setYtKey(data.youtube_key || '') }, [data])
 
   const run = async (fn) => { setBusy(true); setError(''); try { await fn(); await load() } catch (e) { setError(msg(e)) } finally { setBusy(false) } }
+
+  const onAudioFile = (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    run(async () => {
+      const fd = new FormData()
+      fd.append('file', file)
+      await api.upload(`/api/cameras/${id}/audio`, fd)
+    })
+  }
 
   if (loading) return <div className="min-h-screen bg-atmosphere text-slate-300 p-6">Carregando…</div>
   if (!data) return (
@@ -92,6 +105,59 @@ export default function CameraSeguranca() {
             <iframe key={data.playback_id + data.stream_privacy} src={previewUrl} className="w-full h-full" allow="autoplay; fullscreen" />
           </div>
           <p className="text-xs text-slate-500">Se a imagem aparecer, a câmera está enviando para o servidor.</p>
+        </section>
+
+        <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg">Transmissão YouTube</h2>
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${data.relay_running ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-600/40 text-slate-300'}`}>
+              {data.relay_running ? 'No ar' : 'Parado'}
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-xs uppercase tracking-wide text-slate-400">URL de transmissão do YouTube</div>
+            <div className="flex gap-2 items-center">
+              <input value={ytKey} onChange={e => setYtKey(e.target.value)} placeholder="rtmp://a.rtmp.youtube.com/live2/xxxx-xxxx-xxxx-xxxx"
+                className="flex-1 rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+              <button disabled={busy} onClick={() => run(() => api.put(`/api/cameras/${id}`, { youtube_key: ytKey.trim() }))}
+                className="shrink-0 rounded-md bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm text-white">Salvar</button>
+            </div>
+            <div className="text-xs text-slate-500">No YouTube Studio: Transmitir → junte a "URL do servidor" + a "chave de transmissão" no formato <code>rtmp://.../live2/sua-chave</code>.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-wide text-slate-400">Áudio da transmissão</div>
+            {data.has_audio ? (
+              <div className="flex items-center justify-between rounded-md bg-slate-900/60 px-3 py-2 text-sm">
+                <span className="truncate">🎵 {data.audio_name}</span>
+                <button disabled={busy} onClick={() => run(() => api.del(`/api/cameras/${id}/audio`))} className="shrink-0 ml-2 text-red-400 hover:text-red-300 text-xs">Remover</button>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Sem áudio: a transmissão vai com som silencioso. Envie um .mp3 para tocar em loop.</p>
+            )}
+            <label className={`inline-block rounded-md px-4 py-2 text-sm ${busy ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600 text-white cursor-pointer'}`}>
+              {data.has_audio ? 'Trocar áudio (.mp3)' : 'Enviar áudio (.mp3)'}
+              <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={onAudioFile} />
+            </label>
+            <p className="text-xs text-slate-500">Ao trocar ou remover, se o solo estiver no ar ele reinicia sozinho para aplicar.</p>
+          </div>
+
+          <div className="space-y-2">
+            {data.in_active_group ? (
+              <div className="rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm px-3 py-2">
+                Esta câmera está num <strong>grupo ativo</strong> — o grupo controla a transmissão dela. Pare o grupo para transmitir esta câmera sozinha no YouTube.
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button disabled={busy || data.relay_running || !data.youtube_key} onClick={() => run(() => api.post(`/api/cameras/${id}/relay/start`))}
+                  className="rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Iniciar</button>
+                <button disabled={busy || !data.relay_running} onClick={() => run(() => api.post(`/api/cameras/${id}/relay/stop`))}
+                  className="rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Parar</button>
+              </div>
+            )}
+            {!data.in_active_group && !data.youtube_key && <p className="text-xs text-slate-500">Defina e salve a URL do YouTube acima para poder iniciar.</p>}
+          </div>
         </section>
 
         <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-3">
