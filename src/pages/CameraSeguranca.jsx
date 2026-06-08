@@ -64,7 +64,7 @@ export default function CameraSeguranca() {
   const iframeSnippet = `<iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`
 
   return (
-    <div className="min-h-screen bg-atmosphere text-slate-200 p-4 sm:p-6">
+    <div className="h-screen overflow-y-auto bg-atmosphere text-slate-200 p-4 sm:p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
