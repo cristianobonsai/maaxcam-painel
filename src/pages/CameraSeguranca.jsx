@@ -160,4 +160,34 @@ export default function CameraSeguranca() {
         </section>
 
         <section className="rounded-xl bg-slate-800/50 border border-slate-700 p-4 space-y-3">
-          <h2
+          <h2 className="font-display text-lg">Tokens permanentes (HLS em outros servidores)</h2>
+          <p className="text-xs text-slate-500">Cada token gera uma URL HLS com <code>?key=</code> para usar em outro serviço/servidor.</p>
+          <div className="flex gap-2">
+            <input value={newTokenLabel} onChange={e => setNewTokenLabel(e.target.value)} placeholder="rótulo (ex.: Servidor A)"
+              className="flex-1 rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+            <button disabled={busy} onClick={() => run(async () => { await api.post(`/api/cameras/${id}/security/tokens`, { label: newTokenLabel.trim() }); setNewTokenLabel('') })}
+              className="rounded-md bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm text-white">Gerar token</button>
+          </div>
+          <ul className="space-y-2">
+            {data.tokens.map(t => {
+              const url = `${data.hls_url}?key=${t.token}`
+              return (
+                <li key={t.id} className="rounded-md bg-slate-900/60 px-3 py-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">{t.label || '(sem rótulo)'}</span>
+                    <button onClick={() => run(() => api.del(`/api/cameras/${id}/security/tokens/${t.id}`))} className="text-red-400 hover:text-red-300 text-xs">Remover</button>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <code className="flex-1 truncate rounded bg-slate-950 border border-slate-700 px-2 py-1 text-xs text-emerald-300">{url}</code>
+                    <CopyButton text={url} />
+                  </div>
+                </li>
+              )
+            })}
+            {data.tokens.length === 0 && <li className="text-xs text-slate-500">Nenhum token.</li>}
+          </ul>
+        </section>
+      </div>
+    </div>
+  )
+}
