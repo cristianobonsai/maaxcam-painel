@@ -119,7 +119,7 @@ export default function CameraSeguranca() {
   const caps = data.caps || { embed: true, youtube: true, audio: true }
 
   return (
-    <div className="min-h-screen bg-atmosphere text-slate-200">
+    <div className="h-screen overflow-y-auto bg-atmosphere text-slate-200">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 space-y-6 relative z-10">
 
         <div className="flex items-start justify-between gap-4">
