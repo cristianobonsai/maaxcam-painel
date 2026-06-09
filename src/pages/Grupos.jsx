@@ -247,10 +247,6 @@ export default function Grupos() {
                 <Icon path="M12 5v14M5 12h14" className="h-4 w-4" /> Novo grupo
               </button>
             )}
-            <button onClick={() => navigate('/painel')}
-              className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300 hover:border-blue-500">
-              Voltar
-            </button>
           </div>
         </div>
 
