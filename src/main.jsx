@@ -8,6 +8,7 @@ import Painel from './pages/Painel.jsx'
 import Cameras from './pages/Cameras.jsx'
 import Admin from './pages/Admin.jsx'
 import Grupos from './pages/Grupos.jsx'
+import Notificacoes from './pages/Notificacoes.jsx'
 import { AuthProvider, ProtectedRoute } from './auth/AuthContext.jsx'
 import CameraSeguranca from './pages/CameraSeguranca.jsx'
 
@@ -55,6 +56,14 @@ createRoot(document.getElementById('root')).render(
             element={
               <ProtectedRoute>
                 <Grupos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/painel/notificacoes"
+            element={
+              <ProtectedRoute>
+                <Notificacoes />
               </ProtectedRoute>
             }
           />
