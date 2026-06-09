@@ -143,7 +143,7 @@ export default function CameraSeguranca() {
         {error && <div className="rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-sm px-3 py-2">{error}</div>}
 
         <div className="flex gap-6 border-b border-slate-700">
-          {[['stream', 'Transmissão'], ['security', 'Segurança']].map(([key, label]) => (
+          {[['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
               {label}
