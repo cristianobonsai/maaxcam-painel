@@ -12,6 +12,7 @@ import Notificacoes from './pages/Notificacoes.jsx'
 import { AuthProvider, ProtectedRoute } from './auth/AuthContext.jsx'
 import CameraSeguranca from './pages/CameraSeguranca.jsx'
 import Layout from './Layout.jsx'
+import Mapa from './pages/Mapa.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')).render(
           >
             <Route path="/painel" element={<Painel />} />
             <Route path="/painel/cameras" element={<Cameras />} />
+            <Route path="/painel/mapa" element={<Mapa />} />
             <Route path="/painel/cameras/:id/seguranca" element={<CameraSeguranca />} />
             <Route path="/painel/admin" element={<Admin />} />
             <Route path="/painel/grupos" element={<Grupos />} />
