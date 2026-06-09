@@ -15,6 +15,7 @@ function Icon({ path, className = '' }) {
 const ICONS = {
   dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',
   cameras: 'M15 10l4.5-2.3A1 1 0 0 1 21 8.6v6.8a1 1 0 0 1-1.5.9L15 14M4 6h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z',
+  map: 'M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3ZM9 3v15M15 6v15',
   notif: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
   grupos: 'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
   admin: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
@@ -45,6 +46,7 @@ export default function Layout() {
   const items = [
     { to: '/painel', label: 'Dashboard', icon: ICONS.dashboard, end: true },
     { to: '/painel/cameras', label: 'Câmeras', icon: ICONS.cameras },
+    { to: '/painel/mapa', label: 'Mapa', icon: ICONS.map },
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
     ...(isAdmin ? [
       { to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos },
