@@ -311,6 +311,11 @@ export default function Notificacoes() {
               )}
             </section>
 
+            {banner && (
+              <div className={`mt-6 rounded-lg border px-4 py-3 text-sm ${bannerStyle[banner.type]}`}>
+                {banner.text}
+              </div>
+            )}
             <button
               onClick={handleSave}
               disabled={saving}
