@@ -11,6 +11,7 @@ export default function LocationEditor({ cameraId }) {
 
   const [location, setLocation] = useState('')
   const [coords, setCoords] = useState(null)
+  const [suggested, setSuggested] = useState('')
   const [q, setQ] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -51,16 +52,28 @@ export default function LocationEditor({ cameraId }) {
     marker.on('dragend', () => {
       const ll = marker.getLatLng()
       setCoords({ lat: ll.lat, lng: ll.lng })
+      reverseGeocode(ll.lat, ll.lng)
     })
     map.on('click', (e) => {
       marker.setLatLng(e.latlng)
       setCoords({ lat: e.latlng.lat, lng: e.latlng.lng })
+      reverseGeocode(e.latlng.lat, e.latlng.lng)
     })
     mapRef.current = map
     markerRef.current = marker
     setTimeout(() => map.invalidateSize(), 200)
     return () => { map.remove(); mapRef.current = null; markerRef.current = null }
   }, [loading])
+
+  async function reverseGeocode(lat, lng) {
+    try {
+      const r = await api.get(`/api/reverse-geocode?lat=${lat}&lng=${lng}`)
+      if (r && r.label) {
+        setSuggested(r.label)
+        setLocation((prev) => (prev && prev.trim() ? prev : r.label))
+      }
+    } catch { /* ignora */ }
+  }
 
   async function doSearch(e) {
     if (e && e.preventDefault) e.preventDefault()
@@ -78,7 +91,10 @@ export default function LocationEditor({ cameraId }) {
   function pick(r) {
     setResults([]); setQ('')
     setCoords({ lat: r.lat, lng: r.lng })
-    if (!location.trim() && r.label) setLocation(r.label)
+    if (r.label) {
+      setSuggested(r.label)
+      setLocation((prev) => (prev && prev.trim() ? prev : r.label))
+    }
     const map = mapRef.current, marker = markerRef.current
     if (map && marker) { marker.setLatLng([r.lat, r.lng]); map.setView([r.lat, r.lng], 17) }
   }
@@ -107,7 +123,13 @@ export default function LocationEditor({ cameraId }) {
         <input value={location} onChange={(e) => setLocation(e.target.value)}
           placeholder="Ex.: Loja Centro — Rua X, 123"
           className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
-        <p className="mt-1 text-xs text-slate-500">Texto livre — você escreve do seu jeito. É o que aparece nas listas.</p>
+        <p className="mt-1 text-xs text-slate-500">Texto livre — você identifica do seu jeito. É o que aparece nas listas.</p>
+        {suggested && suggested !== location && (
+          <div className="mt-2 flex items-start gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs">
+            <span className="min-w-0 text-slate-400">Endereço do pino: <span className="text-slate-200">{suggested}</span></span>
+            <button type="button" onClick={() => setLocation(suggested)} className="ml-auto shrink-0 rounded-md border border-blue-500/50 px-2 py-1 font-medium text-blue-300 hover:bg-blue-500/10">Usar</button>
+          </div>
+        )}
       </div>
 
       <div>
