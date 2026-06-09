@@ -117,6 +117,7 @@ export default function Cameras() {
       <header className="flex items-center gap-4 border-b border-slate-800 px-6 py-4">
         <h1 className="text-lg font-semibold">Câmeras</h1>
         <div className="ml-auto flex gap-2">
+          <Link to="/painel/mapa" className="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-200 hover:border-blue-500">Mapa</Link>
           <button onClick={load} className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium hover:bg-slate-700">Atualizar</button>
           <button onClick={mode === 'create' ? closeForm : openCreate} className="rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
             {mode === 'create' ? 'Cancelar' : 'Nova câmera'}
