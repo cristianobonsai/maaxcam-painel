@@ -11,6 +11,7 @@ import Grupos from './pages/Grupos.jsx'
 import Notificacoes from './pages/Notificacoes.jsx'
 import { AuthProvider, ProtectedRoute } from './auth/AuthContext.jsx'
 import CameraSeguranca from './pages/CameraSeguranca.jsx'
+import Layout from './Layout.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -20,53 +21,19 @@ createRoot(document.getElementById('root')).render(
           <Route path="/" element={<App />} />
           <Route path="/login" element={<Login />} />
           <Route
-            path="/painel"
             element={
               <ProtectedRoute>
-                <Painel />
+                <Layout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/painel/cameras"
-            element={
-              <ProtectedRoute>
-                <Cameras />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/painel/cameras/:id/seguranca"
-            element={
-              <ProtectedRoute>
-                <CameraSeguranca />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/painel/admin"
-            element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/painel/grupos"
-            element={
-              <ProtectedRoute>
-                <Grupos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/painel/notificacoes"
-            element={
-              <ProtectedRoute>
-                <Notificacoes />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="/painel" element={<Painel />} />
+            <Route path="/painel/cameras" element={<Cameras />} />
+            <Route path="/painel/cameras/:id/seguranca" element={<CameraSeguranca />} />
+            <Route path="/painel/admin" element={<Admin />} />
+            <Route path="/painel/grupos" element={<Grupos />} />
+            <Route path="/painel/notificacoes" element={<Notificacoes />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
