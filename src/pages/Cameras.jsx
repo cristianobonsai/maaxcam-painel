@@ -115,7 +115,6 @@ export default function Cameras() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="flex items-center gap-4 border-b border-slate-800 px-6 py-4">
-        <Link to="/painel" className="text-sm text-slate-400 hover:text-slate-200">← Painel</Link>
         <h1 className="text-lg font-semibold">Câmeras</h1>
         <div className="ml-auto flex gap-2">
           <button onClick={load} className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium hover:bg-slate-700">Atualizar</button>
