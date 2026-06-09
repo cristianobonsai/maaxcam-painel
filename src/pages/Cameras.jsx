@@ -21,7 +21,7 @@ export default function Cameras() {
     setLoading(true)
     setError('')
     try {
-      const data = await api.get('/api/cameras')
+      const data = await api.get('/api/cameras?mine=1')
       setCameras(Array.isArray(data) ? data : (data?.cameras ?? []))
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Erro ao carregar câmeras.')
@@ -206,7 +206,7 @@ export default function Cameras() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button onClick={() => openEdit(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500">Editar</button>
                   <button onClick={() => handleDelete(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-red-300 hover:border-red-500">Excluir</button>
-                  <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-blue-300 hover:border-blue-500">Segurança</Link>
+                  <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-blue-300 hover:border-blue-500">Gerenciar</Link>
                 </div>
 
                 <div className="mt-2 flex gap-2">
