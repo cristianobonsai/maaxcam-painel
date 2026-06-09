@@ -124,12 +124,6 @@ export default function Notificacoes() {
     <>
       <div className="bg-atmosphere" />
       <main className="mx-auto max-w-3xl px-5 py-12">
-        <button
-          onClick={() => navigate('/painel')}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white"
-        >
-          <Icon path="M15 18l-6-6 6-6" className="h-4 w-4" /> Voltar ao painel
-        </button>
 
         <h1 className="font-display text-3xl font-bold text-white">Notificações</h1>
         <p className="mt-1.5 text-slate-400">
