@@ -211,7 +211,7 @@ export default function Notificacoes() {
                   <p className="text-sm text-slate-300">
                     Abra o link abaixo no Telegram e toque em <b>Iniciar</b> (Start):
                   </p>
-                  
+                  <a
                     href={link.deep_link}
                     target="_blank"
                     rel="noreferrer"
