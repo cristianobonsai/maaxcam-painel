@@ -12,6 +12,15 @@ function minDuration(nCams) {
   return 10
 }
 
+function Icon({ path, className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d={path} />
+    </svg>
+  )
+}
+
 export default function Grupos() {
   const navigate = useNavigate()
   const { session } = useAuth()
@@ -222,152 +231,160 @@ export default function Grupos() {
   return (
     <>
       <div className="bg-atmosphere" />
-      <main className="mx-auto max-w-3xl px-5 py-16">
-        <div className="rounded-lg border-2 border-blue-500 bg-slate-700 p-6">
-          <div className="flex items-center justify-between gap-3">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10 relative z-10">
+
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
             <h1 className="font-display text-2xl font-bold text-white">Grupos</h1>
+            <p className="mt-1 text-sm text-slate-400">
+              Rotação de várias câmeras numa transmissão única no YouTube{me?.is_admin ? ` · ${groups.length} grupo(s)` : ''}.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {!loading && me?.is_admin && editing === null && (
+              <button onClick={openNew}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">
+                <Icon path="M12 5v14M5 12h14" className="h-4 w-4" /> Novo grupo
+              </button>
+            )}
             <button onClick={() => navigate('/painel')}
-              className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500">
+              className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300 hover:border-blue-500">
               Voltar
             </button>
           </div>
+        </div>
 
-          {loading && <p className="mt-6 text-slate-300">Carregando…</p>}
+        {loading && <p className="mt-8 text-slate-300">Carregando…</p>}
+        {!loading && me && !me.is_admin && <p className="mt-8 text-red-300">Acesso restrito a administradores.</p>}
+        {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
-          {!loading && me && !me.is_admin && (
-            <p className="mt-6 text-red-300">Acesso restrito a administradores.</p>
-          )}
-
-          {!loading && me?.is_admin && (
-            <>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="text-sm text-slate-400">{groups.length} grupo(s) cadastrado(s).</p>
-                {editing === null && (
-                  <button onClick={openNew}
-                    className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
-                    Novo grupo
-                  </button>
-                )}
-              </div>
-
-              {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
-
-              {editing !== null && (
-                <div className="mt-4 rounded-lg border border-blue-500 bg-slate-800 p-4">
-                  <h2 className="font-semibold text-white">{editing === 'new' ? 'Novo grupo' : 'Editar grupo'}</h2>
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-400">Nome</label>
-                      <input className={inputClass} value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Grupo Centro" />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-400">
-                        YouTube key{editing !== 'new' ? ' (deixe em branco para manter a atual)' : ''}
-                      </label>
-                      <input className={inputClass} value={form.youtube_key}
-                        onChange={(e) => setForm({ ...form, youtube_key: e.target.value })}
-                        placeholder={editing === 'new' ? 'opcional' : '••••••••'} />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-400">Transição (segundos)</label>
-                      <input type="number" className={inputClass} value={form.transition_seconds}
-                        onChange={(e) => setForm({ ...form, transition_seconds: e.target.value })} />
-                    </div>
-                    {editing !== 'new' && (
-                      <label className="flex items-center gap-2 text-sm text-slate-200">
-                        <input type="checkbox" className="accent-blue-500" checked={form.enabled}
-                          onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
-                        Habilitado
-                      </label>
-                    )}
+        {!loading && me?.is_admin && (
+          <>
+            {editing !== null && (
+              <div className="mt-6 rounded-xl border border-blue-500/60 bg-slate-800/80 p-4">
+                <h2 className="font-display font-semibold text-white">{editing === 'new' ? 'Novo grupo' : 'Editar grupo'}</h2>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-xs text-slate-400">Nome</label>
+                    <input className={inputClass} value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Grupo Centro" />
                   </div>
-                  {formError && <p className="mt-3 text-sm text-red-300">{formError}</p>}
-                  <div className="mt-4 flex gap-3">
-                    <button onClick={save} disabled={saving}
-                      className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600 disabled:opacity-50">
-                      {saving ? 'Salvando…' : 'Salvar'}
-                    </button>
-                    <button onClick={closeForm} disabled={saving}
-                      className="rounded-lg border border-slate-600 px-4 py-2 text-slate-300 hover:border-blue-500 disabled:opacity-50">
-                      Cancelar
-                    </button>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-xs text-slate-400">
+                      YouTube key{editing !== 'new' ? ' (deixe em branco para manter a atual)' : ''}
+                    </label>
+                    <input className={inputClass} value={form.youtube_key}
+                      onChange={(e) => setForm({ ...form, youtube_key: e.target.value })}
+                      placeholder={editing === 'new' ? 'opcional' : '••••••••'} />
                   </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-400">Transição (segundos)</label>
+                    <input type="number" className={inputClass} value={form.transition_seconds}
+                      onChange={(e) => setForm({ ...form, transition_seconds: e.target.value })} />
+                  </div>
+                  {editing !== 'new' && (
+                    <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-200">
+                      <input type="checkbox" className="accent-blue-500" checked={form.enabled}
+                        onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
+                      Habilitado
+                    </label>
+                  )}
                 </div>
-              )}
+                {formError && <p className="mt-3 text-sm text-red-300">{formError}</p>}
+                <div className="mt-4 flex gap-3">
+                  <button onClick={save} disabled={saving}
+                    className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white hover:bg-blue-600 disabled:opacity-50">
+                    {saving ? 'Salvando…' : 'Salvar'}
+                  </button>
+                  <button onClick={closeForm} disabled={saving}
+                    className="rounded-lg border border-slate-600 px-4 py-2 text-slate-300 hover:border-blue-500 disabled:opacity-50">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
 
-              <div className="mt-4 space-y-3">
-                {groups.map((g) => {
-                  const cams = g.cameras || []
-                  const used = new Set(cams.map((c) => c.camera_id))
-                  const available = cameras.filter((c) => !used.has(c.camera_id))
-                  return (
-                    <div key={g.id} className="rounded-lg border border-slate-600 bg-slate-800 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="truncate text-lg font-semibold text-white">{g.name || '(sem nome)'}</div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            {g.relay_active ? (
-                              <span className="rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium text-white">No ar</span>
-                            ) : (
-                              <span className="rounded bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-200">Parado</span>
-                            )}
-                            <span className={`rounded px-2 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500 text-white' : 'bg-slate-600 text-slate-200'}`}>
-                              {g.enabled ? 'Habilitado' : 'Desabilitado'}
-                            </span>
-                            {!g.youtube_key && (
-                              <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-medium text-white">Sem YouTube key</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <div className="text-right text-xs text-slate-400">
-                            <div>transição: {g.transition_seconds}s</div>
-                            <div>{cams.length} câmera(s)</div>
-                          </div>
-                          <button onClick={() => openEdit(g)} disabled={busy}
-                            className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
-                            Editar
-                          </button>
-                          <button onClick={() => deleteGroup(g)} disabled={busy}
-                            className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">
-                            Excluir
-                          </button>
+            <div className="mt-6 space-y-4">
+              {groups.map((g) => {
+                const cams = g.cameras || []
+                const used = new Set(cams.map((c) => c.camera_id))
+                const available = cameras.filter((c) => !used.has(c.camera_id))
+                return (
+                  <div key={g.id} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate font-display text-lg font-semibold text-white">{g.name || '(sem nome)'}</div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                          {g.relay_active ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />No ar</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-600/40 px-2.5 py-0.5 text-xs font-medium text-slate-300"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Parado</span>
+                          )}
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>
+                            {g.enabled ? 'Habilitado' : 'Desabilitado'}
+                          </span>
+                          {!g.youtube_key && <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem YouTube key</span>}
                         </div>
                       </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="mr-1 text-right text-xs text-slate-400"><div>transição: {g.transition_seconds}s</div><div>{cams.length} câmera(s)</div></div>
+                        {g.relay_active ? (
+                          <button onClick={() => stopRelay(g)} disabled={busy}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">
+                            <Icon path="M7 5h3v14H7zM14 5h3v14h-3z" className="h-4 w-4" /> Parar relay
+                          </button>
+                        ) : (
+                          <button onClick={() => startRelay(g)} disabled={busy || !g.youtube_key || cams.length === 0}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50">
+                            <Icon path="M6 4l14 8-14 8V4z" className="h-4 w-4" /> Iniciar relay
+                          </button>
+                        )}
+                        <button onClick={() => openEdit(g)} disabled={busy}
+                          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">Editar</button>
+                        <button onClick={() => deleteGroup(g)} disabled={busy}
+                          className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">Excluir</button>
+                      </div>
+                    </div>
 
-                      <div className="mt-3 space-y-2 border-t border-slate-700 pt-3">
-                        {cams.length === 0 && <p className="text-sm text-slate-400">Nenhuma câmera neste grupo.</p>}
-                        {cams.map((c, i) => {
-                          const changed = durEdits[c.id] !== undefined && Number(durEdits[c.id]) !== c.duration_seconds
-                          return (
-                            <div key={c.id} className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="min-w-0 flex-1 truncate text-sm text-slate-200">
-                                {i + 1}. {c.camera_name || c.camera_id}
-                                <span className="ml-2 text-xs text-slate-500">{c.camera_id}</span>
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <input type="number"
-                                  className="w-16 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
-                                  value={durEdits[c.id] ?? c.duration_seconds}
-                                  onChange={(e) => setDurEdits((prev) => ({ ...prev, [c.id]: e.target.value }))} />
+                    {!g.relay_active && (!g.youtube_key || cams.length === 0) && (
+                      <p className="mt-2 text-xs text-slate-400">
+                        {!g.youtube_key && cams.length === 0
+                          ? 'Configure a YouTube key e adicione câmeras para iniciar.'
+                          : !g.youtube_key
+                          ? 'Configure a YouTube key para iniciar.'
+                          : 'Adicione câmeras para iniciar.'}
+                      </p>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4 border-t border-slate-700 pt-4 items-start">
+                      <div>
+                        <div className="mb-2.5 text-xs uppercase tracking-wide text-slate-400">Rotação das câmeras</div>
+                        <div className="space-y-2">
+                          {cams.length === 0 && <p className="text-sm text-slate-400">Nenhuma câmera neste grupo.</p>}
+                          {cams.map((c, i) => {
+                            const changed = durEdits[c.id] !== undefined && Number(durEdits[c.id]) !== c.duration_seconds
+                            return (
+                              <div key={c.id} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
+                                <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-slate-700 text-xs font-semibold text-slate-300">{i + 1}</span>
+                                <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{c.camera_name || c.camera_id}<span className="ml-2 text-xs text-slate-500">{c.camera_id}</span></span>
+                                <input type="number" value={durEdits[c.id] ?? c.duration_seconds}
+                                  onChange={(e) => setDurEdits((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                                  className="w-14 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-center text-sm text-white focus:border-blue-500 focus:outline-none" />
                                 <span className="text-xs text-slate-400">s</span>
                                 {changed && (
                                   <button onClick={() => saveDuration(g, c)} disabled={busy}
-                                    className="rounded border border-blue-500 px-2 py-1 text-xs text-blue-200 hover:bg-blue-500 hover:text-white disabled:opacity-50">
-                                    Salvar
-                                  </button>
+                                    className="rounded border border-blue-500 px-2 py-1 text-xs text-blue-200 hover:bg-blue-500 hover:text-white disabled:opacity-50">Salvar</button>
                                 )}
                                 <button onClick={() => moveCamera(g, i, -1)} disabled={busy || i === 0}
-                                  className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:border-blue-500 disabled:opacity-30">↑</button>
+                                  className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M18 15l-6-6-6 6" className="h-3.5 w-3.5" /></button>
                                 <button onClick={() => moveCamera(g, i, 1)} disabled={busy || i === cams.length - 1}
-                                  className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:border-blue-500 disabled:opacity-30">↓</button>
+                                  className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M6 9l6 6 6-6" className="h-3.5 w-3.5" /></button>
                                 <button onClick={() => removeCamera(g, c)} disabled={busy}
-                                  className="rounded border border-red-500 px-2 py-1 text-xs text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">×</button>
+                                  className="grid h-7 w-7 place-items-center rounded border border-red-500/60 text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50"><Icon path="M18 6 6 18M6 6l12 12" className="h-3.5 w-3.5" /></button>
                               </div>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
+                        </div>
 
                         {addingTo === g.id ? (
                           <div className="mt-2 rounded-lg border border-blue-500 bg-slate-900 p-3">
@@ -395,61 +412,54 @@ export default function Grupos() {
                             {addError && <p className="mt-2 text-sm text-red-300">{addError}</p>}
                             <div className="mt-3 flex gap-2">
                               <button onClick={() => addCamera(g)} disabled={busy || !addForm.camera_id}
-                                className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50">
-                                Adicionar
-                              </button>
+                                className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50">Adicionar</button>
                               <button onClick={() => setAddingTo(null)} disabled={busy}
-                                className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
-                                Cancelar
-                              </button>
+                                className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">Cancelar</button>
                             </div>
                           </div>
                         ) : (
                           <button onClick={() => openAdd(g)} disabled={busy}
-                            className="mt-1 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
-                            + Adicionar câmera
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
+                            <Icon path="M12 5v14M5 12h14" className="h-4 w-4" /> Adicionar câmera
                           </button>
                         )}
                       </div>
 
-                      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-700 pt-3">
-                        {g.relay_active ? (
-                          <button onClick={() => stopRelay(g)} disabled={busy}
-                            className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">
-                            Parar relay
-                          </button>
-                        ) : (
-                          <button onClick={() => startRelay(g)} disabled={busy || !g.youtube_key || cams.length === 0}
-                            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50">
-                            Iniciar relay
-                          </button>
-                        )}
-                        {!g.relay_active && (!g.youtube_key || cams.length === 0) && (
-                          <span className="text-xs text-slate-400">
-                            {!g.youtube_key && cams.length === 0
-                              ? 'configure a YouTube key e adicione câmeras para iniciar'
-                              : !g.youtube_key
-                              ? 'configure a YouTube key para iniciar'
-                              : 'adicione câmeras para iniciar'}
-                          </span>
-                        )}
-                        <div className="ml-auto flex items-center gap-2 text-xs text-slate-400">
-                          <span>Áudio: <span className="text-slate-300">{g.audio_file ? g.audio_file.split('/').pop() : 'nenhum'}</span></span>
-                          <label className="cursor-pointer rounded-lg border border-slate-600 px-2 py-1 text-slate-300 hover:border-blue-500">
-                            Enviar .mp3
-                            <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy}
-                              onChange={(e) => uploadAudio(g, e.target)} />
-                          </label>
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+                          <div className="mb-2 text-xs uppercase tracking-wide text-slate-400">Transmissão YouTube</div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Chave</span>
+                            {g.youtube_key ? (
+                              <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-xs font-medium text-blue-300">Configurada</span>
+                            ) : (
+                              <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem chave</span>
+                            )}
+                          </div>
+                          <p className="mt-1.5 text-xs text-slate-500">Defina ou troque a chave pelo botão Editar do grupo.</p>
                         </div>
+
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+                          <div className="mb-2 text-xs uppercase tracking-wide text-slate-400">Áudio em loop</div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate text-sm text-slate-200">{g.audio_file ? g.audio_file.split('/').pop() : 'nenhum'}</span>
+                            <label className="shrink-0 cursor-pointer rounded-lg border border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:border-blue-500">
+                              Enviar .mp3
+                              <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={(e) => uploadAudio(g, e.target)} />
+                            </label>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-500"><span className="font-medium text-slate-300">Exclusividade:</span> com o grupo no ar, os relays individuais dessas câmeras ficam pausados.</p>
                       </div>
                     </div>
-                  )
-                })}
-                {groups.length === 0 && !error && <p className="text-slate-400">Nenhum grupo cadastrado.</p>}
-              </div>
-            </>
-          )}
-        </div>
+                  </div>
+                )
+              })}
+              {groups.length === 0 && !error && editing === null && <p className="text-slate-400">Nenhum grupo cadastrado.</p>}
+            </div>
+          </>
+        )}
       </main>
     </>
   )
