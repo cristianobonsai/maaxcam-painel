@@ -80,7 +80,11 @@ export default function CameraSeguranca() {
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
-    try { setData(await api.get(`/api/cameras/${id}/security`)) }
+    try {
+      const sec = await api.get(`/api/cameras/${id}/security`)
+      try { sec.caps = await api.get(`/api/cameras/${id}/caps`) } catch {}
+      setData(sec)
+    }
     catch (e) { setError(msg(e)) }
     finally { setLoading(false) }
   }, [id])
