@@ -96,6 +96,12 @@ export default function Painel() {
             >
               Câmeras
             </button>
+            <button
+              onClick={() => navigate('/painel/notificacoes')}
+              className="rounded-lg border border-blue-500 px-4 py-2 font-medium text-blue-200 hover:bg-blue-500 hover:text-white"
+            >
+              Notificações
+            </button>
             {isAdmin && (
               <button
                 onClick={() => navigate('/painel/admin')}
