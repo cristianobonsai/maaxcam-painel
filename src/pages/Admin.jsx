@@ -11,6 +11,8 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState(null)
+  const [plans, setPlans] = useState({})
+  const [planBusy, setPlanBusy] = useState(null)
 
   const [tab, setTab] = useState('users')
   const [filter, setFilter] = useState('')
@@ -27,6 +29,10 @@ export default function Admin() {
       if (meData?.is_admin) {
         const usersData = await api.get('/api/admin/users')
         setUsers(Array.isArray(usersData) ? usersData : [])
+        try {
+          const p = await api.get('/api/admin/plans')
+          setPlans(p && typeof p === 'object' ? p : {})
+        } catch { /* sem planos ainda: trata como básico */ }
       }
     } catch (e) {
       setError(msg(e))
@@ -47,6 +53,18 @@ export default function Admin() {
       setError(msg(e))
     } finally {
       setBusyId(null)
+    }
+  }
+
+  async function setPlan(u, plan) {
+    setPlanBusy(u.user_id); setError('')
+    try {
+      await api.put(`/api/admin/users/${u.user_id}/plan`, { plan })
+      setPlans((prev) => ({ ...prev, [u.user_id]: plan }))
+    } catch (e) {
+      setError(msg(e))
+    } finally {
+      setPlanBusy(null)
     }
   }
 
@@ -107,10 +125,22 @@ export default function Admin() {
                           {u.user_id === me.user_id && <span className="text-xs text-slate-400">(você)</span>}
                         </div>
                       </div>
-                      <button onClick={() => toggleRole(u)} disabled={busyId === u.user_id}
-                        className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
-                        {busyId === u.user_id ? '...' : u.role === 'admin' ? 'Rebaixar p/ usuário' : 'Promover a admin'}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                          Plano
+                          <select value={plans[u.user_id] || 'basico'} disabled={planBusy === u.user_id}
+                            onChange={(e) => setPlan(u, e.target.value)}
+                            className="rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none disabled:opacity-50">
+                            <option value="basico">Básico</option>
+                            <option value="pro">Pro</option>
+                            <option value="premium">Premium</option>
+                          </select>
+                        </label>
+                        <button onClick={() => toggleRole(u)} disabled={busyId === u.user_id}
+                          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">
+                          {busyId === u.user_id ? '...' : u.role === 'admin' ? 'Rebaixar p/ usuário' : 'Promover a admin'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -131,6 +161,7 @@ export default function Admin() {
                             <div className="truncate text-sm text-slate-200">{u.email || '(sem email)'}</div>
                             <div className="mt-1 flex items-center gap-2">
                               <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${u.role === 'admin' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>{u.role}</span>
+                              <span className="rounded-full bg-slate-700/60 px-2 py-0.5 text-[11px] font-medium text-slate-300">{plans[u.user_id] || 'basico'}</span>
                               {u.user_id === me.user_id && <span className="text-[11px] text-slate-500">(você)</span>}
                             </div>
                           </div>
@@ -152,6 +183,23 @@ export default function Admin() {
                       <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-200">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4m0 4h.01" /></svg>
                         <span>Visão de administrador — você está vendo as câmeras de <strong className="text-white">{selected.email || selected.user_id}</strong>, não as suas.</span>
+                      </div>
+
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-3">
+                        <div className="text-sm text-slate-300">
+                          Plano de <strong className="text-white">{selected.email || selected.user_id}</strong>
+                          <span className="ml-2 rounded-full bg-slate-700/60 px-2 py-0.5 text-xs font-medium text-slate-300">{plans[selected.user_id] || 'basico'}</span>
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-slate-400">
+                          Definir plano
+                          <select value={plans[selected.user_id] || 'basico'} disabled={planBusy === selected.user_id}
+                            onChange={(e) => setPlan(selected, e.target.value)}
+                            className="rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none disabled:opacity-50">
+                            <option value="basico">Básico</option>
+                            <option value="pro">Pro</option>
+                            <option value="premium">Premium</option>
+                          </select>
+                        </label>
                       </div>
 
                       {camsLoading && <p className="text-sm text-slate-400">Carregando câmeras…</p>}
