@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import LocationEditor from '../LocationEditor.jsx'
 
 const PLAY_BASE = 'https://play.maaxcam.com.br'
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
