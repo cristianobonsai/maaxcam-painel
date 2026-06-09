@@ -91,10 +91,6 @@ export default function Admin() {
             <h1 className="font-display text-2xl font-bold text-white">Admin</h1>
             <p className="mt-1 text-sm text-slate-400">Usuários e câmeras por conta.</p>
           </div>
-          <button onClick={() => navigate('/painel')}
-            className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300 hover:border-blue-500">
-            Voltar
-          </button>
         </div>
 
         {loading && <p className="mt-8 text-slate-300">Carregando…</p>}
