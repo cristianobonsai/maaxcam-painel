@@ -121,7 +121,10 @@ export default function CameraSeguranca() {
 
   // Plano: o backend pode mandar data.caps = { embed, youtube, audio }.
   // Enquanto não mandar, libera tudo (mesmo comportamento de hoje, sem regressão).
-  const caps = data.caps || { embed: true, youtube: true, audio: true }
+  const caps = data.caps || { embed: true, youtube: true, audio: true, snapshot: true }
+  const firstToken = (data.tokens && data.tokens[0] && data.tokens[0].token) || ''
+  const snapshotBase = `https://api.maaxcam.com.br/api/cameras/${id}/snapshot.jpg`
+  const snapshotLink = isPrivate && firstToken ? `${snapshotBase}?key=${firstToken}` : snapshotBase
 
   return (
     <div className="h-screen overflow-y-auto bg-atmosphere text-slate-200">
