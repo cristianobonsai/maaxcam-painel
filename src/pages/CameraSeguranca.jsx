@@ -241,7 +241,7 @@ export default function CameraSeguranca() {
               </Card>
             </div>
           </div>
-        ) : (
+        ) : tab === 'security' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
             <div className="space-y-5">
               <Card title="Privacidade" icon="M6 21h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2ZM8 11V7a4 4 0 0 1 8 0v4">
@@ -329,6 +329,8 @@ export default function CameraSeguranca() {
               </div>
             )}
           </div>
+        ) : (
+          <LocationEditor cameraId={id} />
         )}
       </div>
     </div>
