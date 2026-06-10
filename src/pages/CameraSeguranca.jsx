@@ -168,6 +168,20 @@ export default function CameraSeguranca() {
               <Card title="Transmissão (RTMP)" icon="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12">
                 <Field label="URL RTMP" value={data.rtmp_url} hint="Cole isto na sua câmera IP (campo de servidor/URL RTMP) para começar a transmitir." />
               </Card>
+
+              <Card title="Link da foto (time-lapse)" icon="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10">
+                {!caps.snapshot ? (
+                  <LockedNote>O link da foto (time-lapse) está disponível nos planos Pro e Premium.</LockedNote>
+                ) : (<>
+                  <p className="text-sm text-slate-400">Link que sempre devolve a última foto da câmera (atualiza a cada 30 min). Use no seu site ou time-lapse.</p>
+                  <div className="flex gap-2 items-start">
+                    <code className="flex-1 break-all rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-emerald-300">{snapshotLink}</code>
+                    <CopyButton text={snapshotLink} />
+                  </div>
+                  {isPrivate && !firstToken && <p className="text-xs text-amber-300">Câmera privada: gere um token na aba Segurança e acrescente <code>?key=SEU_TOKEN</code> ao final do link.</p>}
+                  {isPrivate && firstToken && <p className="text-xs text-slate-500">Câmera privada: o link já inclui um token de acesso.</p>}
+                </>)}
+              </Card>
             </div>
 
             <div className="space-y-5">
@@ -243,19 +257,6 @@ export default function CameraSeguranca() {
                 </div>
               </Card>
 
-              <Card title="Link da foto (time-lapse)" icon="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10">
-                {!caps.snapshot ? (
-                  <LockedNote>O link da foto (time-lapse) está disponível nos planos Pro e Premium.</LockedNote>
-                ) : (<>
-                  <p className="text-sm text-slate-400">Link que sempre devolve a última foto da câmera (atualiza a cada 30 min). Use no seu site ou time-lapse.</p>
-                  <div className="flex gap-2 items-start">
-                    <code className="flex-1 break-all rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-emerald-300">{snapshotLink}</code>
-                    <CopyButton text={snapshotLink} />
-                  </div>
-                  {isPrivate && !firstToken && <p className="text-xs text-amber-300">Câmera privada: gere um token na aba Segurança e acrescente <code>?key=SEU_TOKEN</code> ao final do link.</p>}
-                  {isPrivate && firstToken && <p className="text-xs text-slate-500">Câmera privada: o link já inclui um token de acesso.</p>}
-                </>)}
-              </Card>
             </div>
           </div>
         ) : tab === 'security' ? (
