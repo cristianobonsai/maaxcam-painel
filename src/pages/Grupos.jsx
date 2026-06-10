@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
 
-const API_URL = 'https://api.maaxcam.com.br'
+const API_URL = 'https://api.livebybit.com'
 const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false }
 
 function minDuration(nCams) {
