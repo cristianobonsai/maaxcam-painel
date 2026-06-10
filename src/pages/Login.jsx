@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
-
 export default function Login() {
   const { session, signInWithEmail } = useAuth()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState('')
-
   // já logado? vai direto pro painel
   if (session) return <Navigate to="/painel" replace />
-
   async function handleSubmit() {
     if (!email) return
     setStatus('sending')
@@ -23,17 +20,21 @@ export default function Login() {
       setStatus('sent')
     }
   }
-
   return (
     <>
       <div className="bg-atmosphere" />
       <main className="flex min-h-screen items-center justify-center px-5">
         <div className="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-800 p-6">
+          <div className="mb-5 flex items-center gap-2.5">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-500 text-white">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <span className="font-display text-lg font-bold text-white">LiveByBit</span>
+          </div>
           <h1 className="font-display text-xl font-bold text-white">Entrar no painel</h1>
           <p className="mt-2 text-sm text-slate-400">
             Digite seu email e enviamos um link de acesso. Sem senha.
           </p>
-
           {status === 'sent' ? (
             <div className="mt-6 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-300">
               Link enviado. Confira seu email (e a caixa de spam) e clique no link para entrar.
