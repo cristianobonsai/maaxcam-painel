@@ -17,7 +17,7 @@ export default function Footer() {
         </div>
 
         <p className="text-xs text-slate-500">
-          © {new Date().getFullYear()} MaaxCam · painel.maaxcam.com.br
+          © {new Date().getFullYear()} MaaxCam · painel.livebybit.com
         </p>
       </div>
     </footer>
