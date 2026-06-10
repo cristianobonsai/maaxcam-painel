@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import LocationEditor from '../LocationEditor.jsx'
 
-const PLAY_BASE = 'https://play.maaxcam.com.br'
+const PLAY_BASE = 'https://play.livebybit.com'
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
 
 function Icon({ path, className = '' }) {
@@ -123,7 +123,7 @@ export default function CameraSeguranca() {
   // Enquanto não mandar, libera tudo (mesmo comportamento de hoje, sem regressão).
   const caps = data.caps || { embed: true, youtube: true, audio: true, snapshot: true }
   const firstToken = (data.tokens && data.tokens[0] && data.tokens[0].token) || ''
-  const snapshotBase = `https://api.maaxcam.com.br/api/cameras/${id}/snapshot.jpg`
+  const snapshotBase = `https://api.livebybit.com/api/cameras/${id}/snapshot.jpg`
   const snapshotLink = isPrivate && firstToken ? `${snapshotBase}?key=${firstToken}` : snapshotBase
 
   return (
