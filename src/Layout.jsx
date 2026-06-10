@@ -69,7 +69,7 @@ export default function Layout() {
         <button onClick={() => setOpen(true)} aria-label="Abrir menu" className="text-slate-200">
           <Icon path={ICONS.menu} className="h-6 w-6" />
         </button>
-        <span className="font-display font-bold text-white">MaaxCam</span>
+        <span className="font-display font-bold text-white">LiveByBit</span>
       </div>
 
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
@@ -80,7 +80,7 @@ export default function Layout() {
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500 text-white">
               <Icon path={ICONS.cameras} className="h-5 w-5" />
             </div>
-            <span className="font-display text-lg font-bold text-white">MaaxCam</span>
+            <span className="font-display text-lg font-bold text-white">LiveByBit</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Fechar menu" className="text-slate-400 lg:hidden">
             <Icon path={ICONS.close} className="h-5 w-5" />
