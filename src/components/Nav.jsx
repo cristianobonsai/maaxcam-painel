@@ -6,8 +6,7 @@ function LogoMark({ className = "" }) {
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
       <rect x="2" y="2" width="28" height="28" rx="8" fill="#3b82f6" />
       <rect x="2" y="2" width="28" height="28" rx="8" fill="url(#g)" fillOpacity="0.5" />
-      <circle cx="16" cy="16" r="6.5" fill="none" stroke="white" strokeWidth="2.2" />
-      <circle cx="16" cy="16" r="2.4" fill="white" />
+      <path d="M13 10 L22 16 L13 22 Z" fill="white" stroke="white" strokeWidth="1.6" strokeLinejoin="round" />
       <defs>
         <linearGradient id="g" x1="2" y1="2" x2="30" y2="30">
           <stop stopColor="white" stopOpacity="0.35" />
@@ -27,7 +26,7 @@ export default function Nav() {
         <a href="#" className="flex items-center gap-2.5">
           <LogoMark className="h-8 w-8" />
           <span className="font-display text-lg font-bold tracking-tight text-white">
-            Maax<span className="text-blue-400">Cam</span>
+            LiveBy<span className="text-blue-400">Bit</span>
           </span>
         </a>
         <div className="hidden items-center gap-8 md:flex">
