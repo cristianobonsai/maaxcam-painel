@@ -2,7 +2,7 @@
 // Helper de chamadas à API do MaaxCam.
 // Injeta o token do Supabase (Authorization: Bearer ...) e trata erros comuns.
 
-const API_BASE = 'https://api.maaxcam.com.br'
+const API_BASE = 'https://api.livebybit.com'
 
 // O Supabase guarda a sessão no localStorage nesta chave.
 const SESSION_KEY = 'sb-qtvrzdwgfeomzahtjwpz-auth-token'
