@@ -78,7 +78,7 @@ export default function Layout() {
         <div className="flex items-center justify-between px-2 py-3">
           <div className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500 text-white">
-              <Icon path={ICONS.cameras} className="h-5 w-5" />
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M8 5v14l11-7z"/></svg>
             </div>
             <span className="font-display text-lg font-bold text-white">LiveByBit</span>
           </div>
