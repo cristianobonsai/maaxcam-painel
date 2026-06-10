@@ -106,9 +106,9 @@ export default function CameraSeguranca() {
     })
   }
 
-  if (loading) return <div className="min-h-screen bg-atmosphere text-slate-300 p-6">Carregando…</div>
+  if (loading) return <div className="min-h-screen text-slate-300 p-6">Carregando…</div>
   if (!data) return (
-    <div className="min-h-screen bg-atmosphere text-slate-300 p-6 space-y-2">
+    <div className="min-h-screen text-slate-300 p-6 space-y-2">
       <p className="text-red-400">{error || 'Não foi possível carregar.'}</p>
       <button onClick={() => navigate('/painel/cameras')} className="text-blue-400 underline">← Voltar</button>
     </div>
@@ -127,7 +127,7 @@ export default function CameraSeguranca() {
   const snapshotLink = isPrivate && firstToken ? `${snapshotBase}?key=${firstToken}` : snapshotBase
 
   return (
-    <div className="h-screen overflow-y-auto bg-atmosphere text-slate-200">
+    <div className="h-screen overflow-y-auto text-slate-200">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 space-y-6 relative z-10">
 
         <div className="flex items-start justify-between gap-4">
