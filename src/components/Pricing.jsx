@@ -8,41 +8,39 @@ function Check() {
 
 const plans = [
   {
-    name: "Essencial",
-    price: "49",
-    blurb: "Para começar a transmitir.",
+    name: "Básico",
+    price: "9,90",
+    blurb: "Coloque sua câmera no ar.",
     highlight: false,
     features: [
-      "Até 4 câmeras simultâneas",
-      "Transmissão ao YouTube",
-      "Áudio em loop contínuo",
-      "Player público para embed",
+      "Cria chave RTMP / inserção de câmeras IP",
+      "Gera chave HLS/M3U8",
+      "Configuração de chave pública ou privada",
     ],
   },
   {
-    name: "Profissional",
-    price: "129",
-    blurb: "O mais escolhido por quem opera grupos.",
+    name: "Pro",
+    price: "29,90",
+    blurb: "Transmita ao vivo no YouTube.",
     highlight: true,
     features: [
-      "Até 10 câmeras simultâneas",
-      "Grupos em rotação automática",
-      "Troca de áudio sem cortar o vídeo",
-      "Monitoramento com auto-restart",
-      "Suporte prioritário",
+      "Tudo do Básico",
+      "Código iframe para embed em site",
+      "Link de fotos JPG do vídeo",
+      "Retransmissão para o YouTube",
+      "Áudio personalizado no YouTube",
     ],
   },
   {
-    name: "Estúdio",
-    price: "299",
-    blurb: "Operação multi-canal em escala.",
+    name: "Premium",
+    price: "59,90",
+    blurb: "Grupos de câmeras em rotação.",
     highlight: false,
     features: [
-      "Múltiplos grupos e canais",
-      "Alertas no Telegram por canal",
-      "Métricas de transmissão",
-      "Onboarding dedicado",
+      "Tudo do Pro",
+      "Grupo de câmeras (até 5) para retransmissão no YouTube *",
     ],
+    note: "* Ao criar grupos de câmeras, as câmeras com transmissão solo no YouTube são interrompidas.",
   },
 ];
 
@@ -68,6 +66,7 @@ function PricingCard({ plan }) {
         <span className="font-display text-4xl font-bold tracking-tight text-white">{plan.price}</span>
         <span className="text-sm text-slate-400">/mês</span>
       </div>
+      <p className="mt-1 text-xs text-slate-500">por câmera</p>
 
       <button
         className={`mt-6 w-full rounded-md px-4 py-2.5 font-semibold transition-colors ${
@@ -87,6 +86,10 @@ function PricingCard({ plan }) {
           </li>
         ))}
       </ul>
+
+      {plan.note && (
+        <p className="mt-5 text-xs leading-relaxed text-slate-500">{plan.note}</p>
+      )}
     </div>
   );
 }
@@ -99,8 +102,8 @@ export default function Pricing() {
           Planos simples e diretos
         </h2>
         <p className="mt-4 text-slate-400">
-          Comece grátis e cresça conforme adiciona câmeras. Valores ilustrativos
-          para validar o layout — os planos finais serão definidos em breve.
+          Preços por câmera, cobrança mensal. Adicione quantas câmeras quiser e
+          pague só pelas que usar.
         </p>
       </div>
 
