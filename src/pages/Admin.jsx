@@ -4,6 +4,64 @@ import { api, ApiError } from '../lib/api'
 
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
 
+function healthBar(p) {
+  return p >= 90 ? 'bg-red-500' : p >= 70 ? 'bg-amber-500' : 'bg-emerald-500'
+}
+
+function SystemHealth() {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    async function tick() {
+      try {
+        const d = await api.get('/api/admin/system')
+        if (alive) { setData(d); setError('') }
+      } catch (e) {
+        if (alive) setError(e instanceof ApiError ? e.message : 'Erro inesperado.')
+      }
+    }
+    tick()
+    const id = setInterval(tick, 5000)
+    return () => { alive = false; clearInterval(id) }
+  }, [])
+
+  if (error) return <p className="mt-6 text-sm text-red-300">{error}</p>
+  if (!data) return <p className="mt-6 text-sm text-slate-400">Carregando saúde do servidor…</p>
+
+  const cpu = data.cpu || {}, mem = data.mem || {}, disk = data.disk || {}
+  const cards = [
+    { label: `CPU (${cpu.ncpu ?? '?'} vCPU)`, pct: cpu.pct ?? 0, detail: `carga ${cpu.load1 ?? 0} de ${cpu.ncpu ?? 0}` },
+    { label: 'Memória', pct: mem.pct ?? 0, detail: `${mem.used_mb ?? 0} de ${mem.total_mb ?? 0} MB` },
+    { label: 'Disco', pct: disk.pct ?? 0, detail: `${disk.used_gb ?? 0} de ${disk.total_gb ?? 0} GB` },
+  ]
+  const upDays = Math.floor((data.uptime_secs || 0) / 86400)
+  const upHours = Math.floor(((data.uptime_secs || 0) % 86400) / 3600)
+
+  return (
+    <div className="mt-6">
+      <p className="text-sm text-slate-400">Atualiza a cada 5 segundos.</p>
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+            <div className="text-xs uppercase tracking-wide text-slate-400">{c.label}</div>
+            <div className="mt-1 text-2xl font-bold text-white">{c.pct}%</div>
+            <div className="mt-0.5 text-xs text-slate-500">{c.detail}</div>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-700">
+              <div className={`h-full rounded-full ${healthBar(c.pct)}`} style={{ width: `${Math.min(c.pct, 100)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm">
+        <span className="text-slate-400">No ar há </span>
+        <span className="text-slate-200">{upDays} dias e {upHours} h sem reiniciar</span>
+      </div>
+    </div>
+  )
+}
+
 export default function Admin() {
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
@@ -100,7 +158,7 @@ export default function Admin() {
         {!loading && me?.is_admin && (
           <>
             <div className="mt-6 flex gap-6 border-b border-slate-700">
-              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário']].map(([key, label]) => (
+              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário'], ['health', 'Saúde']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)}
                   className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
                   {label}
@@ -108,7 +166,9 @@ export default function Admin() {
               ))}
             </div>
 
-            {tab === 'users' ? (
+            {tab === 'health' ? (
+  <SystemHealth />
+) : tab === 'users' ? (
               <div className="mt-6">
                 <p className="text-sm text-slate-400">{users.length} usuário(s) cadastrado(s).</p>
                 <div className="mt-4 space-y-3">
