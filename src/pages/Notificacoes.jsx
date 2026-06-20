@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 
-const DELAY_OPTIONS = [1, 3, 5, 10, 30]
+const DELAY_OPTIONS = [1, 3, 5, 10, 15, 30, 60]
+const DELAY2_OPTIONS = [0, 60, 120, 240, 480, 720]
+const delay2Label = (m) => (m === 0 ? 'Desligado' : m < 60 ? `${m} min` : `${m / 60} ${m / 60 === 1 ? 'hora' : 'horas'}`)
 
 const DEFAULTS = {
   enabled: true,
@@ -10,6 +12,7 @@ const DEFAULTS = {
   daily_summary: false,
   daily_time: '08:00',
   off_delay_minutes: 3,
+  off_delay_2_minutes: 0,
   quiet_hours_enabled: false,
   quiet_start: '22:00',
   quiet_end: '07:00',
@@ -61,6 +64,7 @@ export default function Notificacoes() {
           daily_summary: s.daily_summary,
           daily_time: s.daily_time,
           off_delay_minutes: Number(s.off_delay_minutes) || 0,
+          off_delay_2_minutes: Number(s.off_delay_2_minutes) || 0,
         }),
         api.put('/api/notifications/extra', {
           quiet_hours_enabled: s.quiet_hours_enabled,
@@ -260,8 +264,8 @@ export default function Notificacoes() {
             <section className="mt-3 divide-y divide-slate-700 rounded-xl border border-slate-700 bg-slate-800/60">
               <div className="flex flex-wrap items-center gap-4 px-5 py-4">
                 <div className="flex-1">
-                  <p className="font-medium text-white">Tempo mínimo entre alertas</p>
-                  <p className="text-sm text-slate-400">Evita spam de notificações quando a câmera oscila</p>
+                  <p className="font-medium text-white">Câmera offline — alertar após</p>
+                  <p className="text-sm text-slate-400">Só alerta se a câmera ficar offline por esse tempo (evita oscilação)</p>
                 </div>
                 <select
                   value={s.off_delay_minutes}
@@ -270,6 +274,22 @@ export default function Notificacoes() {
                 >
                   {DELAY_OPTIONS.map((m) => (
                     <option key={m} value={m}>{m} {m === 1 ? 'minuto' : 'minutos'}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 px-5 py-4">
+                <div className="flex-1">
+                  <p className="font-medium text-white">2º alerta se continuar offline</p>
+                  <p className="text-sm text-slate-400">Reenvia um aviso se a câmera seguir offline após esse tempo</p>
+                </div>
+                <select
+                  value={s.off_delay_2_minutes}
+                  onChange={(e) => set({ off_delay_2_minutes: Number(e.target.value) })}
+                  className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                >
+                  {DELAY2_OPTIONS.map((m) => (
+                    <option key={m} value={m}>{delay2Label(m)}</option>
                   ))}
                 </select>
               </div>
