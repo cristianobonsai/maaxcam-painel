@@ -39,6 +39,8 @@ export default function Painel() {
 
       {error && <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
 
+      <AtencaoBanner />
+
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi label="Câmeras" value={loading ? '…' : total} />
         <Kpi label="Ativas" value={loading ? '…' : ativas} />
@@ -126,6 +128,77 @@ export default function Painel() {
         </section>
       </div>
     </main>
+  )
+}
+
+function AtencaoBanner() {
+  const [mon, setMon] = useState(null)
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    let active = true
+    const fetchMon = async () => {
+      try { const d = await api.get('/api/monitoring?mine=1'); if (active) { setMon(Array.isArray(d) ? d : []); setReady(true) } }
+      catch { if (active) setReady(true) }
+    }
+    fetchMon()
+    const t = setInterval(fetchMon, 30000)
+    return () => { active = false; clearInterval(t) }
+  }, [])
+
+  if (!ready || !mon) return null
+
+  const problems = mon.filter((c) => c.status_geral && c.status_geral !== 'ok')
+  if (problems.length === 0) {
+    return (
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Tudo certo — todas as câmeras saudáveis.
+      </div>
+    )
+  }
+
+  const count = (s) => problems.filter((c) => c.status_geral === s).length
+  const chips = [
+    { n: count('fora_do_ar'), label: 'fora do ar', cls: 'bg-red-500/15 text-red-300' },
+    { n: count('instavel'), label: 'instáveis', cls: 'bg-red-500/15 text-red-300' },
+    { n: count('saida_off'), label: 'relay desligado', cls: 'bg-amber-500/15 text-amber-300' },
+    { n: count('ajustar'), label: 'precisam de ajuste', cls: 'bg-orange-500/15 text-orange-300' },
+  ].filter((x) => x.n > 0)
+
+  const reasonOf = (c) => {
+    if (c.status_geral === 'fora_do_ar') return 'Fora do ar'
+    if (c.status_geral === 'instavel') return `Instável (${c.drops_24h} quedas/24h)`
+    if (c.status_geral === 'saida_off') return 'Relay do YouTube desligado'
+    if (c.status_geral === 'ajustar') return c.ajustes_motivo || 'Precisa ajustar'
+    return ''
+  }
+  const dotOf = (c) => ((c.status_geral === 'ajustar' || c.status_geral === 'saida_off') ? 'bg-orange-400' : 'bg-red-400')
+
+  return (
+    <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="font-display text-base font-semibold text-amber-200">
+          {problems.length} {problems.length === 1 ? 'câmera precisa' : 'câmeras precisam'} de atenção
+        </span>
+        {chips.map((ch, i) => (
+          <span key={i} className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ch.cls}`}>{ch.n} {ch.label}</span>
+        ))}
+      </div>
+      <ul className="mt-3 divide-y divide-amber-500/15">
+        {problems.slice(0, 6).map((c) => (
+          <li key={c.camera_id} className="flex items-center justify-between gap-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotOf(c)}`} />
+              <span className="truncate text-sm text-white">{c.name || c.camera_id}</span>
+              <span className="truncate text-xs text-slate-400">— {reasonOf(c)}</span>
+            </div>
+            <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="shrink-0 text-xs font-semibold text-blue-300 hover:text-blue-200">Gerenciar</Link>
+          </li>
+        ))}
+      </ul>
+      {problems.length > 6 && (
+        <div className="mt-1 text-xs text-slate-400">e mais {problems.length - 6}… <Link to="/painel/cameras" className="text-blue-300 hover:text-blue-200">ver todas</Link></div>
+      )}
+    </div>
   )
 }
 
