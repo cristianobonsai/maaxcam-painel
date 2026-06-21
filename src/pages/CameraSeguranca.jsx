@@ -65,6 +65,92 @@ function LockedNote({ children }) {
   )
 }
 
+function StatusDot({ color }) {
+  const map = { green: 'bg-emerald-400', blue: 'bg-sky-400', yellow: 'bg-amber-400', orange: 'bg-orange-400', red: 'bg-red-400', gray: 'bg-slate-500' }
+  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${map[color] || 'bg-slate-500'}`} />
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-md bg-slate-900/60 border border-slate-700 px-3 py-2">
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-base font-semibold text-white">{value ?? '—'}</div>
+    </div>
+  )
+}
+
+function MonitorPanel({ id }) {
+  const [mon, setMon] = useState(null)
+  const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(true)
+  const fetchMon = useCallback(async () => {
+    try { setErr(''); setMon(await api.get(`/api/cameras/${id}/monitoring`)) }
+    catch (e) { setErr(msg(e)) }
+    finally { setLoading(false) }
+  }, [id])
+  useEffect(() => { fetchMon(); const t = setInterval(fetchMon, 20000); return () => clearInterval(t) }, [fetchMon])
+
+  if (loading) return <p className="text-sm text-slate-400">Carregando monitoramento…</p>
+  if (err) return <p className="text-sm text-red-400">{err}</p>
+  if (!mon) return null
+
+  const tipoLabel = { hls: 'HLS direto', youtube: 'YouTube', grupo: 'Grupo' }[mon.tipo] || mon.tipo
+  const conexao = mon.conexao === 'conectada' ? { c: 'green', t: 'Conectada' } : { c: 'red', t: 'Sem sinal' }
+  const estab = mon.estabilidade === 'instavel'
+    ? { c: 'red', t: `Instável (${mon.drops_24h} quedas/24h)` }
+    : { c: 'green', t: `Estável (${mon.drops_24h} quedas/24h)` }
+  const saidaMap = {
+    no_ar: { c: 'green', t: 'No ar (YouTube)' },
+    publicando: { c: 'green', t: 'Publicando (HLS)' },
+    no_grupo: { c: 'green', t: 'No grupo' },
+    desligado: { c: 'yellow', t: 'Relay desligado' },
+    '—': { c: 'gray', t: '—' },
+  }
+  const saida = saidaMap[mon.saida] || { c: 'gray', t: mon.saida }
+  const ajustes = mon.ajustes === 'ajustar' ? { c: 'orange', t: 'Precisa ajustar' } : { c: 'green', t: 'OK' }
+
+  const Row = ({ label, dot, text }) => (
+    <div className="flex items-center justify-between gap-3 rounded-md bg-slate-900/60 px-3 py-2.5">
+      <span className="text-sm text-slate-400">{label}</span>
+      <span className="flex items-center gap-2 text-sm font-medium text-white"><StatusDot color={dot} />{text}</span>
+    </div>
+  )
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      <Card title="Estado da câmera" icon="M22 12h-4l-3 9L9 3l-3 9H2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-slate-400">Tipo / saída</span>
+          <span className="rounded-full bg-slate-700 px-3 py-1 text-xs font-medium text-slate-200">{tipoLabel}</span>
+        </div>
+        <div className="space-y-2">
+          <Row label="Conexão com o servidor" dot={conexao.c} text={conexao.t} />
+          <Row label="Estabilidade (24h)" dot={estab.c} text={estab.t} />
+          <Row label="Saída" dot={saida.c} text={saida.t} />
+          <Row label="Ajustes (configuração)" dot={ajustes.c} text={ajustes.t} />
+        </div>
+        {mon.ajustes === 'ajustar' && mon.ajustes_motivo && (
+          <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
+            <strong>Precisa ajustar:</strong> {mon.ajustes_motivo}. Diminua o I-Frame/GOP da câmera (ideal ~2s) e, se necessário, ajuste o bitrate.
+          </div>
+        )}
+      </Card>
+
+      <Card title="Números da transmissão" icon="M3 3v18h18M7 14l3-3 4 4 5-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <Metric label="Resolução" value={mon.resolucao} />
+          <Metric label="FPS" value={mon.fps} />
+          <Metric label="Bitrate" value={mon.bitrate_kbps ? `${mon.bitrate_kbps} Kbps` : null} />
+          <Metric label="Keyframe" value={mon.keyframe_s ? `${mon.keyframe_s}s` : null} />
+          <Metric label="Quedas (24h)" value={mon.drops_24h} />
+          <Metric label="Codec" value={mon.codec} />
+        </div>
+        <p className="text-xs text-slate-500">Atualiza sozinho a cada 20s. Resolução/FPS lidos da câmera; bitrate e keyframe medidos no servidor.</p>
+      </Card>
+    </div>
+  )
+}
+
 export default function CameraSeguranca() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -171,7 +257,7 @@ export default function CameraSeguranca() {
         {error && <div className="rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-sm px-3 py-2">{error}</div>}
 
         <div className="flex gap-6 border-b border-slate-700">
-          {[['edit', 'Editar'], ['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização']].map(([key, label]) => (
+          {[['edit', 'Editar'], ['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização'], ['monitor', 'Monitoramento']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
               {label}
@@ -415,6 +501,8 @@ export default function CameraSeguranca() {
               </div>
             )}
           </div>
+        ) : tab === 'monitor' ? (
+          <MonitorPanel id={id} />
         ) : (
           <LocationEditor cameraId={id} />
         )}
