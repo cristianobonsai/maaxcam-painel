@@ -72,12 +72,15 @@ export default function CameraSeguranca() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState('stream')
+  const [tab, setTab] = useState('edit')
   const [newDomain, setNewDomain] = useState('')
   const [newCidr, setNewCidr] = useState('')
   const [newCidrLabel, setNewCidrLabel] = useState('')
   const [newTokenLabel, setNewTokenLabel] = useState('')
   const [ytKey, setYtKey] = useState('')
+  const [edit, setEdit] = useState(null)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
@@ -92,6 +95,28 @@ export default function CameraSeguranca() {
 
   useEffect(() => { load() }, [load])
   useEffect(() => { if (data) setYtKey(data.youtube_key || '') }, [data])
+
+  useEffect(() => {
+    let alive = true
+    api.get('/api/cameras?mine=1')
+      .then((all) => {
+        const list = Array.isArray(all) ? all : (all?.cameras ?? [])
+        const c = list.find((x) => x.camera_id === id)
+        if (alive && c) setEdit({ name: c.name || '', brand: c.brand || '', cloud: c.cloud || '', project: c.project || '', enabled: !!c.enabled })
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [id])
+
+  async function saveEdit() {
+    if (!edit || !edit.name.trim()) { setEditError('O nome é obrigatório.'); return }
+    setEditSaving(true); setEditError('')
+    try {
+      await api.put(`/api/cameras/${id}`, { name: edit.name.trim(), brand: edit.brand.trim(), cloud: edit.cloud.trim(), project: edit.project.trim(), enabled: edit.enabled })
+      await load()
+    } catch (e) { setEditError(msg(e)) }
+    finally { setEditSaving(false) }
+  }
 
   const run = async (fn) => { setBusy(true); setError(''); try { await fn(); await load() } catch (e) { setError(msg(e)) } finally { setBusy(false) } }
 
@@ -146,7 +171,7 @@ export default function CameraSeguranca() {
         {error && <div className="rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-sm px-3 py-2">{error}</div>}
 
         <div className="flex gap-6 border-b border-slate-700">
-          {[['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização']].map(([key, label]) => (
+          {[['edit', 'Editar'], ['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
               {label}
@@ -154,7 +179,50 @@ export default function CameraSeguranca() {
           ))}
         </div>
 
-        {tab === 'stream' ? (
+        {tab === 'edit' ? (
+          <div className="max-w-2xl">
+            <Card title="Dados da câmera" icon="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z">
+              {!edit ? (
+                <p className="text-sm text-slate-400">Carregando…</p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Nome *</div>
+                    <input value={edit.name} onChange={(e) => setEdit((p) => ({ ...p, name: e.target.value }))} placeholder="Ex.: Portão da frente"
+                      className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Marca <span className="lowercase text-slate-500">(opcional)</span></div>
+                    <input value={edit.brand} onChange={(e) => setEdit((p) => ({ ...p, brand: e.target.value }))} placeholder="Ex.: Intelbras, Hikvision"
+                      className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Cloud <span className="lowercase text-slate-500">(opcional)</span></div>
+                    <input value={edit.cloud} onChange={(e) => setEdit((p) => ({ ...p, cloud: e.target.value }))} placeholder="Ex.: iCSee, Tuya, própria"
+                      className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Projeto/Cliente <span className="lowercase text-slate-500">(opcional)</span></div>
+                    <input value={edit.project} onChange={(e) => setEdit((p) => ({ ...p, project: e.target.value }))} placeholder="Ex.: Condomínio X"
+                      className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={edit.enabled} onChange={(e) => setEdit((p) => ({ ...p, enabled: e.target.checked }))} className="size-4" />
+                    <span className="text-sm text-slate-300">Câmera ativa</span>
+                  </label>
+                  {editError && <p className="text-sm text-red-400">{editError}</p>}
+                  <div>
+                    <button disabled={editSaving} onClick={saveEdit}
+                      className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm text-white">
+                      {editSaving ? 'Salvando…' : 'Salvar'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500">A localização fica na aba <strong>Localização</strong> e a chave do YouTube na aba <strong>Transmissão</strong>.</p>
+                </div>
+              )}
+            </Card>
+          </div>
+        ) : tab === 'stream' ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-5 items-start">
 
             <div className="space-y-5">
