@@ -156,6 +156,9 @@ export default function Cameras() {
                 <input value={form.project} onChange={(e) => setField('project', e.target.value)} className={inputCls} placeholder="Ex.: Condomínio X" />
               </label>
             </div>
+            <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
+              🔊 <strong>Áudio:</strong> configure a câmera em <strong>G.711A</strong>. Evite <strong>AAC</strong> — pode causar atraso na abertura do vídeo.
+            </div>
             {formError && <p className="mt-3 text-sm text-red-400">{formError}</p>}
             <div className="mt-4 flex gap-2">
               <button onClick={handleSubmit} disabled={submitting} className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50">
@@ -177,6 +180,9 @@ export default function Cameras() {
               <Row label="RTMP" value={created.rtmp_url} />
               <Row label="HLS" value={created.hls_url} />
             </dl>
+            <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
+              🔊 <strong>Áudio:</strong> configure a câmera em <strong>G.711A</strong>. Evite <strong>AAC</strong> — pode causar atraso na abertura do vídeo.
+            </div>
             <button onClick={() => setCreated(null)} className="mt-4 rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-slate-500">Fechar</button>
           </div>
         )}

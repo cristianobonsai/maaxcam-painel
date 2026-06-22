@@ -321,6 +321,9 @@ export default function CameraSeguranca() {
 
               <Card title="Transmissão (RTMP)" icon="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12">
                 <Field label="URL RTMP" value={data.rtmp_url} hint="Cole isto na sua câmera IP (campo de servidor/URL RTMP) para começar a transmitir." />
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
+                  🔊 <strong>Áudio:</strong> configure a câmera em <strong>G.711A</strong>. Evite <strong>AAC</strong> — pode causar atraso na abertura do vídeo.
+                </div>
               </Card>
 
               <Card title="Link da foto (time-lapse)" icon="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10">
