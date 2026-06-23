@@ -5,3 +5,4 @@ dist.bak*/
 patch_painel.py
 *.local
 .DS_Store
+package-lock.json
