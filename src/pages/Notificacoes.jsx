@@ -13,6 +13,8 @@ const DEFAULTS = {
   daily_time: '08:00',
   off_delay_minutes: 3,
   off_delay_2_minutes: 0,
+  email_enabled: false,
+  email_to: '',
   quiet_hours_enabled: false,
   quiet_start: '22:00',
   quiet_end: '07:00',
@@ -65,6 +67,8 @@ export default function Notificacoes() {
           daily_time: s.daily_time,
           off_delay_minutes: Number(s.off_delay_minutes) || 0,
           off_delay_2_minutes: Number(s.off_delay_2_minutes) || 0,
+          email_enabled: s.email_enabled,
+          email_to: s.email_to,
         }),
         api.put('/api/notifications/extra', {
           quiet_hours_enabled: s.quiet_hours_enabled,
@@ -229,6 +233,38 @@ export default function Notificacoes() {
                       Já conectei — atualizar
                     </button>
                   </div>
+                </div>
+              )}
+            </section>
+
+            <section className="mt-6 rounded-xl border border-slate-700 bg-slate-800/60 p-5">
+              <div className="mb-3.5 flex items-center justify-between">
+                <span className="flex items-center gap-2.5 font-display text-lg font-semibold text-white">
+                  <Icon path="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2 8 6 8-6" className="h-6 w-6 text-[#2E7BF6]" />
+                  E-mail
+                </span>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${s.email_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700 text-slate-400'}`}>
+                  <span className={`h-2 w-2 rounded-full ${s.email_enabled ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                  {s.email_enabled ? 'Ativado' : 'Desativado'}
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="font-medium text-white">Receber alertas por e-mail</p>
+                  <p className="text-sm text-slate-400">Avisa por e-mail quando uma câmera ficar fora do ar (e quando voltar).</p>
+                </div>
+                <Toggle checked={s.email_enabled} onChange={(v) => set({ email_enabled: v })} />
+              </div>
+              {s.email_enabled && (
+                <div className="mt-4">
+                  <label className="mb-1.5 block text-sm text-slate-400">E-mail de destino <span className="text-slate-600">(opcional)</span></label>
+                  <input
+                    type="email"
+                    value={s.email_to}
+                    onChange={(e) => set({ email_to: e.target.value })}
+                    placeholder="deixe vazio para usar o e-mail da sua conta"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
                 </div>
               )}
             </section>
