@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 
-const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '' }
+const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '', qualityTier: '1080p' }
 
 export default function Cameras() {
   const [cameras, setCameras] = useState([])
@@ -51,6 +51,7 @@ export default function Cameras() {
         brand: form.brand.trim(),
         cloud: form.cloud.trim(),
         project: form.project.trim(),
+        quality_tier: form.qualityTier || '1080p',
       }
       if (form.streamKey.trim()) body.stream_key = form.streamKey.trim()
       setCreated(await api.post('/api/cameras', body))
@@ -154,6 +155,17 @@ export default function Cameras() {
               <label className="block">
                 <span className="mb-1 block text-sm text-slate-400">Projeto/Cliente <span className="text-slate-600">(opcional)</span></span>
                 <input value={form.project} onChange={(e) => setField('project', e.target.value)} className={inputCls} placeholder="Ex.: Condomínio X" />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-sm text-slate-400">Qualidade contratada</span>
+                <select value={form.qualityTier} onChange={(e) => setField('qualityTier', e.target.value)} className={inputCls}>
+                  <option value="1080p">1080p ou inferior (15 fps)</option>
+                  <option value="2k">2K / QHD (30 fps)</option>
+                  <option value="4k">4K / UHD (30 fps)</option>
+                </select>
+                <span className="mt-1.5 block text-xs text-amber-300/90">
+                  Qualidades acima de 1080p têm custo adicional. Sua câmera é monitorada: se enviar acima do contratado, você será avisado para ajustar ou fazer upgrade.
+                </span>
               </label>
             </div>
             <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
