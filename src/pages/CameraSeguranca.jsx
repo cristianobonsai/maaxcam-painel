@@ -184,11 +184,9 @@ export default function CameraSeguranca() {
 
   useEffect(() => {
     let alive = true
-    api.get('/api/cameras?mine=1')
-      .then((all) => {
-        const list = Array.isArray(all) ? all : (all?.cameras ?? [])
-        const c = list.find((x) => x.camera_id === id)
-        if (alive && c) setEdit({ name: c.name || '', brand: c.brand || '', cloud: c.cloud || '', project: c.project || '', enabled: !!c.enabled })
+    api.get(`/api/cameras/${id}`)
+      .then((c) => {
+        if (alive && c) setEdit({ name: c.name || '', brand: c.brand || '', cloud: c.cloud || '', project: c.project || '', enabled: !!c.enabled, quality_tier: c.quality_tier || '1080p' })
       })
       .catch(() => {})
     return () => { alive = false }
@@ -198,7 +196,7 @@ export default function CameraSeguranca() {
     if (!edit || !edit.name.trim()) { setEditError('O nome é obrigatório.'); return }
     setEditSaving(true); setEditError('')
     try {
-      await api.put(`/api/cameras/${id}`, { name: edit.name.trim(), brand: edit.brand.trim(), cloud: edit.cloud.trim(), project: edit.project.trim(), enabled: edit.enabled })
+      await api.put(`/api/cameras/${id}`, { name: edit.name.trim(), brand: edit.brand.trim(), cloud: edit.cloud.trim(), project: edit.project.trim(), enabled: edit.enabled, quality_tier: edit.quality_tier })
       await load()
     } catch (e) { setEditError(msg(e)) }
     finally { setEditSaving(false) }
@@ -291,6 +289,16 @@ export default function CameraSeguranca() {
                     <div className="text-xs uppercase tracking-wide text-slate-400">Projeto/Cliente <span className="lowercase text-slate-500">(opcional)</span></div>
                     <input value={edit.project} onChange={(e) => setEdit((p) => ({ ...p, project: e.target.value }))} placeholder="Ex.: Condomínio X"
                       className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Qualidade contratada</div>
+                    <select value={edit.quality_tier} onChange={(e) => setEdit((p) => ({ ...p, quality_tier: e.target.value }))}
+                      className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                      <option value="1080p">1080p ou inferior (15 fps)</option>
+                      <option value="2k">2K / QHD (30 fps)</option>
+                      <option value="4k">4K / UHD (30 fps)</option>
+                    </select>
+                    <p className="text-xs text-amber-300/90">Qualidades acima de 1080p têm custo adicional. Cobramos pelo que sua câmera realmente envia: se houver diferença entre o contratado e o enviado, você será avisado para ajustar.</p>
                   </div>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" checked={edit.enabled} onChange={(e) => setEdit((p) => ({ ...p, enabled: e.target.checked }))} className="size-4" />
