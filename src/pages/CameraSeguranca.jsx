@@ -380,7 +380,14 @@ export default function CameraSeguranca() {
                         className="rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Iniciar</button>
                       <button disabled={busy || !data.relay_running} onClick={() => run(() => api.post(`/api/cameras/${id}/relay/stop`))}
                         className="rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Parar</button>
+                      <button disabled={busy || !data.relay_running} onClick={() => run(() => api.post(`/api/cameras/${id}/relay/restart`))}
+                        className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Reiniciar</button>
                     </div>
+                  )}
+                  {!data.in_active_group && data.relay_running && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Fez mudanças na câmera (áudio, qualidade)? Clique em <strong className="text-slate-400">Reiniciar</strong> para aplicá-las na transmissão do YouTube. A transmissão fica fora do ar por cerca de 15 segundos.
+                    </p>
                   )}
                   {!data.in_active_group && !data.youtube_key && <p className="text-xs text-slate-500">Defina e salve a URL do YouTube acima para poder iniciar.</p>}
                 </>)}
