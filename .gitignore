@@ -2,7 +2,7 @@ node_modules/
 dist/
 dist.bak*/
 *.bak.*
-patch_painel.py
+patch_*.py
 *.local
 .DS_Store
 package-lock.json
