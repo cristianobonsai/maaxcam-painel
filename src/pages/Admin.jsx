@@ -11,7 +11,6 @@ function healthBar(p) {
 function SystemHealth() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
-
   useEffect(() => {
     let alive = true
     async function tick() {
@@ -26,23 +25,27 @@ function SystemHealth() {
     const id = setInterval(tick, 5000)
     return () => { alive = false; clearInterval(id) }
   }, [])
-
   if (error) return <p className="mt-6 text-sm text-red-300">{error}</p>
   if (!data) return <p className="mt-6 text-sm text-slate-400">Carregando saúde do servidor…</p>
-
   const cpu = data.cpu || {}, mem = data.mem || {}, disk = data.disk || {}
+  const net = data.net || {}, viewers = data.viewers || {}, cap = data.capacity || {}
   const cards = [
     { label: `CPU (${cpu.ncpu ?? '?'} vCPU)`, pct: cpu.pct ?? 0, detail: `carga ${cpu.load1 ?? 0} de ${cpu.ncpu ?? 0}` },
     { label: 'Memória', pct: mem.pct ?? 0, detail: `${mem.used_mb ?? 0} de ${mem.total_mb ?? 0} MB` },
     { label: 'Disco', pct: disk.pct ?? 0, detail: `${disk.used_gb ?? 0} de ${disk.total_gb ?? 0} GB` },
+    { label: 'Banda (upload)', pct: net.pct ?? 0, detail: `${net.tx_mbps ?? 0} de ${net.cap_mbps ?? 1000} Mbps` },
   ]
   const upDays = Math.floor((data.uptime_secs || 0) / 86400)
   const upHours = Math.floor(((data.uptime_secs || 0) % 86400) / 3600)
-
+  const maxView = cap.viewers_max_estimado ?? 0
+  const restView = cap.viewers_restantes ?? 0
+  const usadoView = Math.max(maxView - restView, 0)
+  const pctView = maxView > 0 ? Math.round((usadoView / maxView) * 100) : 0
+  const topCams = Array.isArray(viewers.por_camera) ? viewers.por_camera : []
   return (
     <div className="mt-6">
       <p className="text-sm text-slate-400">Atualiza a cada 5 segundos.</p>
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
             <div className="text-xs uppercase tracking-wide text-slate-400">{c.label}</div>
@@ -54,6 +57,38 @@ function SystemHealth() {
           </div>
         ))}
       </div>
+
+      {/* Capacidade de espectadores */}
+      <div className="mt-3 rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+        <div className="flex items-baseline justify-between">
+          <div className="text-xs uppercase tracking-wide text-slate-400">Capacidade de espectadores</div>
+          <div className="text-xs text-slate-500">~{cap.mbps_por_espectador ?? '?'} Mbps por espectador</div>
+        </div>
+        <div className="mt-1 flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-white">{restView}</span>
+          <span className="text-sm text-slate-400">livres de ~{maxView} simultâneos</span>
+        </div>
+        <div className="mt-0.5 text-xs text-slate-500">
+          pico de hoje: {viewers.hoje_pico_total ?? 0} espectador(es) · estimativa baseada na banda de {net.cap_mbps ?? 1000} Mbps
+        </div>
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-700">
+          <div className={`h-full rounded-full ${healthBar(pctView)}`} style={{ width: `${Math.min(pctView, 100)}%` }} />
+        </div>
+        {topCams.length > 0 && (
+          <div className="mt-3 border-t border-slate-700 pt-3">
+            <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">Mais assistidas hoje (pico)</div>
+            <ul className="space-y-1">
+              {topCams.map((c) => (
+                <li key={c.camera_id} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-300 truncate pr-2">{c.name || c.camera_id}</span>
+                  <span className="text-slate-400 tabular-nums">{c.pico}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <div className="mt-3 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm">
         <span className="text-slate-400">No ar há </span>
         <span className="text-slate-200">{upDays} dias e {upHours} h sem reiniciar</span>
@@ -61,7 +96,6 @@ function SystemHealth() {
     </div>
   )
 }
-
 export default function Admin() {
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
