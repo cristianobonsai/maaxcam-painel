@@ -41,13 +41,16 @@ export default function Grupos() {
   const [addError, setAddError] = useState('')
   const [durEdits, setDurEdits] = useState({})
 
+  // Admin sempre pode. Cliente comum precisa do plano Premium (can_use_groups vindo do /api/me).
+  const canAccessGroups = !!(me?.is_admin || me?.can_use_groups)
+
   async function load() {
     setLoading(true)
     setError('')
     try {
       const meData = await api.get('/api/me')
       setMe(meData)
-      if (meData?.is_admin) {
+      if (meData?.is_admin || meData?.can_use_groups) {
         const [g, cams] = await Promise.all([api.get('/api/groups'), api.get('/api/cameras')])
         setGroups(Array.isArray(g) ? g : [])
         setCameras(Array.isArray(cams) ? cams : (cams?.cameras ?? []))
@@ -237,11 +240,11 @@ export default function Grupos() {
           <div>
             <h1 className="font-display text-2xl font-bold text-white">Grupos</h1>
             <p className="mt-1 text-sm text-slate-400">
-              Rotação de várias câmeras numa transmissão única no YouTube{me?.is_admin ? ` · ${groups.length} grupo(s)` : ''}.
+              Rotação de várias câmeras numa transmissão única no YouTube{canAccessGroups ? ` · ${groups.length} grupo(s)` : ''}.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {!loading && me?.is_admin && editing === null && (
+            {!loading && canAccessGroups && editing === null && (
               <button onClick={openNew}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">
                 <Icon path="M12 5v14M5 12h14" className="h-4 w-4" /> Novo grupo
@@ -251,10 +254,23 @@ export default function Grupos() {
         </div>
 
         {loading && <p className="mt-8 text-slate-300">Carregando…</p>}
-        {!loading && me && !me.is_admin && <p className="mt-8 text-red-300">Acesso restrito a administradores.</p>}
+
+        {!loading && me && !canAccessGroups && (
+          <div className="mt-8 rounded-xl border border-blue-500/40 bg-slate-800/60 p-6 text-center">
+            <h2 className="font-display text-lg font-semibold text-white">Grupos é um recurso Premium</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+              Com o plano Premium você pode reunir várias câmeras numa única transmissão no YouTube, com rotação automática entre elas.
+            </p>
+            <button onClick={() => navigate('/suporte')}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">
+              Fale conosco para upgrade
+            </button>
+          </div>
+        )}
+
         {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
-        {!loading && me?.is_admin && (
+        {!loading && canAccessGroups && (
           <>
             {editing !== null && (
               <div className="mt-6 rounded-xl border border-blue-500/60 bg-slate-800/80 p-4">
