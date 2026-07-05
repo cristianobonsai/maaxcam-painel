@@ -32,6 +32,7 @@ export default function Grupos() {
   const [busy, setBusy] = useState(false)
 
   const [editing, setEditing] = useState(null) // null | 'new' | id
+  const [managingId, setManagingId] = useState(null) // null = lista simples | id = detalhe do grupo
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
@@ -73,10 +74,23 @@ export default function Grupos() {
 
   async function save() {
     if (!form.name.trim()) { setFormError('O nome é obrigatório.'); return }
+    const ytKey = form.youtube_key.trim()
+    if (ytKey) {
+      const rtmpCount = (ytKey.match(/rtmp:\/\//g) || []).length
+      if (rtmpCount > 1) {
+        setFormError('A chave do YouTube parece estar duplicada (endereço "rtmp://" aparece mais de uma vez). Confira se colou o texto duas vezes.')
+        return
+      }
+      const afterLive2 = ytKey.split('/live2/')[1] || ''
+      if (ytKey.includes('/live2/') && afterLive2.trim().length < 10) {
+        setFormError('A chave do YouTube parece incompleta — falta o código de transmissão depois de "/live2/" (ex.: xxxx-xxxx-xxxx-xxxx-xxxx).')
+        return
+      }
+    }
     setSaving(true); setFormError('')
     try {
       const body = { name: form.name.trim(), transition_seconds: Number(form.transition_seconds) || 5 }
-      if (form.youtube_key.trim()) body.youtube_key = form.youtube_key.trim()
+      if (ytKey) body.youtube_key = ytKey
       if (editing === 'new') {
         await api.post('/api/groups', body)
       } else {
@@ -316,8 +330,41 @@ export default function Grupos() {
               </div>
             )}
 
-            <div className="mt-6 space-y-4">
-              {groups.map((g) => {
+            {managingId === null && (
+              <div className="mt-6 space-y-2">
+                {groups.map((g) => (
+                  <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-display text-base font-semibold text-white">{g.name || '(sem nome)'}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {g.relay_active ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />No ar</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-600/40 px-2.5 py-0.5 text-xs font-medium text-slate-300"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Parado</span>
+                        )}
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>
+                          {g.enabled ? 'Habilitado' : 'Desabilitado'}
+                        </span>
+                        <span className="text-xs text-slate-400">{(g.cameras?.length ?? 0)} câmera(s)</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setManagingId(g.id)}
+                      className="shrink-0 rounded-lg border border-slate-600 px-4 py-1.5 text-sm text-slate-300 hover:border-blue-500">
+                      Gerenciar
+                    </button>
+                  </div>
+                ))}
+                {groups.length === 0 && !error && editing === null && <p className="text-slate-400">Nenhum grupo cadastrado.</p>}
+              </div>
+            )}
+
+            {managingId !== null && (
+              <div className="mt-6 space-y-4">
+                <button onClick={() => setManagingId(null)}
+                  className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
+                  <Icon path="M15 18l-6-6 6-6" className="h-4 w-4" /> Voltar para a lista de grupos
+                </button>
+                {groups.filter((g) => g.id === managingId).map((g) => {
                 const cams = g.cameras || []
                 const used = new Set(cams.map((c) => c.camera_id))
                 const available = cameras.filter((c) => !used.has(c.camera_id))
@@ -468,8 +515,8 @@ export default function Grupos() {
                   </div>
                 )
               })}
-              {groups.length === 0 && !error && editing === null && <p className="text-slate-400">Nenhum grupo cadastrado.</p>}
-            </div>
+              </div>
+            )}
           </>
         )}
       </main>

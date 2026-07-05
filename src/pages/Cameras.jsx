@@ -9,6 +9,7 @@ export default function Cameras() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('todas')
 
   const [mode, setMode] = useState(null)
   const [form, setForm] = useState(EMPTY)
@@ -116,7 +117,33 @@ export default function Cameras() {
       if (!q) return true
       return [c.name, c.camera_id, c.location, c.brand, c.cloud, c.project].some((v) => (v || '').toLowerCase().includes(q))
     })
+    .filter((c) => {
+      if (statusFilter === 'todas') return true
+      if (statusFilter === 'no_ar') return !!c.is_streaming
+      if (statusFilter === 'ativa') return !!c.enabled
+      if (statusFilter === 'inativa') return !c.enabled
+      if (statusFilter === 'youtube') return !!c.youtube_relay_active
+      return true
+    })
     .sort((a, b) => (a.name || a.camera_id).localeCompare(b.name || b.camera_id, 'pt', { sensitivity: 'base' }))
+
+  const planCounts = cameras.reduce((acc, c) => {
+    const p = c.plan || 'basico'
+    acc[p] = (acc[p] || 0) + 1
+    return acc
+  }, {})
+  const planLabels = { basico: 'Básico', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
+  const planSummary = Object.entries(planCounts)
+    .map(([p, n]) => `${planLabels[p] || p}: ${n}`)
+    .join(' · ')
+
+  const statusFilters = [
+    { key: 'todas', label: 'Todas' },
+    { key: 'no_ar', label: 'No ar' },
+    { key: 'ativa', label: 'Ativa' },
+    { key: 'inativa', label: 'Inativa' },
+    { key: 'youtube', label: 'YouTube' },
+  ]
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -205,6 +232,26 @@ export default function Cameras() {
 
         {!loading && !error && cameras.length > 0 && (
           <>
+            {planSummary && (
+              <p className="mb-3 text-sm text-slate-400">{planSummary}</p>
+            )}
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              {statusFilters.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    statusFilter === f.key
+                      ? 'bg-blue-500 text-white'
+                      : 'border border-slate-700 text-slate-300 hover:border-blue-500'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
             <div className="mb-4 max-w-md">
               <input
                 value={query}
@@ -228,6 +275,11 @@ export default function Cameras() {
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${c.enabled ? 'bg-emerald-900 text-emerald-300' : 'bg-slate-800 text-slate-400'}`}>
                           {c.enabled ? 'Ativa' : 'Inativa'}
                         </span>
+                        {c.group_name && (
+                          <span className="rounded-full bg-indigo-900 px-2 py-0.5 text-xs font-medium text-indigo-300">
+                            Grupo: {c.group_name}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
                         {c.camera_id}{c.location ? ` · ${c.location}` : ''}{c.project ? ` · ${c.project}` : ''}
