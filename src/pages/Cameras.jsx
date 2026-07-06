@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 
-const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '', qualityTier: '1080p' }
+const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '', qualityTier: '1080p', plan: 'basico' }
 
 export default function Cameras() {
   const [cameras, setCameras] = useState([])
@@ -20,6 +20,7 @@ export default function Cameras() {
 
   const [deleting, setDeleting] = useState(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
+  const [planBusy, setPlanBusy] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -53,6 +54,7 @@ export default function Cameras() {
         cloud: form.cloud.trim(),
         project: form.project.trim(),
         quality_tier: form.qualityTier || '1080p',
+        plan: form.plan || 'basico',
       }
       if (form.streamKey.trim()) body.stream_key = form.streamKey.trim()
       setCreated(await api.post('/api/cameras', body))
@@ -106,6 +108,18 @@ export default function Cameras() {
       alert(e instanceof ApiError ? e.message : 'Erro ao parar relay.')
     } finally {
       setRelayBusy(null)
+    }
+  }
+
+  async function handlePlanChange(c, novoPlan) {
+    setPlanBusy(c.camera_id)
+    try {
+      await api.put(`/api/cameras/${c.camera_id}`, { plan: novoPlan })
+      await load()
+    } catch (e) {
+      alert(e instanceof ApiError ? e.message : 'Erro ao mudar plano.')
+    } finally {
+      setPlanBusy(null)
     }
   }
 
@@ -166,6 +180,14 @@ export default function Cameras() {
               <label className="block">
                 <span className="mb-1 block text-sm text-slate-400">Nome *</span>
                 <input value={form.name} onChange={(e) => setField('name', e.target.value)} className={inputCls} placeholder="Ex.: Portão da frente" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-sm text-slate-400">Plano desta câmera *</span>
+                <select value={form.plan} onChange={(e) => setField('plan', e.target.value)} className={inputCls}>
+                  <option value="basico">Básico — R$9,90/mês</option>
+                  <option value="pro">Pro — R$29,90/mês</option>
+                  <option value="premium">Premium — R$29,90/mês (permite Grupos)</option>
+                </select>
               </label>
               <label className="block">
                 <span className="mb-1 block text-sm text-slate-400">Stream key <span className="text-slate-600">(opcional — vazio = gerado automaticamente)</span></span>
@@ -280,6 +302,17 @@ export default function Cameras() {
                             Grupo: {c.group_name}
                           </span>
                         )}
+                        <select
+                          value={c.plan || 'basico'}
+                          disabled={planBusy === c.camera_id}
+                          onChange={(e) => handlePlanChange(c, e.target.value)}
+                          className="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-200 outline-none hover:border-blue-500 disabled:opacity-50"
+                        >
+                          <option value="basico">Básico</option>
+                          <option value="pro">Pro</option>
+                          <option value="premium">Premium</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
                         {c.camera_id}{c.location ? ` · ${c.location}` : ''}{c.project ? ` · ${c.project}` : ''}
