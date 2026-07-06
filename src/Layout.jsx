@@ -23,25 +23,19 @@ const ICONS = {
   menu: 'M3 6h18M3 12h18M3 18h18',
   close: 'M18 6 6 18M6 6l12 12',
   logs: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-7 6h6m-6 4h6',
+  faturamento: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
 }
 
 export default function Layout() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
-  const [canUseGroups, setCanUseGroups] = useState(false)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     let active = true
     ;(async () => {
-      try {
-        const me = await api.get('/api/me')
-        if (active) {
-          setIsAdmin(!!me?.is_admin)
-          setCanUseGroups(!!me?.can_use_groups)
-        }
-      } catch { /* silencioso */ }
+      try { const me = await api.get('/api/me'); if (active) setIsAdmin(!!me?.is_admin) } catch { /* silencioso */ }
     })()
     return () => { active = false }
   }, [])
@@ -56,10 +50,9 @@ export default function Layout() {
     { to: '/painel/cameras', label: 'Câmeras', icon: ICONS.cameras },
     { to: '/painel/mapa', label: 'Mapa', icon: ICONS.map },
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
-    ...((isAdmin || canUseGroups) ? [
-      { to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos },
-    ] : []),
+    { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },
     ...(isAdmin ? [
+      { to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos },
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },
       { to: '/painel/logs', label: 'Logs', icon: ICONS.logs },
     ] : []),

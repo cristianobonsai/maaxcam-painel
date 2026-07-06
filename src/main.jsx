@@ -14,6 +14,7 @@ import CameraSeguranca from './pages/CameraSeguranca.jsx'
 import Layout from './Layout.jsx'
 import Mapa from './pages/Mapa.jsx'
 import Logs from './pages/Logs.jsx'
+import Faturamento from './pages/Faturamento.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/painel/grupos" element={<Grupos />} />
             <Route path="/painel/notificacoes" element={<Notificacoes />} />
             <Route path="/painel/logs" element={<Logs />} />
+            <Route path="/painel/faturamento" element={<Faturamento />} />
           </Route>
         </Routes>
       </BrowserRouter>

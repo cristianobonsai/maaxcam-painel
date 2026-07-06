@@ -96,6 +96,151 @@ function SystemHealth() {
     </div>
   )
 }
+const PLAN_LABELS = { basico: 'Básico', pro: 'Pro', premium: 'Premium', grupo: 'Grupo (por grupo criado)' }
+
+function DiscountsPanel({ users }) {
+  const [discounts, setDiscounts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [filter, setFilter] = useState('')
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [plan, setPlan] = useState('basico')
+  const [preco, setPreco] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
+  async function load() {
+    setLoading(true); setError('')
+    try {
+      const data = await api.get('/api/admin/discounts')
+      setDiscounts(Array.isArray(data) ? data : [])
+    } catch (e) {
+      setError(msg(e))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  function discountFor(userId, plan) {
+    const d = discounts.find((x) => x.user_id === userId && x.plan === plan)
+    return d ? d.preco_customizado : null
+  }
+
+  function selectUser(u) {
+    setSelectedUser(u)
+    setPlan('basico')
+    const atual = discountFor(u.user_id, 'basico')
+    setPreco(atual != null ? String(atual) : '')
+    setSaveError('')
+  }
+
+  function changePlan(newPlan) {
+    setPlan(newPlan)
+    const atual = discountFor(selectedUser.user_id, newPlan)
+    setPreco(atual != null ? String(atual) : '')
+  }
+
+  async function salvar() {
+    if (!selectedUser) return
+    setSaving(true); setSaveError('')
+    try {
+      const valor = preco.trim() === '' ? null : Number(preco)
+      await api.put(`/api/admin/discounts/${selectedUser.user_id}/${plan}`, { preco_customizado: valor })
+      await load()
+    } catch (e) {
+      setSaveError(msg(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function remover() {
+    if (!selectedUser) return
+    setSaving(true); setSaveError('')
+    try {
+      await api.put(`/api/admin/discounts/${selectedUser.user_id}/${plan}`, { preco_customizado: null })
+      setPreco('')
+      await load()
+    } catch (e) {
+      setSaveError(msg(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const visibleUsers = users.filter((u) => (u.email || '').toLowerCase().includes(filter.trim().toLowerCase()))
+
+  return (
+    <div className="mt-6 grid grid-cols-1 lg:grid-cols-[0.95fr_1.7fr] gap-5 items-start">
+      <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+        <div className="mb-3 text-xs uppercase tracking-wide text-slate-400">Usuários</div>
+        <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Buscar por email…"
+          className="mb-3 w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none" />
+        <div className="space-y-2">
+          {visibleUsers.map((u) => {
+            const sel = selectedUser?.user_id === u.user_id
+            const temDesconto = discounts.some((d) => d.user_id === u.user_id)
+            return (
+              <button key={u.user_id} onClick={() => selectUser(u)}
+                className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left ${sel ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 bg-slate-900/50 hover:border-slate-500'}`}>
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-slate-200">{u.email || '(sem email)'}</div>
+                  {temDesconto && <span className="mt-1 inline-block rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300">tem desconto</span>}
+                </div>
+              </button>
+            )
+          })}
+          {visibleUsers.length === 0 && <p className="text-xs text-slate-500">Nenhum usuário encontrado.</p>}
+        </div>
+      </div>
+
+      <div>
+        {loading && <p className="text-sm text-slate-400">Carregando descontos…</p>}
+        {error && <p className="text-sm text-red-300">{error}</p>}
+        {!selectedUser ? (
+          <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/30 p-10 text-center text-sm text-slate-400">
+            Selecione um usuário à esquerda para definir descontos.
+          </div>
+        ) : (
+          <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-5">
+            <p className="text-sm text-slate-300">
+              Desconto pra <strong className="text-white">{selectedUser.email || selectedUser.user_id}</strong>
+            </p>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-400">Item</span>
+                <select value={plan} onChange={(e) => changePlan(e.target.value)}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                  {Object.entries(PLAN_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-400">Preço customizado (R$) — vazio = sem desconto</span>
+                <input value={preco} onChange={(e) => setPreco(e.target.value)} type="number" step="0.01" min="0"
+                  placeholder="Ex.: 5.00"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none" />
+              </label>
+            </div>
+            {saveError && <p className="mt-3 text-sm text-red-300">{saveError}</p>}
+            <div className="mt-4 flex gap-2">
+              <button onClick={salvar} disabled={saving}
+                className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50">
+                {saving ? 'Salvando…' : 'Salvar desconto'}
+              </button>
+              <button onClick={remover} disabled={saving}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:border-red-500 disabled:opacity-50">
+                Remover desconto deste item
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Admin() {
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
@@ -103,7 +248,6 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState(null)
-  const [plans, setPlans] = useState({})
   const [planBusy, setPlanBusy] = useState(null)
 
   const [tab, setTab] = useState('users')
@@ -121,10 +265,6 @@ export default function Admin() {
       if (meData?.is_admin) {
         const usersData = await api.get('/api/admin/users')
         setUsers(Array.isArray(usersData) ? usersData : [])
-        try {
-          const p = await api.get('/api/admin/plans')
-          setPlans(p && typeof p === 'object' ? p : {})
-        } catch { /* sem planos ainda: trata como básico */ }
       }
     } catch (e) {
       setError(msg(e))
@@ -148,11 +288,12 @@ export default function Admin() {
     }
   }
 
-  async function setPlan(u, plan) {
+  async function setGroupsAddon(u, enabled) {
     setPlanBusy(u.user_id); setError('')
     try {
-      await api.put(`/api/admin/users/${u.user_id}/plan`, { plan })
-      setPlans((prev) => ({ ...prev, [u.user_id]: plan }))
+      await api.put(`/api/admin/users/${u.user_id}/groups-addon`, { enabled })
+      setUsers((prev) => prev.map((x) => (x.user_id === u.user_id ? { ...x, groups_addon: enabled } : x)))
+      if (selected?.user_id === u.user_id) setSelected((s) => ({ ...s, groups_addon: enabled }))
     } catch (e) {
       setError(msg(e))
     } finally {
@@ -192,7 +333,7 @@ export default function Admin() {
         {!loading && me?.is_admin && (
           <>
             <div className="mt-6 flex gap-6 border-b border-slate-700">
-              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário'], ['health', 'Saúde']].map(([key, label]) => (
+              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário'], ['discounts', 'Descontos'], ['health', 'Saúde']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)}
                   className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
                   {label}
@@ -202,6 +343,8 @@ export default function Admin() {
 
             {tab === 'health' ? (
   <SystemHealth />
+) : tab === 'discounts' ? (
+  <DiscountsPanel users={users} />
 ) : tab === 'users' ? (
               <div className="mt-6">
                 <p className="text-sm text-slate-400">{users.length} usuário(s) cadastrado(s).</p>
@@ -217,13 +360,12 @@ export default function Admin() {
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <label className="flex items-center gap-1.5 text-xs text-slate-400">
-                          Plano
-                          <select value={plans[u.user_id] || 'basico'} disabled={planBusy === u.user_id}
-                            onChange={(e) => setPlan(u, e.target.value)}
+                          Grupos
+                          <select value={u.groups_addon ? '1' : '0'} disabled={planBusy === u.user_id}
+                            onChange={(e) => setGroupsAddon(u, e.target.value === '1')}
                             className="rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none disabled:opacity-50">
-                            <option value="basico">Básico</option>
-                            <option value="pro">Pro</option>
-                            <option value="premium">Premium</option>
+                            <option value="0">Desabilitado</option>
+                            <option value="1">Habilitado</option>
                           </select>
                         </label>
                         <button onClick={() => toggleRole(u)} disabled={busyId === u.user_id}
@@ -251,7 +393,9 @@ export default function Admin() {
                             <div className="truncate text-sm text-slate-200">{u.email || '(sem email)'}</div>
                             <div className="mt-1 flex items-center gap-2">
                               <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${u.role === 'admin' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>{u.role}</span>
-                              <span className="rounded-full bg-slate-700/60 px-2 py-0.5 text-[11px] font-medium text-slate-300">{plans[u.user_id] || 'basico'}</span>
+                              <span className="rounded-full bg-slate-700/60 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                                {u.groups_addon ? 'Grupos ✓' : 'Sem grupos'}
+                              </span>
                               {u.user_id === me.user_id && <span className="text-[11px] text-slate-500">(você)</span>}
                             </div>
                           </div>
@@ -277,17 +421,18 @@ export default function Admin() {
 
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-3">
                         <div className="text-sm text-slate-300">
-                          Plano de <strong className="text-white">{selected.email || selected.user_id}</strong>
-                          <span className="ml-2 rounded-full bg-slate-700/60 px-2 py-0.5 text-xs font-medium text-slate-300">{plans[selected.user_id] || 'basico'}</span>
+                          Grupos de <strong className="text-white">{selected.email || selected.user_id}</strong>
+                          <span className="ml-2 rounded-full bg-slate-700/60 px-2 py-0.5 text-xs font-medium text-slate-300">
+                            {selected.groups_addon ? 'Habilitado' : 'Desabilitado'}
+                          </span>
                         </div>
                         <label className="flex items-center gap-2 text-xs text-slate-400">
-                          Definir plano
-                          <select value={plans[selected.user_id] || 'basico'} disabled={planBusy === selected.user_id}
-                            onChange={(e) => setPlan(selected, e.target.value)}
+                          Grupos habilitado
+                          <select value={selected.groups_addon ? '1' : '0'} disabled={planBusy === selected.user_id}
+                            onChange={(e) => setGroupsAddon(selected, e.target.value === '1')}
                             className="rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none disabled:opacity-50">
-                            <option value="basico">Básico</option>
-                            <option value="pro">Pro</option>
-                            <option value="premium">Premium</option>
+                            <option value="0">Desabilitado</option>
+                            <option value="1">Habilitado</option>
                           </select>
                         </label>
                       </div>
