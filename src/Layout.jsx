@@ -30,12 +30,19 @@ export default function Layout() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [canUseGroups, setCanUseGroups] = useState(false)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     let active = true
     ;(async () => {
-      try { const me = await api.get('/api/me'); if (active) setIsAdmin(!!me?.is_admin) } catch { /* silencioso */ }
+      try {
+        const me = await api.get('/api/me')
+        if (active) {
+          setIsAdmin(!!me?.is_admin)
+          setCanUseGroups(!!me?.can_use_groups)
+        }
+      } catch { /* silencioso */ }
     })()
     return () => { active = false }
   }, [])
@@ -51,8 +58,8 @@ export default function Layout() {
     { to: '/painel/mapa', label: 'Mapa', icon: ICONS.map },
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
     { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },
+    ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos }] : []),
     ...(isAdmin ? [
-      { to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos },
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },
       { to: '/painel/logs', label: 'Logs', icon: ICONS.logs },
     ] : []),

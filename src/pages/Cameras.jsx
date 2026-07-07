@@ -146,7 +146,7 @@ export default function Cameras() {
     acc[p] = (acc[p] || 0) + 1
     return acc
   }, {})
-  const planLabels = { basico: 'Básico', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
+  const planLabels = { basico: 'Básico', pro: 'Pro', premium: 'Premium' }
   const planSummary = Object.entries(planCounts)
     .map(([p, n]) => `${planLabels[p] || p}: ${n}`)
     .join(' · ')
@@ -311,7 +311,6 @@ export default function Cameras() {
                           <option value="basico">Básico</option>
                           <option value="pro">Pro</option>
                           <option value="premium">Premium</option>
-                          <option value="enterprise">Enterprise</option>
                         </select>
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
