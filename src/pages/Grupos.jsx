@@ -367,7 +367,7 @@ export default function Grupos() {
                 {groups.filter((g) => g.id === managingId).map((g) => {
                 const cams = g.cameras || []
                 const used = new Set(cams.map((c) => c.camera_id))
-                const available = cameras.filter((c) => !used.has(c.camera_id))
+                const available = cameras.filter((c) => !used.has(c.camera_id) && c.plan !== 'basico')
                 return (
                   <div key={g.id} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
