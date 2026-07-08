@@ -181,14 +181,16 @@ export default function Cameras() {
                 <span className="mb-1 block text-sm text-slate-400">Nome *</span>
                 <input value={form.name} onChange={(e) => setField('name', e.target.value)} className={inputCls} placeholder="Ex.: Portão da frente" />
               </label>
+
               <label className="block">
                 <span className="mb-1 block text-sm text-slate-400">Plano desta câmera *</span>
                 <select value={form.plan} onChange={(e) => setField('plan', e.target.value)} className={inputCls}>
-                  <option value="basico">Básico — R$9,90/mês</option>
-                  <option value="pro">Pro — R$29,90/mês</option>
-                  <option value="premium">Premium — R$29,90/mês (permite Grupos)</option>
+                  <option value="basico">Básico — R$9,90/mês (só transmissão)</option>
+                  <option value="pro">Pro — R$29,90/mês (+ embed, YouTube, áudio, foto)</option>
+                  <option value="premium">Premium — R$29,90/mês (+ pode entrar em Grupos)</option>
                 </select>
               </label>
+
               <label className="block">
                 <span className="mb-1 block text-sm text-slate-400">Stream key <span className="text-slate-600">(opcional — vazio = gerado automaticamente)</span></span>
                 <input value={form.streamKey} onChange={(e) => setField('streamKey', e.target.value)} className={inputCls} placeholder="sem espaços; deixe vazio para gerar" />
@@ -315,6 +317,14 @@ export default function Cameras() {
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
                         {c.camera_id}{c.location ? ` · ${c.location}` : ''}{c.project ? ` · ${c.project}` : ''}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        {(() => {
+                          const p = c.plan || 'basico'
+                          if (p === 'basico') return 'Plano Básico: transmissão HLS/RTMP normal. Sem embed, YouTube, áudio próprio, foto ou grupos.'
+                          if (p === 'pro') return 'Plano Pro: inclui embed, YouTube, áudio próprio e foto. Não pode entrar em grupos.'
+                          return 'Plano Premium: inclui tudo do Pro + pode entrar em grupos.'
+                        })()}
                       </div>
                     </div>
 
