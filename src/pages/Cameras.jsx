@@ -111,7 +111,23 @@ export default function Cameras() {
     }
   }
 
+  const PLAN_PRICES = { basico: 9.90, pro: 29.90, premium: 29.90 }
+  const PLAN_LABELS_FULL = {
+    basico: 'Básico (só transmissão, sem embed/YouTube/áudio/foto/grupos)',
+    pro: 'Pro (embed, YouTube, áudio próprio, foto — sem grupos)',
+    premium: 'Premium (tudo do Pro + pode entrar em Grupos)',
+  }
+
   async function handlePlanChange(c, novoPlan) {
+    const planoAtual = c.plan || 'basico'
+    if (novoPlan === planoAtual) return
+    const precoAtual = PLAN_PRICES[planoAtual]
+    const precoNovo = PLAN_PRICES[novoPlan]
+    const confirmado = window.confirm(
+      `Trocar "${c.name || c.camera_id}" de ${PLAN_LABELS_FULL[planoAtual]} (R$${precoAtual.toFixed(2)}/mês) ` +
+      `para ${PLAN_LABELS_FULL[novoPlan]} (R$${precoNovo.toFixed(2)}/mês)?\n\nO valor da próxima fatura será ajustado.`
+    )
+    if (!confirmado) return
     setPlanBusy(c.camera_id)
     try {
       await api.put(`/api/cameras/${c.camera_id}`, { plan: novoPlan })
@@ -308,23 +324,16 @@ export default function Cameras() {
                           value={c.plan || 'basico'}
                           disabled={planBusy === c.camera_id}
                           onChange={(e) => handlePlanChange(c, e.target.value)}
+                          title="Básico R$9,90/mês: só transmissão. Pro R$29,90/mês: + embed, YouTube, áudio, foto. Premium R$29,90/mês: + Grupos."
                           className="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-200 outline-none hover:border-blue-500 disabled:opacity-50"
                         >
-                          <option value="basico">Básico</option>
-                          <option value="pro">Pro</option>
-                          <option value="premium">Premium</option>
+                          <option value="basico">Básico — R$9,90 (só transmissão)</option>
+                          <option value="pro">Pro — R$29,90 (+ embed/YouTube/áudio/foto)</option>
+                          <option value="premium">Premium — R$29,90 (+ Grupos)</option>
                         </select>
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
                         {c.camera_id}{c.location ? ` · ${c.location}` : ''}{c.project ? ` · ${c.project}` : ''}
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500">
-                        {(() => {
-                          const p = c.plan || 'basico'
-                          if (p === 'basico') return 'Plano Básico: transmissão HLS/RTMP normal. Sem embed, YouTube, áudio próprio, foto ou grupos.'
-                          if (p === 'pro') return 'Plano Pro: inclui embed, YouTube, áudio próprio e foto. Não pode entrar em grupos.'
-                          return 'Plano Premium: inclui tudo do Pro + pode entrar em grupos.'
-                        })()}
                       </div>
                     </div>
 
@@ -334,7 +343,7 @@ export default function Cameras() {
                           className="rounded-md border border-red-700 px-3 py-1 text-xs text-red-300 hover:border-red-500 disabled:opacity-50">
                           {relayBusy === c.camera_id ? '…' : 'Parar relay'}
                         </button>
-                      ) : c.youtube_key ? (
+                      ) : (c.youtube_key && c.plan !== 'basico') ? (
                         <button onClick={() => handleRelayStart(c)} disabled={relayBusy === c.camera_id}
                           className="rounded-md border border-emerald-700 px-3 py-1 text-xs text-emerald-300 hover:border-emerald-500 disabled:opacity-50">
                           {relayBusy === c.camera_id ? '…' : 'Iniciar relay'}
