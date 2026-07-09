@@ -167,6 +167,7 @@ export default function CameraSeguranca() {
   const [edit, setEdit] = useState(null)
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
+  const [editOk, setEditOk] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
@@ -194,10 +195,12 @@ export default function CameraSeguranca() {
 
   async function saveEdit() {
     if (!edit || !edit.name.trim()) { setEditError('O nome é obrigatório.'); return }
-    setEditSaving(true); setEditError('')
+    setEditSaving(true); setEditError(''); setEditOk(false)
     try {
       await api.put(`/api/cameras/${id}`, { name: edit.name.trim(), brand: edit.brand.trim(), cloud: edit.cloud.trim(), project: edit.project.trim(), enabled: edit.enabled, quality_tier: edit.quality_tier })
       await load()
+      setEditOk(true)
+      setTimeout(() => setEditOk(false), 3000)
     } catch (e) { setEditError(msg(e)) }
     finally { setEditSaving(false) }
   }
@@ -305,11 +308,17 @@ export default function CameraSeguranca() {
                     <span className="text-sm text-slate-300">Câmera ativa</span>
                   </label>
                   {editError && <p className="text-sm text-red-400">{editError}</p>}
-                  <div>
+                  <div className="flex items-center gap-3">
                     <button disabled={editSaving} onClick={saveEdit}
                       className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm text-white">
                       {editSaving ? 'Salvando…' : 'Salvar'}
                     </button>
+                    {editOk && (
+                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M20 6L9 17l-5-5" /></svg>
+                        Alterações salvas
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-slate-500">A localização fica na aba <strong>Localização</strong> e a chave do YouTube na aba <strong>Transmissão</strong>.</p>
                 </div>
