@@ -4,6 +4,34 @@ import { api, ApiError } from '../lib/api'
 
 const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '', qualityTier: '1080p', plan: 'basico' }
 
+const PLAN_PRICES = { basico: 9.90, pro: 29.90, premium: 32.90 }
+const PLAN_LABELS = { basico: 'Básico', pro: 'Pro', premium: 'Premium' }
+
+const PLANS = [
+  {
+    key: 'basico',
+    nome: 'Básico',
+    preco: 9.90,
+    features: ['Chave RTMP / câmeras IP', 'Chave HLS / M3U8', 'Chave pública ou privada'],
+  },
+  {
+    key: 'pro',
+    nome: 'Pro',
+    preco: 29.90,
+    popular: true,
+    features: ['Tudo do Básico', 'Código iframe para embed', 'Fotos JPG a cada 15 min', 'Retransmissão pro YouTube', 'Áudio personalizado no YouTube'],
+  },
+  {
+    key: 'premium',
+    nome: 'Premium',
+    preco: 32.90,
+    extra: '+ R$ 59,90 por grupo/mês',
+    features: ['Tudo do Pro', 'Inserção em grupos', 'Grupo de até 7 câmeras no YouTube'],
+  },
+]
+
+const PAGE_SIZES = [10, 20, 50, 100]
+
 export default function Cameras() {
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,6 +49,10 @@ export default function Cameras() {
   const [deleting, setDeleting] = useState(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [planBusy, setPlanBusy] = useState(null)
+  const [planModalCam, setPlanModalCam] = useState(null)
+
+  const [pageSize, setPageSize] = useState(10)
+  const [page, setPage] = useState(1)
 
   async function load() {
     setLoading(true)
@@ -36,6 +68,7 @@ export default function Cameras() {
   }
 
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [statusFilter, query, pageSize])
 
   function setField(k, v) { setForm((f) => ({ ...f, [k]: v })) }
 
@@ -111,26 +144,13 @@ export default function Cameras() {
     }
   }
 
-  const PLAN_PRICES = { basico: 9.90, pro: 29.90, premium: 29.90 }
-  const PLAN_LABELS_FULL = {
-    basico: 'Básico (só transmissão, sem embed/YouTube/áudio/foto/grupos)',
-    pro: 'Pro (embed, YouTube, áudio próprio, foto — sem grupos)',
-    premium: 'Premium (tudo do Pro + pode entrar em Grupos)',
-  }
-
-  async function handlePlanChange(c, novoPlan) {
+  async function doPlanChange(c, novoPlan) {
     const planoAtual = c.plan || 'basico'
-    if (novoPlan === planoAtual) return
-    const precoAtual = PLAN_PRICES[planoAtual]
-    const precoNovo = PLAN_PRICES[novoPlan]
-    const confirmado = window.confirm(
-      `Trocar "${c.name || c.camera_id}" de ${PLAN_LABELS_FULL[planoAtual]} (R$${precoAtual.toFixed(2)}/mês) ` +
-      `para ${PLAN_LABELS_FULL[novoPlan]} (R$${precoNovo.toFixed(2)}/mês)?\n\nO valor da próxima fatura será ajustado.`
-    )
-    if (!confirmado) return
+    if (novoPlan === planoAtual) { setPlanModalCam(null); return }
     setPlanBusy(c.camera_id)
     try {
       await api.put(`/api/cameras/${c.camera_id}`, { plan: novoPlan })
+      setPlanModalCam(null)
       await load()
     } catch (e) {
       alert(e instanceof ApiError ? e.message : 'Erro ao mudar plano.')
@@ -153,6 +173,8 @@ export default function Cameras() {
       if (statusFilter === 'ativa') return !!c.enabled
       if (statusFilter === 'inativa') return !c.enabled
       if (statusFilter === 'youtube') return !!c.youtube_relay_active
+      if (statusFilter === 'grupos') return !!c.group_name
+      if (statusFilter === 'ociosa') return !!c.enabled && !c.is_streaming
       return true
     })
     .sort((a, b) => (a.name || a.camera_id).localeCompare(b.name || b.camera_id, 'pt', { sensitivity: 'base' }))
@@ -162,10 +184,13 @@ export default function Cameras() {
     acc[p] = (acc[p] || 0) + 1
     return acc
   }, {})
-  const planLabels = { basico: 'Básico', pro: 'Pro', premium: 'Premium' }
   const planSummary = Object.entries(planCounts)
-    .map(([p, n]) => `${planLabels[p] || p}: ${n}`)
+    .map(([p, n]) => `${PLAN_LABELS[p] || p}: ${n}`)
     .join(' · ')
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paged = visible.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const statusFilters = [
     { key: 'todas', label: 'Todas' },
@@ -173,6 +198,8 @@ export default function Cameras() {
     { key: 'ativa', label: 'Ativa' },
     { key: 'inativa', label: 'Inativa' },
     { key: 'youtube', label: 'YouTube' },
+    { key: 'grupos', label: 'Grupos' },
+    { key: 'ociosa', label: 'Ociosa' },
   ]
 
   return (
@@ -304,8 +331,24 @@ export default function Cameras() {
             {visible.length === 0 ? (
               <p className="text-slate-400">Nenhuma câmera encontrada para “{query}”.</p>
             ) : (
+              <>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+                <span>
+                  {`${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, visible.length)}`} de {visible.length}
+                </span>
+                <label className="flex items-center gap-2">
+                  <span>Por página:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-200 outline-none hover:border-blue-500"
+                  >
+                    {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+              </div>
               <ul className="space-y-2">
-                {visible.map((c) => (
+                {paged.map((c) => (
                   <li key={c.camera_id} className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -320,17 +363,20 @@ export default function Cameras() {
                             Grupo: {c.group_name}
                           </span>
                         )}
-                        <select
-                          value={c.plan || 'basico'}
+                        <button
+                          onClick={() => setPlanModalCam(c)}
                           disabled={planBusy === c.camera_id}
-                          onChange={(e) => handlePlanChange(c, e.target.value)}
-                          title="Básico R$9,90/mês: só transmissão. Pro R$29,90/mês: + embed, YouTube, áudio, foto. Premium R$29,90/mês: + Grupos."
-                          className="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-200 outline-none hover:border-blue-500 disabled:opacity-50"
+                          title="Ver e trocar o plano desta câmera"
+                          className="inline-flex items-center gap-1 rounded-full border border-blue-800 bg-blue-950/60 px-2.5 py-0.5 text-xs font-medium text-blue-200 outline-none transition hover:border-blue-500 disabled:opacity-50"
                         >
-                          <option value="basico">Básico — R$9,90 (só transmissão)</option>
-                          <option value="pro">Pro — R$29,90 (+ embed/YouTube/áudio/foto)</option>
-                          <option value="premium">Premium — R$29,90 (+ Grupos)</option>
-                        </select>
+                          {planBusy === c.camera_id ? '…' : (
+                            <>
+                              Plano: {PLAN_LABELS[c.plan || 'basico']}
+                              <span className="text-blue-400">· R${PLAN_PRICES[c.plan || 'basico'].toFixed(2).replace('.', ',')}</span>
+                              <span className="text-blue-500">▾</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                       <div className="mt-0.5 text-sm text-slate-500">
                         {c.camera_id}{c.location ? ` · ${c.location}` : ''}{c.project ? ` · ${c.project}` : ''}
@@ -355,6 +401,14 @@ export default function Cameras() {
                   </li>
                 ))}
               </ul>
+              {totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1} className="rounded-md border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-40">Anterior</button>
+                  <span className="text-sm text-slate-400">Página {safePage} de {totalPages}</span>
+                  <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} className="rounded-md border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-40">Próxima</button>
+                </div>
+              )}
+              </>
             )}
           </>
         )}
@@ -375,6 +429,54 @@ export default function Cameras() {
               <button onClick={confirmDelete} disabled={deleteBusy} className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
                 {deleteBusy ? 'Excluindo…' : 'Excluir definitivamente'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {planModalCam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 px-4 py-8" onClick={() => planBusy === null && setPlanModalCam(null)}>
+          <div className="w-full max-w-4xl rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-1 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Plano da câmera</h2>
+                <p className="mt-0.5 text-sm text-slate-400">
+                  {planModalCam.name || planModalCam.camera_id} · plano atual: <span className="text-slate-200">{PLAN_LABELS[planModalCam.plan || 'basico']}</span>
+                </p>
+              </div>
+              <button onClick={() => setPlanModalCam(null)} className="rounded-md border border-slate-700 px-2 py-1 text-sm text-slate-300 hover:border-slate-500">Fechar</button>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {PLANS.map((p) => {
+                const atual = (planModalCam.plan || 'basico') === p.key
+                return (
+                  <div key={p.key} className={`relative flex flex-col rounded-lg border p-4 ${atual ? 'border-blue-500 bg-blue-950/30' : 'border-slate-700 bg-slate-950'}`}>
+                    {p.popular && !atual && <span className="absolute -top-2 left-4 rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white">MAIS POPULAR</span>}
+                    {atual && <span className="absolute -top-2 left-4 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">PLANO ATUAL</span>}
+                    <div className="text-base font-semibold">{p.nome}</div>
+                    <div className="mt-1"><span className="text-2xl font-bold">R${p.preco.toFixed(2).replace('.', ',')}</span><span className="text-xs text-slate-500"> /câmera/mês</span></div>
+                    {p.extra && <div className="mt-1 inline-block rounded bg-purple-950/60 px-2 py-0.5 text-xs text-purple-300">{p.extra}</div>}
+                    <ul className="mt-3 flex-1 space-y-1.5 text-xs text-slate-300">
+                      {p.features.map((f, i) => (
+                        <li key={i} className="flex gap-1.5"><span className="text-emerald-400">✓</span><span>{f}</span></li>
+                      ))}
+                    </ul>
+                    <button
+                      onClick={() => doPlanChange(planModalCam, p.key)}
+                      disabled={atual || planBusy === planModalCam.camera_id}
+                      className={`mt-4 rounded-md px-3 py-2 text-sm font-medium transition ${atual ? 'cursor-default border border-slate-700 text-slate-500' : 'bg-blue-500 text-white hover:bg-blue-600'} disabled:opacity-60`}
+                    >
+                      {atual ? 'Plano atual' : planBusy === planModalCam.camera_id ? 'Trocando…' : `Trocar para ${p.nome}`}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mt-4 flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
+              <span>⚠️</span>
+              <span>Ao inserir uma câmera Premium em um grupo, a transmissão solo dela no YouTube é interrompida imediatamente. A troca de plano ajusta o valor da próxima fatura.</span>
             </div>
           </div>
         </div>
