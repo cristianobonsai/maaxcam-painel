@@ -267,6 +267,13 @@ export default function Grupos() {
           </div>
         </div>
 
+        {!loading && canAccessGroups && (
+          <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-4 py-2.5 text-sm text-purple-200">
+            <Icon path="M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-4M12 8h.01" className="h-4 w-4 shrink-0" />
+            <span>Cada grupo custa <strong className="font-semibold text-white">R$ 59,90/mês</strong>, somado ao valor das câmeras Premium que fazem parte dele.</span>
+          </div>
+        )}
+
         {loading && <p className="mt-8 text-slate-300">Carregando…</p>}
 
         {!loading && me && !canAccessGroups && (
