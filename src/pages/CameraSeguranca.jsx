@@ -379,9 +379,11 @@ export default function CameraSeguranca() {
                     <div className="text-xs text-slate-500">No YouTube Studio: Transmitir → junte a "URL do servidor" + a "chave de transmissão" no formato rtmp://.../live2/sua-chave.</div>
                   </div>
 
-                  {data.in_active_group ? (
+                  {data.in_group ? (
                     <div className="rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm px-3 py-2">
-                      Esta câmera está num <strong>grupo ativo</strong> — o grupo controla a transmissão dela. Pare o grupo para transmitir esta câmera sozinha.
+                      {data.in_active_group
+                        ? <>Esta câmera está num <strong>grupo que está no ar</strong> — o grupo controla a transmissão dela e o relay solo fica bloqueado.</>
+                        : <>Esta câmera <strong>faz parte de um grupo</strong> e não pode transmitir sozinha no YouTube. Remova-a do grupo para transmitir solo.</>}
                     </div>
                   ) : (
                     <div className="flex gap-2">
@@ -393,12 +395,12 @@ export default function CameraSeguranca() {
                         className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-4 py-2 text-sm text-white">Reiniciar</button>
                     </div>
                   )}
-                  {!data.in_active_group && data.relay_running && (
+                  {!data.in_group && data.relay_running && (
                     <p className="mt-2 text-xs text-slate-500">
                       Fez mudanças na câmera (áudio, qualidade)? Clique em <strong className="text-slate-400">Reiniciar</strong> para aplicá-las na transmissão do YouTube. A transmissão fica fora do ar por cerca de 15 segundos.
                     </p>
                   )}
-                  {!data.in_active_group && !data.youtube_key && <p className="text-xs text-slate-500">Defina e salve a URL do YouTube acima para poder iniciar.</p>}
+                  {!data.in_group && !data.youtube_key && <p className="text-xs text-slate-500">Defina e salve a URL do YouTube acima para poder iniciar.</p>}
                 </>)}
               </Card>
 

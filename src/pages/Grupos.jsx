@@ -42,6 +42,7 @@ export default function Grupos() {
   const [addError, setAddError] = useState('')
   const [durEdits, setDurEdits] = useState({})
   const [showPremiumGate, setShowPremiumGate] = useState(false)
+  const [soloWarn, setSoloWarn] = useState(null)
 
   // Admin sempre pode. Cliente comum precisa do plano Premium (can_use_groups vindo do /api/me).
   const canAccessGroups = !!(me?.is_admin || me?.can_use_groups)
@@ -189,8 +190,13 @@ export default function Grupos() {
     setAddError(''); setAddingTo(g.id)
   }
 
-  async function addCamera(g) {
+  async function addCamera(g, skipWarn = false) {
     if (!addForm.camera_id) { setAddError('Selecione uma câmera.'); return }
+    if (!skipWarn) {
+      const cam = cameras.find((c) => c.camera_id === addForm.camera_id)
+      if (cam && cam.youtube_key) { setSoloWarn(g); return }
+    }
+    setSoloWarn(null)
     setBusy(true); setAddError('')
     try {
       await api.post(`/api/groups/${g.id}/cameras`, {
@@ -557,6 +563,29 @@ export default function Grupos() {
               </div>
             )}
           </>
+        )}
+        {soloWarn && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => !busy && setSoloWarn(null)}>
+            <div className="w-full max-w-md rounded-xl border border-amber-500/40 bg-slate-900 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start gap-3">
+                <Icon path="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" className="mt-0.5 h-6 w-6 shrink-0 text-amber-300" />
+                <div>
+                  <h2 className="font-display text-base font-semibold text-white">Esta câmera tem transmissão solo no YouTube</h2>
+                  <p className="mt-2 text-sm text-slate-300">
+                    Ao iniciar a transmissão do grupo, o relay solo dela no YouTube será <strong className="text-white">pausado imediatamente</strong>. Enquanto estiver no grupo, a câmera não poderá transmitir sozinha.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end gap-2">
+                <button onClick={() => setSoloWarn(null)} disabled={busy}
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:border-slate-400 disabled:opacity-50">Cancelar</button>
+                <button onClick={() => addCamera(soloWarn, true)} disabled={busy}
+                  className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-400 disabled:opacity-50">
+                  {busy ? 'Adicionando…' : 'Adicionar mesmo assim'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </>
