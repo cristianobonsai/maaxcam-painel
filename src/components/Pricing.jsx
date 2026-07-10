@@ -33,12 +33,15 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "59,90",
+    price: "32,90",
     blurb: "Grupos de câmeras em rotação.",
     highlight: false,
+    extra: "+ R$ 59,90 por grupo/mês",
     features: [
       "Tudo do Pro",
-      "Grupo de câmeras (até 5) para retransmissão no YouTube *",
+      "Inserção em grupos",
+      "Grupo de câmeras (até 7) para retransmissão no YouTube *",
+      "Áudio personalizado no YouTube",
     ],
     note: "* Ao criar grupos de câmeras, as câmeras com transmissão solo no YouTube são interrompidas.",
   },
@@ -67,6 +70,9 @@ function PricingCard({ plan }) {
         <span className="text-sm text-slate-400">/mês</span>
       </div>
       <p className="mt-1 text-xs text-slate-500">por câmera</p>
+      {plan.extra && (
+        <p className="mt-2 inline-block rounded bg-purple-500/15 px-2 py-0.5 text-xs font-medium text-purple-300">{plan.extra}</p>
+      )}
 
       <button
         className={`mt-6 w-full rounded-md px-4 py-2.5 font-semibold transition-colors ${
