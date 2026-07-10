@@ -41,9 +41,13 @@ export default function Grupos() {
   const [addForm, setAddForm] = useState({ camera_id: '', duration_seconds: 6 })
   const [addError, setAddError] = useState('')
   const [durEdits, setDurEdits] = useState({})
+  const [showPremiumGate, setShowPremiumGate] = useState(false)
 
   // Admin sempre pode. Cliente comum precisa do plano Premium (can_use_groups vindo do /api/me).
   const canAccessGroups = !!(me?.is_admin || me?.can_use_groups)
+  const isAdmin = !!me?.is_admin
+  const premiumCount = cameras.filter((c) => c.plan === 'premium').length
+  const canCreateGroup = isAdmin || premiumCount >= 2
 
   async function load() {
     setLoading(true)
@@ -65,7 +69,11 @@ export default function Grupos() {
 
   useEffect(() => { load() }, [])
 
-  function openNew() { setForm(EMPTY_FORM); setFormError(''); setEditing('new') }
+  function openNew() {
+    if (!canCreateGroup) { setShowPremiumGate(true); return }
+    setShowPremiumGate(false)
+    setForm(EMPTY_FORM); setFormError(''); setEditing('new')
+  }
   function openEdit(g) {
     setForm({ name: g.name || '', youtube_key: '', transition_seconds: g.transition_seconds ?? 5, enabled: !!g.enabled })
     setFormError(''); setEditing(g.id)
@@ -274,6 +282,30 @@ export default function Grupos() {
           </div>
         )}
 
+        {!loading && canAccessGroups && showPremiumGate && !canCreateGroup && (
+          <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5">
+            <div className="flex items-start gap-3">
+              <Icon path="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="min-w-0">
+                <h2 className="font-display text-base font-semibold text-white">Você precisa de 2 câmeras Premium</h2>
+                <p className="mt-1 text-sm text-slate-300">
+                  Grupos reúnem câmeras <strong className="text-white">Premium</strong> numa transmissão única no YouTube. Para criar um grupo é preciso ter pelo menos <strong className="text-white">2 câmeras no plano Premium</strong> — você tem {premiumCount} no momento. Altere o plano das câmeras que quer agrupar e volte aqui.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button onClick={() => navigate('/painel/cameras')}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">
+                    <Icon path="M5 12h14M13 6l6 6-6 6" className="h-4 w-4" /> Ir para minhas câmeras
+                  </button>
+                  <button onClick={() => setShowPremiumGate(false)}
+                    className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:border-slate-400">
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loading && <p className="mt-8 text-slate-300">Carregando…</p>}
 
         {!loading && me && !canAccessGroups && (
@@ -374,7 +406,7 @@ export default function Grupos() {
                 {groups.filter((g) => g.id === managingId).map((g) => {
                 const cams = g.cameras || []
                 const used = new Set(cams.map((c) => c.camera_id))
-                const available = cameras.filter((c) => !used.has(c.camera_id) && c.plan !== 'basico')
+                const available = cameras.filter((c) => !used.has(c.camera_id) && c.plan === 'premium')
                 return (
                   <div key={g.id} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
