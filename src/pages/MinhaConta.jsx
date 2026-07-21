@@ -59,7 +59,13 @@ export default function MinhaConta() {
         <p className="text-xs text-slate-500">E-mail</p>
         <p className="mt-0.5 text-sm text-slate-200">{user?.email}</p>
         <p className="mt-3 text-xs text-slate-500">Tipo de acesso</p>
-        <p className="mt-0.5 text-sm text-slate-200">{isGuest ? 'Convidado de uma conta' : 'Dono da conta'}</p>
+        <p className="mt-0.5 text-sm text-slate-200">{isGuest ? 'Convidado' : 'Dono da conta'}</p>
+        {isGuest && me?.owner_email && (
+          <>
+            <p className="mt-3 text-xs text-slate-500">Conta de</p>
+            <p className="mt-0.5 text-sm text-slate-200">{me.owner_email}</p>
+          </>
+        )}
       </div>
 
       {/* Zona de perigo */}
