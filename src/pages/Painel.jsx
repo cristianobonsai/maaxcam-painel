@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
+import InviteBanner from '../components/InviteBanner.jsx'
 
 export default function Painel() {
   const { user } = useAuth()
@@ -50,6 +51,8 @@ export default function Painel() {
     <main className="mx-auto w-full max-w-[1500px] px-4 sm:px-6 py-8">
       <h1 className="font-display text-2xl font-bold text-white">Dashboard</h1>
       <p className="mt-1 text-sm text-slate-400">Bem-vindo, <span className="text-slate-200">{user?.email}</span>.</p>
+
+      <InviteBanner />
 
       {error && <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
 
