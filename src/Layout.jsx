@@ -25,6 +25,7 @@ const ICONS = {
   logs: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-7 6h6m-6 4h6',
   faturamento: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   usuarios: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  conta: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM3 21a9 9 0 0 1 18 0',
 }
 
 export default function Layout() {
@@ -60,6 +61,7 @@ export default function Layout() {
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
     { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },
     { to: '/painel/usuarios', label: 'Usuários', icon: ICONS.usuarios },
+    { to: '/painel/conta', label: 'Minha conta', icon: ICONS.conta },
     ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos }] : []),
     ...(isAdmin ? [
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },

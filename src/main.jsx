@@ -16,6 +16,7 @@ import Mapa from './pages/Mapa.jsx'
 import Logs from './pages/Logs.jsx'
 import Faturamento from './pages/Faturamento.jsx'
 import Usuarios from './pages/Usuarios.jsx'
+import MinhaConta from './pages/MinhaConta.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/painel/logs" element={<Logs />} />
             <Route path="/painel/faturamento" element={<Faturamento />} />
             <Route path="/painel/usuarios" element={<Usuarios />} />
+            <Route path="/painel/conta" element={<MinhaConta />} />
           </Route>
         </Routes>
       </BrowserRouter>

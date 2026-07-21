@@ -24,6 +24,7 @@ export default function Usuarios() {
   const [email, setEmail] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState('')
+  const [emailPreso, setEmailPreso] = useState(null)  // { email, tipo } quando o email ja tem conta
 
   async function carregar() {
     setError('')
@@ -50,14 +51,21 @@ export default function Usuarios() {
   async function enviarConvite() {
     const e = email.trim()
     if (!e) return
-    setInviting(true); setInviteMsg(''); setError('')
+    setInviting(true); setInviteMsg(''); setError(''); setEmailPreso(null)
     try {
       await api.post('/api/account/invites', { email: e })
       setEmail('')
       setInviteMsg('Convite enviado.')
       await carregar()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível enviar o convite.')
+      const msg = err instanceof ApiError ? err.message : ''
+      if (msg.includes('já tem conta própria')) {
+        setEmailPreso({ email: e, tipo: 'dono' })
+      } else if (msg.includes('já é convidado')) {
+        setEmailPreso({ email: e, tipo: 'convidado' })
+      } else {
+        setError(msg || 'Não foi possível enviar o convite.')
+      }
     } finally {
       setInviting(false)
     }
@@ -113,6 +121,26 @@ export default function Usuarios() {
           </button>
         </div>
         {inviteMsg && <p className="mt-2 text-xs text-emerald-300">{inviteMsg}</p>}
+
+        {emailPreso && (
+          <div className="mt-3 rounded-lg border border-amber-700/50 bg-amber-500/5 p-3">
+            <p className="text-sm font-semibold text-amber-300">Este e-mail já está em uso</p>
+            <p className="mt-1 text-xs text-slate-300">
+              {emailPreso.tipo === 'dono'
+                ? <>O e-mail <span className="font-medium text-slate-100">{emailPreso.email}</span> já tem uma conta própria no LiveByBit. Para entrar na sua conta como convidado, a pessoa precisa primeiro excluir a conta dela.</>
+                : <>O e-mail <span className="font-medium text-slate-100">{emailPreso.email}</span> já é convidado de outra conta. Uma pessoa só pode estar em uma conta por vez. Para vir para a sua, ela precisa primeiro sair da conta atual.</>}
+            </p>
+            <p className="mt-2 text-xs font-medium text-slate-300">Peça para a pessoa fazer o seguinte:</p>
+            <ol className="mt-1 list-decimal space-y-1 pl-5 text-xs text-slate-400">
+              <li>Entrar no painel com o e-mail <span className="text-slate-200">{emailPreso.email}</span></li>
+              <li>Ir em <span className="text-slate-200">Minha conta</span> no menu</li>
+              <li>Clicar em <span className="text-slate-200">{emailPreso.tipo === 'dono' ? 'Excluir minha conta' : 'Sair da conta'}</span> e confirmar</li>
+              <li>Avisar você quando terminar</li>
+            </ol>
+            <p className="mt-2 text-xs text-slate-400">Depois disso, é só enviar o convite novamente.</p>
+            <button onClick={() => setEmailPreso(null)} className="mt-2 text-xs text-slate-400 underline hover:text-slate-200">Entendi</button>
+          </div>
+        )}
       </div>
 
       {/* Convites pendentes */}
