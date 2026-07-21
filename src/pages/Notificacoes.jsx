@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import { usePermissions } from '../hooks/usePermissions'
 
 const DELAY_OPTIONS = [1, 3, 5, 10, 15, 30, 60]
 const DELAY2_OPTIONS = [0, 60, 120, 240, 480, 720]
@@ -21,6 +22,7 @@ const DEFAULTS = {
 }
 
 export default function Notificacoes() {
+  const perms = usePermissions()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -366,14 +368,16 @@ export default function Notificacoes() {
                 {banner.text}
               </div>
             )}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 py-3 font-semibold text-white hover:bg-blue-600 disabled:opacity-60"
-            >
-              <Icon path="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2ZM17 21v-8H7v8M7 3v5h8" className="h-5 w-5" />
-              {saving ? 'Salvando…' : 'Salvar Configurações'}
-            </button>
+            {perms.canEditNotif && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 py-3 font-semibold text-white hover:bg-blue-600 disabled:opacity-60"
+              >
+                <Icon path="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2ZM17 21v-8H7v8M7 3v5h8" className="h-5 w-5" />
+                {saving ? 'Salvando…' : 'Salvar Configurações'}
+              </button>
+            )}
           </>
         )}
       </main>

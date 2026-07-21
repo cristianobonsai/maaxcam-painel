@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import { usePermissions } from '../hooks/usePermissions'
 import LocationEditor from '../LocationEditor.jsx'
 
 const PLAY_BASE = 'https://play.livebybit.com'
@@ -152,6 +153,7 @@ function MonitorPanel({ id }) {
 }
 
 export default function CameraSeguranca() {
+  const perms = usePermissions()
   const { id } = useParams()
   const navigate = useNavigate()
   const [data, setData] = useState(null)
@@ -309,10 +311,12 @@ export default function CameraSeguranca() {
                   </label>
                   {editError && <p className="text-sm text-red-400">{editError}</p>}
                   <div className="flex items-center gap-3">
-                    <button disabled={editSaving} onClick={saveEdit}
-                      className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm text-white">
-                      {editSaving ? 'Salvando…' : 'Salvar'}
-                    </button>
+                    {perms.canEditCameras && (
+                      <button disabled={editSaving} onClick={saveEdit}
+                        className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm text-white">
+                        {editSaving ? 'Salvando…' : 'Salvar'}
+                      </button>
+                    )}
                     {editOk && (
                       <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M20 6L9 17l-5-5" /></svg>

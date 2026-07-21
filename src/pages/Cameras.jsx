@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import { usePermissions } from '../hooks/usePermissions'
 
 const EMPTY = { name: '', streamKey: '', brand: '', cloud: '', project: '', qualityTier: '1080p', plan: 'basico' }
 
@@ -33,6 +34,7 @@ const PLANS = [
 const PAGE_SIZES = [10, 20, 50, 100]
 
 export default function Cameras() {
+  const perms = usePermissions()
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -209,9 +211,11 @@ export default function Cameras() {
         <div className="ml-auto flex gap-2">
           <Link to="/painel/mapa" className="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-200 hover:border-blue-500">Mapa</Link>
           <button onClick={load} className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium hover:bg-slate-700">Atualizar</button>
-          <button onClick={mode === 'create' ? closeForm : openCreate} className="rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
-            {mode === 'create' ? 'Cancelar' : 'Nova câmera'}
-          </button>
+          {perms.canAddCameras && (
+            <button onClick={mode === 'create' ? closeForm : openCreate} className="rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
+              {mode === 'create' ? 'Cancelar' : 'Nova câmera'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -395,7 +399,9 @@ export default function Cameras() {
                           {relayBusy === c.camera_id ? '…' : 'Iniciar relay'}
                         </button>
                       ) : null}
-                      <button onClick={() => setDeleting(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-red-300 hover:border-red-500">Excluir</button>
+                      {perms.canAddCameras && (
+                        <button onClick={() => setDeleting(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-red-300 hover:border-red-500">Excluir</button>
+                      )}
                       <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-blue-300 hover:border-blue-500">Gerenciar</Link>
                     </div>
                   </li>

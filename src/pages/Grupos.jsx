@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
+import { usePermissions } from '../hooks/usePermissions'
 
 const API_URL = 'https://api.livebybit.com'
 const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false }
@@ -22,6 +23,7 @@ function Icon({ path, className = '' }) {
 }
 
 export default function Grupos() {
+  const perms = usePermissions()
   const navigate = useNavigate()
   const { session } = useAuth()
   const [me, setMe] = useState(null)
@@ -272,7 +274,7 @@ export default function Grupos() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {!loading && canAccessGroups && editing === null && (
+            {!loading && canAccessGroups && perms.canCreateGroups && editing === null && (
               <button onClick={openNew}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600">
                 <Icon path="M12 5v14M5 12h14" className="h-4 w-4" /> Novo grupo
