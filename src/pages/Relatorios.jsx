@@ -91,7 +91,7 @@ export default function Relatorios() {
       {loading && <p className="mt-4 text-sm text-slate-400">Carregando relatório…</p>}
 
       {!loading && data && tipo?.key === 'uptime' && <Uptime data={data} />}
-      {!loading && data && tipo?.key === 'drops' && <Drops data={data} />}
+      {!loading && data && tipo?.key === 'drops' && <Drops data={data} dias={dias} />}
       {!loading && data && tipo?.key === 'access' && <Access data={data} />}
     </main>
   )
@@ -134,12 +134,28 @@ function Uptime({ data }) {
   )
 }
 
-// ---------- Quedas (ranking) ----------
-function Drops({ data }) {
+// ---------- Quedas (ranking + detalhe ao clicar) ----------
+function Drops({ data, dias }) {
   const cams = data.cameras || []
+  const [aberta, setAberta] = useState(null)     // camera_id expandida
+  const [detalhe, setDetalhe] = useState(null)   // { quedas: [...] }
+  const [carregando, setCarregando] = useState(false)
+
+  async function abrir(cam) {
+    if (aberta === cam.camera_id) { setAberta(null); setDetalhe(null); return }
+    setAberta(cam.camera_id); setDetalhe(null)
+    if (cam.quedas === 0) return
+    setCarregando(true)
+    try {
+      const r = await api.get(`/api/reports/drops/${cam.camera_id}?dias=${dias}`)
+      setDetalhe(r)
+    } catch { setDetalhe({ quedas: [] }) }
+    finally { setCarregando(false) }
+  }
+
   return (
     <div className="mt-5">
-      <p className="mb-3 text-xs text-slate-500">Total de {data.total_quedas} {data.total_quedas === 1 ? 'queda' : 'quedas'} nos últimos {data.dias} {data.dias === 1 ? 'dia' : 'dias'}.</p>
+      <p className="mb-3 text-xs text-slate-500">Total de {data.total_quedas} {data.total_quedas === 1 ? 'queda' : 'quedas'} nos últimos {data.dias} {data.dias === 1 ? 'dia' : 'dias'}. Clique numa câmera para ver todas as quedas dela.</p>
       <div className="overflow-hidden rounded-lg border border-slate-700">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
@@ -151,11 +167,41 @@ function Drops({ data }) {
           </thead>
           <tbody>
             {cams.map((c) => (
-              <tr key={c.camera_id} className="border-t border-slate-800">
-                <td className="px-4 py-2.5 text-slate-200">{c.nome}</td>
-                <td className={`px-4 py-2.5 text-right font-medium ${c.quedas > 0 ? 'text-amber-300' : 'text-slate-500'}`}>{c.quedas}</td>
-                <td className="px-4 py-2.5 text-right text-slate-400">{c.ultima_queda || '—'}</td>
-              </tr>
+              <>
+                <tr key={c.camera_id}
+                  onClick={() => abrir(c)}
+                  className={`border-t border-slate-800 ${c.quedas > 0 ? 'cursor-pointer hover:bg-slate-800/40' : ''}`}>
+                  <td className="px-4 py-2.5 text-slate-200">
+                    {c.quedas > 0 && <span className="mr-2 text-slate-500">{aberta === c.camera_id ? '▾' : '▸'}</span>}
+                    {c.nome}
+                  </td>
+                  <td className={`px-4 py-2.5 text-right font-medium ${c.quedas > 0 ? 'text-amber-300' : 'text-slate-500'}`}>{c.quedas}</td>
+                  <td className="px-4 py-2.5 text-right text-slate-400">{c.ultima_queda || '—'}</td>
+                </tr>
+                {aberta === c.camera_id && (
+                  <tr key={c.camera_id + '-det'} className="border-t border-slate-800 bg-slate-950/40">
+                    <td colSpan={3} className="px-4 py-3">
+                      {carregando ? (
+                        <span className="text-xs text-slate-400">Carregando quedas…</span>
+                      ) : detalhe && detalhe.quedas?.length ? (
+                        <div>
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Todas as quedas ({detalhe.total})</p>
+                          <ul className="flex flex-col gap-1">
+                            {detalhe.quedas.map((q, i) => (
+                              <li key={i} className="flex items-center gap-2 text-xs text-slate-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                {q.quando}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-500">Sem quedas registradas no período.</span>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
           </tbody>
         </table>
