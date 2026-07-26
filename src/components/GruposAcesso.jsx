@@ -73,7 +73,9 @@ export default function GruposAcesso({ members }) {
           for (const cid of (g.camera_ids || [])) set.add(cid)
         }
       }
-      map[m.user_id] = [...set].map(nomeCamera).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      map[m.user_id] = [...set]
+        .map((cid) => ({ id: cid, nome: nomeCamera(cid) }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     }
     return map
   }, [members, groups, avulsas, cameras])
@@ -91,7 +93,7 @@ export default function GruposAcesso({ members }) {
 
   // ---------- VISTA: ajuste fino ----------
   if (vista === 'fino') {
-    return <AjusteFino members={members} cameras={cameras} avulsas={avulsas}
+    return <AjusteFino members={members} cameras={cameras} avulsas={avulsas} groups={groups}
       onVoltar={() => setVista('lista')} onChanged={carregar} onError={setError} error={error} />
   }
 
@@ -107,7 +109,14 @@ export default function GruposAcesso({ members }) {
             <div key={m.user_id} className="rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3">
               <p className="text-sm font-medium text-slate-200">{m.email}</p>
               {resumo[m.user_id]?.length ? (
-                <p className="mt-1 text-xs text-slate-400">{resumo[m.user_id].join(' · ')}</p>
+                <ul className="mt-2 flex flex-col gap-1">
+                  {resumo[m.user_id].map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 text-xs text-slate-300">
+                      <span className="rounded bg-slate-700/60 px-1.5 py-0.5 font-mono text-[11px] text-slate-400">{c.id}</span>
+                      <span>{c.nome}</span>
+                    </li>
+                  ))}
+                </ul>
               ) : (
                 <p className="mt-1 text-xs text-slate-500">Nenhuma câmera liberada ainda.</p>
               )}
@@ -297,7 +306,7 @@ function EditarGrupo({ grupo, cameras, members, onVoltar, onChanged, onError, er
 }
 
 // ============ ajuste fino ============
-function AjusteFino({ members, cameras, avulsas, onVoltar, onChanged, onError, error }) {
+function AjusteFino({ members, cameras, avulsas, groups, onVoltar, onChanged, onError, error }) {
   const [sel, setSel] = useState(members?.[0]?.user_id || '')
   const [selCams, setSelCams] = useState(new Set())
   const [busca, setBusca] = useState('')
@@ -306,12 +315,24 @@ function AjusteFino({ members, cameras, avulsas, onVoltar, onChanged, onError, e
 
   useEffect(() => { setSelCams(new Set(avulsas[sel] || [])); setSaved(false) }, [sel, avulsas])
 
+  // pro convidado selecionado: cameras que ele ja ve por grupo (camera_id -> nome do grupo)
+  const porGrupo = useMemo(() => {
+    const map = {}
+    for (const g of (groups || [])) {
+      if ((g.member_ids || []).includes(sel)) {
+        for (const cid of (g.camera_ids || [])) { if (!map[cid]) map[cid] = g.name }
+      }
+    }
+    return map
+  }, [groups, sel])
+
   const camsFiltradas = useMemo(() => {
     const q = busca.trim().toLowerCase()
     return q ? cameras.filter((c) => (c.name || c.camera_id).toLowerCase().includes(q)) : cameras
   }, [cameras, busca])
 
   function toggleCam(cid) {
+    if (porGrupo[cid]) return  // ja vem de grupo: nao deixa marcar avulso
     setSelCams((s) => { const n = new Set(s); n.has(cid) ? n.delete(cid) : n.add(cid); return n }); setSaved(false)
   }
 
@@ -346,12 +367,26 @@ function AjusteFino({ members, cameras, avulsas, onVoltar, onChanged, onError, e
         <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-slate-700/60">
           {camsFiltradas.length === 0 ? (
             <p className="px-3 py-2 text-xs text-slate-500">Nenhuma câmera encontrada.</p>
-          ) : camsFiltradas.map((c) => (
-            <label key={c.camera_id} className="flex cursor-pointer items-center gap-2 border-b border-slate-800 px-3 py-2 text-sm text-slate-300 last:border-0 hover:bg-slate-800/40">
-              <input type="checkbox" checked={selCams.has(c.camera_id)} onChange={() => toggleCam(c.camera_id)} className="h-4 w-4 accent-blue-500" />
-              {c.name || c.camera_id}
-            </label>
-          ))}
+          ) : camsFiltradas.map((c) => {
+            const viaGrupo = porGrupo[c.camera_id]
+            if (viaGrupo) {
+              return (
+                <div key={c.camera_id} className="flex items-center justify-between gap-2 border-b border-slate-800 px-3 py-2 text-sm last:border-0 opacity-70">
+                  <span className="flex items-center gap-2 text-slate-400">
+                    <input type="checkbox" checked disabled className="h-4 w-4 accent-slate-500" />
+                    {c.name || c.camera_id}
+                  </span>
+                  <span className="whitespace-nowrap rounded bg-slate-700/60 px-2 py-0.5 text-[11px] text-slate-300">já vê pelo grupo {viaGrupo}</span>
+                </div>
+              )
+            }
+            return (
+              <label key={c.camera_id} className="flex cursor-pointer items-center gap-2 border-b border-slate-800 px-3 py-2 text-sm text-slate-300 last:border-0 hover:bg-slate-800/40">
+                <input type="checkbox" checked={selCams.has(c.camera_id)} onChange={() => toggleCam(c.camera_id)} className="h-4 w-4 accent-blue-500" />
+                {c.name || c.camera_id}
+              </label>
+            )
+          })}
         </div>
 
         <div className="mt-3 flex items-center gap-3">
