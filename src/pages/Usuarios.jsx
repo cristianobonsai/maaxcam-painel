@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../lib/api'
+import GruposAcesso from '../components/GruposAcesso.jsx'
 
 const PERMS = [
   { key: 'can_add_cameras', label: 'Cadastrar câmeras' },
@@ -25,6 +26,7 @@ export default function Usuarios() {
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState('')
   const [emailPreso, setEmailPreso] = useState(null)  // { email, tipo } quando o email ja tem conta
+  const [aba, setAba] = useState('usuarios')  // 'usuarios' | 'acessos'
 
   async function carregar() {
     setError('')
@@ -99,7 +101,23 @@ export default function Usuarios() {
   return (
     <main className="mx-auto w-full max-w-[1100px] px-4 sm:px-6 py-8">
       <h1 className="font-display text-2xl font-bold text-white">Usuários</h1>
-      <p className="mt-1 text-sm text-slate-400">Convide pessoas e defina o que cada uma pode fazer na sua conta.</p>
+
+      <div className="mt-4 flex gap-1 border-b border-slate-700">
+        <button onClick={() => setAba('usuarios')}
+          className={`px-4 py-2 text-sm ${aba === 'usuarios' ? 'border-b-2 border-blue-500 font-medium text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+          Usuários
+        </button>
+        <button onClick={() => setAba('acessos')}
+          className={`px-4 py-2 text-sm ${aba === 'acessos' ? 'border-b-2 border-blue-500 font-medium text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+          Grupos de acesso
+        </button>
+      </div>
+
+      {aba === 'acessos' ? (
+        <GruposAcesso members={members} />
+      ) : (
+      <>
+      <p className="mt-4 text-sm text-slate-400">Convide pessoas e defina o que cada uma pode fazer na sua conta.</p>
 
       {error && <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
 
@@ -175,6 +193,8 @@ export default function Usuarios() {
             <MemberCard key={m.user_id} member={m} onChanged={carregar} onError={setError} />
           ))}
         </div>
+      )}
+      </>
       )}
     </main>
   )
