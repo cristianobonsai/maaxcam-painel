@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
+import { useAuth } from '../auth/AuthContext.jsx'
+
+const API_URL = 'https://api.livebybit.com'
 
 // Tipos de relatório. 'perm' = flag necessária; dias = opções de período.
 const TIPOS = [
@@ -11,6 +14,8 @@ const TIPOS = [
 
 export default function Relatorios() {
   const perms = usePermissions()
+  const { session } = useAuth()
+  const [baixando, setBaixando] = useState(false)
   const disponiveis = useMemo(
     () => TIPOS.filter((t) => perms[t.perm]),
     [perms.canViewUptime, perms.canViewDrops, perms.canViewAccessLogs] // eslint-disable-line
@@ -43,6 +48,31 @@ export default function Relatorios() {
     })()
     return () => { active = false }
   }, [tipo, dias])
+
+  async function baixarPdf() {
+    if (!tipo) return
+    if (!session?.access_token) { setError('Sessão expirada, faça login novamente.'); return }
+    setBaixando(true); setError('')
+    try {
+      const res = await fetch(`${API_URL}/api/reports/${tipo.key}/pdf?dias=${dias}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) throw new Error(`Falha ao gerar PDF (HTTP ${res.status}).`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `relatorio-${tipo.key}-livebybit.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e.message || 'Erro ao baixar PDF.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   if (perms.loading) {
     return <main className="mx-auto w-full max-w-[1100px] px-4 sm:px-6 py-8"><p className="text-slate-400">Carregando…</p></main>
@@ -81,9 +111,9 @@ export default function Relatorios() {
           {(tipo?.dias || [7]).map((d) => <option key={d} value={d}>Últimos {d} {d === 1 ? 'dia' : 'dias'}</option>)}
         </select>
 
-        <button disabled title="Exportação em PDF em breve"
-          className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-500">
-          Exportar PDF
+        <button onClick={baixarPdf} disabled={baixando || loading || !data}
+          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:border-blue-500 disabled:opacity-50">
+          {baixando ? 'Gerando…' : 'Exportar PDF'}
         </button>
       </div>
 
