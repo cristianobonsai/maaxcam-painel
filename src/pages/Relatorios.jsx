@@ -5,7 +5,7 @@ import { usePermissions } from '../hooks/usePermissions'
 // Tipos de relatório. 'perm' = flag necessária; dias = opções de período.
 const TIPOS = [
   { key: 'uptime', label: 'Disponibilidade', perm: 'canViewUptime', endpoint: '/api/reports/uptime', dias: [7, 30, 90] },
-  { key: 'drops', label: 'Quedas', perm: 'canViewDrops', endpoint: '/api/reports/drops', dias: [1, 3, 7] },
+  { key: 'drops', label: 'Quedas', perm: 'canViewDrops', endpoint: '/api/reports/drops', dias: [7, 30, 90, 180] },
   { key: 'access', label: 'Acessos', perm: 'canViewAccessLogs', endpoint: '/api/reports/access-logs', dias: [7, 30, 90] },
 ]
 
@@ -155,7 +155,8 @@ function Drops({ data, dias }) {
 
   return (
     <div className="mt-5">
-      <p className="mb-3 text-xs text-slate-500">Total de {data.total_quedas} {data.total_quedas === 1 ? 'queda' : 'quedas'} nos últimos {data.dias} {data.dias === 1 ? 'dia' : 'dias'}. Clique numa câmera para ver todas as quedas dela.</p>
+      <p className="mb-2 text-xs text-slate-500">Total de {data.total_quedas} {data.total_quedas === 1 ? 'queda' : 'quedas'} nos últimos {data.dias} {data.dias === 1 ? 'dia' : 'dias'}. Clique numa câmera para ver todas as quedas dela.</p>
+      <p className="mb-3 text-[11px] text-slate-500">O histórico de quedas fica disponível por até 180 dias.</p>
       <div className="overflow-hidden rounded-lg border border-slate-700">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
