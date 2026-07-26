@@ -10,6 +10,12 @@ const PERMS = [
   { key: 'can_edit_notif', label: 'Editar notificação' },
 ]
 
+const REPORT_PERMS = [
+  { key: 'can_view_access_logs', label: 'Ver acessos' },
+  { key: 'can_view_drops', label: 'Ver quedas' },
+  { key: 'can_view_uptime', label: 'Ver disponibilidade' },
+]
+
 function iniciais(email) {
   const nome = (email || '').split('@')[0] || ''
   return (nome.slice(0, 2) || '?').toUpperCase()
@@ -264,6 +270,19 @@ function MemberCard({ member, onChanged, onError }) {
             {p.label}
           </label>
         ))}
+      </div>
+
+      <div className="mt-3 border-t border-slate-700 pt-3">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Relatórios</p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          {REPORT_PERMS.map((p) => (
+            <label key={p.key} className="flex cursor-pointer items-center gap-2 text-[13px] text-slate-300">
+              <input type="checkbox" checked={!!perms[p.key]} onChange={() => toggle(p.key)}
+                className="h-4 w-4 accent-blue-500" />
+              {p.label}
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="mt-3 flex items-center gap-3">
