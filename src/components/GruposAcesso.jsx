@@ -236,13 +236,17 @@ function GrupoCard({ grupo, cameras, members, onChanged, onError }) {
       </div>
 
       {/* membros */}
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Quem vê este grupo</p>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Quem vê este grupo</p>
+      <p className="mb-2 text-xs text-amber-300/90">✓ Marque a caixa de cada pessoa que deve ver estas câmeras. Sem ninguém marcado, o grupo não libera acesso a nenhum convidado.</p>
+      {selMems.size === 0 && (members || []).length > 0 && (
+        <p className="mb-2 text-xs text-slate-500">Nenhuma pessoa marcada ainda.</p>
+      )}
       {(members || []).length === 0 ? (
         <p className="mb-4 text-xs text-slate-500">Nenhum convidado disponível.</p>
       ) : (
         <div className="mb-4 flex flex-wrap gap-2">
           {(members || []).map((m) => (
-            <label key={m.user_id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500">
+            <label key={m.user_id} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm hover:border-blue-500 ${selMems.has(m.user_id) ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-slate-700 bg-slate-950 text-slate-300'}`}>
               <input type="checkbox" checked={selMems.has(m.user_id)} onChange={() => toggleMem(m.user_id)} className="h-4 w-4 accent-blue-500" />
               {m.email}
             </label>
