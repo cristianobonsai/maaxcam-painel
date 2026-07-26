@@ -38,5 +38,8 @@ export function usePermissions() {
     canChangePlan: can('can_change_plan'),
     canCreateGroups: can('can_create_groups'),
     canEditNotif: can('can_edit_notif'),
+    canViewAccessLogs: can('can_view_access_logs'),
+    canViewDrops: can('can_view_drops'),
+    canViewUptime: can('can_view_uptime'),
   }
 }

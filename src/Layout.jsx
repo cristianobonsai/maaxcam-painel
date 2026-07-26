@@ -26,6 +26,7 @@ const ICONS = {
   faturamento: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   usuarios: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
   conta: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM3 21a9 9 0 0 1 18 0',
+  relatorios: 'M3 3v18h18M18 17V9M13 17V5M8 17v-3',
 }
 
 export default function Layout() {
@@ -33,6 +34,7 @@ export default function Layout() {
   const { signOut } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [canUseGroups, setCanUseGroups] = useState(false)
+  const [canReports, setCanReports] = useState(false)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -43,6 +45,10 @@ export default function Layout() {
         if (active) {
           setIsAdmin(!!me?.is_admin)
           setCanUseGroups(!!me?.can_use_groups)
+          const perm = me?.permissions || {}
+          const podeRel = !!me?.is_admin || !me?.owner_id
+            || perm.can_view_access_logs || perm.can_view_drops || perm.can_view_uptime
+          setCanReports(!!podeRel)
         }
       } catch { /* silencioso */ }
     })()
@@ -62,6 +68,7 @@ export default function Layout() {
     { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },
     { to: '/painel/usuarios', label: 'Usuários', icon: ICONS.usuarios },
     { to: '/painel/conta', label: 'Minha conta', icon: ICONS.conta },
+    ...(canReports ? [{ to: '/painel/relatorios', label: 'Relatórios', icon: ICONS.relatorios }] : []),
     ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos }] : []),
     ...(isAdmin ? [
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },

@@ -15,6 +15,7 @@ import Layout from './Layout.jsx'
 import Mapa from './pages/Mapa.jsx'
 import Logs from './pages/Logs.jsx'
 import Faturamento from './pages/Faturamento.jsx'
+import Relatorios from './pages/Relatorios.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 import MinhaConta from './pages/MinhaConta.jsx'
 
@@ -43,6 +44,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/painel/faturamento" element={<Faturamento />} />
             <Route path="/painel/usuarios" element={<Usuarios />} />
             <Route path="/painel/conta" element={<MinhaConta />} />
+            <Route path="/painel/relatorios" element={<Relatorios />} />
           </Route>
         </Routes>
       </BrowserRouter>
