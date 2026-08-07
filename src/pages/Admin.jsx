@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import CobrancaPanel from '../components/CobrancaPanel.jsx'
 
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
 
@@ -333,7 +334,7 @@ export default function Admin() {
         {!loading && me?.is_admin && (
           <>
             <div className="mt-6 flex gap-6 border-b border-slate-700">
-              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário'], ['discounts', 'Descontos'], ['health', 'Saúde']].map(([key, label]) => (
+              {[['users', 'Usuários'], ['cameras', 'Câmeras por usuário'], ['discounts', 'Descontos'], ['cobranca', 'Cobrança'], ['health', 'Saúde']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)}
                   className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
                   {label}
@@ -341,7 +342,9 @@ export default function Admin() {
               ))}
             </div>
 
-            {tab === 'health' ? (
+            {tab === 'cobranca' ? (
+  <CobrancaPanel />
+) : tab === 'health' ? (
   <SystemHealth />
 ) : tab === 'discounts' ? (
   <DiscountsPanel users={users} />
