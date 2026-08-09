@@ -63,13 +63,13 @@ export default function Layout() {
   const items = [
     { to: '/painel', label: 'Dashboard', icon: ICONS.dashboard, end: true },
     { to: '/painel/cameras', label: 'Câmeras', icon: ICONS.cameras },
+    ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupo de transmissão', icon: ICONS.grupos }] : []),
     { to: '/painel/mapa', label: 'Mapa', icon: ICONS.map },
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
     { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },
     { to: '/painel/usuarios', label: 'Usuários', icon: ICONS.usuarios },
     { to: '/painel/conta', label: 'Minha conta', icon: ICONS.conta },
     ...(canReports ? [{ to: '/painel/relatorios', label: 'Relatórios', icon: ICONS.relatorios }] : []),
-    ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupos', icon: ICONS.grupos }] : []),
     ...(isAdmin ? [
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },
       { to: '/painel/logs', label: 'Logs', icon: ICONS.logs },
