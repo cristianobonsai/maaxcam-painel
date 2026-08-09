@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
+import NotifConvidados from '../components/NotifConvidados.jsx'
 
 const DELAY_OPTIONS = [1, 3, 5, 10, 15, 30, 60]
 const DELAY2_OPTIONS = [0, 60, 120, 240, 480, 720]
@@ -32,6 +33,7 @@ export default function Notificacoes() {
   const [conn, setConn] = useState({ connected: false, chat_id: '', bot_username: '' })
   const [link, setLink] = useState(null)
   const [s, setS] = useState(DEFAULTS)
+  const [aba, setAba] = useState('minhas')
 
   async function load() {
     setLoading(true)
@@ -140,13 +142,28 @@ export default function Notificacoes() {
           Configure como e onde você quer ser alertado sobre eventos das suas câmeras.
         </p>
 
+        {!perms.isGuest && (
+          <div className="mt-5 flex gap-1 border-b border-slate-700">
+            <button onClick={() => setAba('minhas')}
+              className={`px-4 py-2 text-sm ${aba === 'minhas' ? 'border-b-2 border-blue-500 font-medium text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+              Minhas notificações
+            </button>
+            <button onClick={() => setAba('convidados')}
+              className={`px-4 py-2 text-sm ${aba === 'convidados' ? 'border-b-2 border-blue-500 font-medium text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+              Convidados
+            </button>
+          </div>
+        )}
+
         {banner && (
           <div className={`mt-5 rounded-lg border px-4 py-3 text-sm ${bannerStyle[banner.type]}`}>
             {banner.text}
           </div>
         )}
 
-        {loading ? (
+        {aba === 'convidados' ? (
+          <NotifConvidados />
+        ) : loading ? (
           <p className="mt-8 text-slate-400">Carregando…</p>
         ) : (
           <>
