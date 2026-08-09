@@ -19,6 +19,12 @@ export default function LocationEditor({ cameraId }) {
   const [banner, setBanner] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // --- autocomplete ---
+  const [openSug, setOpenSug] = useState(false)
+  const acTimer = useRef(null)
+  const acSeq = useRef(0)
+  const boxRef = useRef(null)
+
   useEffect(() => {
     let active = true
     ;(async () => {
@@ -65,6 +71,15 @@ export default function LocationEditor({ cameraId }) {
     return () => { map.remove(); mapRef.current = null; markerRef.current = null }
   }, [loading])
 
+  // fecha a lista de sugestões ao clicar fora
+  useEffect(() => {
+    function onDocClick(e) {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpenSug(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
   async function reverseGeocode(lat, lng) {
     try {
       const r = await api.get(`/api/reverse-geocode?lat=${lat}&lng=${lng}`)
@@ -75,21 +90,45 @@ export default function LocationEditor({ cameraId }) {
     } catch { /* ignora */ }
   }
 
+  // busca sugestões enquanto digita (debounce 350ms, cancela respostas antigas)
+  function onChangeQ(value) {
+    setQ(value)
+    setBanner(null)
+    if (acTimer.current) clearTimeout(acTimer.current)
+    const termo = value.trim()
+    if (termo.length < 3) { setResults([]); setOpenSug(false); return }
+    acTimer.current = setTimeout(async () => {
+      const seq = ++acSeq.current
+      try {
+        const r = await api.get(`/api/geocode?q=${encodeURIComponent(termo)}`)
+        if (seq !== acSeq.current) return // chegou resposta velha, ignora
+        const arr = Array.isArray(r) ? r : []
+        setResults(arr)
+        setOpenSug(arr.length > 0)
+      } catch { /* silencioso durante digitação */ }
+    }, 350)
+  }
+
   async function doSearch(e) {
     if (e && e.preventDefault) e.preventDefault()
+    if (acTimer.current) clearTimeout(acTimer.current)
     if (q.trim().length < 3) return
     setSearching(true); setBanner(null)
     try {
+      const seq = ++acSeq.current
       const r = await api.get(`/api/geocode?q=${encodeURIComponent(q.trim())}`)
-      setResults(Array.isArray(r) ? r : [])
-      if (!r || r.length === 0) setBanner({ type: 'warn', text: 'Nenhum endereço encontrado.' })
+      if (seq !== acSeq.current) return
+      const arr = Array.isArray(r) ? r : []
+      setResults(arr)
+      setOpenSug(arr.length > 0)
+      if (arr.length === 0) setBanner({ type: 'warn', text: 'Nenhum endereço encontrado.' })
     } catch (err) {
       setBanner({ type: 'err', text: err instanceof ApiError ? err.message : 'Falha na busca.' })
     } finally { setSearching(false) }
   }
 
   function pick(r) {
-    setResults([]); setQ('')
+    setResults([]); setOpenSug(false); setQ('')
     setCoords({ lat: r.lat, lng: r.lng })
     if (r.label) {
       setSuggested(r.label)
@@ -132,20 +171,22 @@ export default function LocationEditor({ cameraId }) {
         )}
       </div>
 
-      <div>
+      <div ref={boxRef} className="relative">
         <label className="mb-1 block text-sm text-slate-300">Buscar endereço no mapa</label>
         <div className="flex gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') doSearch(e) }}
-            placeholder="Digite um endereço e busque"
+          <input value={q} onChange={(e) => onChangeQ(e.target.value)}
+            onFocus={() => { if (results.length > 0) setOpenSug(true) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') doSearch(e); if (e.key === 'Escape') setOpenSug(false) }}
+            placeholder="Comece a digitar o endereço…"
+            autoComplete="off"
             className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
           <button onClick={doSearch} disabled={searching}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50">
             {searching ? '...' : 'Buscar'}
           </button>
         </div>
-        {results.length > 0 && (
-          <ul className="mt-2 divide-y divide-slate-800 rounded-lg border border-slate-700 bg-slate-900">
+        {openSug && results.length > 0 && (
+          <ul className="absolute z-[1000] mt-1 max-h-64 w-full overflow-auto divide-y divide-slate-800 rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
             {results.map((r, i) => (
               <li key={i}>
                 <button onClick={() => pick(r)} className="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">
@@ -155,6 +196,7 @@ export default function LocationEditor({ cameraId }) {
             ))}
           </ul>
         )}
+        <p className="mt-1 text-xs text-slate-500">As opções aparecem enquanto você digita — clique na correta.</p>
       </div>
 
       <div ref={mapEl} className="h-72 w-full overflow-hidden rounded-xl border border-slate-700" />
