@@ -178,8 +178,13 @@ export default function DadosCobranca({ getUrl = '/api/billing/info', putUrl = '
                     onChange={(e) => { setAceite(e.target.checked); setSaved(false) }}
                     className="mt-0.5 accent-blue-500" />
                   <span>
-                    Li e aceito os <strong className="text-slate-100">Termos de Uso</strong> e a{' '}
-                    <strong className="text-slate-100">Política de Pagamento</strong> do LiveByBit.
+                    Li e aceito os{' '}
+                    <a href="/termos.pdf" target="_blank" rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-semibold text-blue-400 underline hover:text-blue-300">Termos de Uso</a> e a{' '}
+                    <a href="/politica.pdf" target="_blank" rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-semibold text-blue-400 underline hover:text-blue-300">Política de Pagamento</a> do LiveByBit.
                   </span>
                 </label>
               )}
