@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
+import DadosCobranca from '../components/DadosCobranca.jsx'
 
 // Tela "Minha conta": mostra o email e permite sair/excluir a conta (autoexclusão).
 // Comportamento adapta ao perfil:
 //  - convidado: sai da conta na hora (1 confirmação)
 //  - dono sem câmeras: precisa digitar EXCLUIR
 //  - dono com câmeras: backend bloqueia (mostra a mensagem)
+// O dono tambem vê o cadastro fiscal + aceite dos termos (DadosCobranca); convidado nao.
 export default function MinhaConta() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
@@ -67,6 +69,9 @@ export default function MinhaConta() {
           </>
         )}
       </div>
+
+      {/* Cadastro fiscal + aceite dos Termos — somente o dono da conta */}
+      {!isGuest && <DadosCobranca aceiteTermos defaultOpen />}
 
       {/* Zona de perigo */}
       <div className="mt-8 rounded-xl border border-red-900/60 bg-red-500/5 p-4">
