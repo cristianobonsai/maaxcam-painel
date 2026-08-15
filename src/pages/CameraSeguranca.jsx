@@ -338,6 +338,9 @@ export default function CameraSeguranca() {
                   <iframe key={data.playback_id + data.stream_privacy} src={previewUrl} className="w-full h-full" allow="autoplay; fullscreen" />
                 </div>
                 <p className="text-xs text-slate-500">Se a imagem aparecer, a câmera está enviando para o servidor.</p>
+                <div className="mt-2 rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2.5 text-xs text-sky-200/90">
+                  Acabou de configurar a câmera? O vídeo pode levar até <strong>3 minutos</strong> para aparecer aqui. Se demorar mais que isso, confira se a <strong>URL RTMP</strong> e a <strong>chave</strong> estão corretas na câmera, e se ela está ligada e conectada à internet.
+                </div>
               </Card>
 
               <Card title="Transmissão (RTMP)" icon="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12">
