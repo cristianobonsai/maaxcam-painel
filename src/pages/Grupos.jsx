@@ -5,7 +5,14 @@ import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
 
 const API_URL = 'https://api.livebybit.com'
-const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false }
+const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false, resolution_tier: '1080p' }
+
+// [PORTEIRO-A3] Trilhos de resolução do grupo (batem com QUALITY_TIERS no backend).
+const TIERS = [
+  { v: '1080p', label: '1080p — Full HD (1920×1080, até 15 fps)' },
+  { v: '2k', label: '2K — QHD (2560×1440, até 30 fps)' },
+  { v: '4k', label: '4K — UHD (3840×2160, até 30 fps)' },
+]
 
 function minDuration(nCams) {
   if (nCams <= 4) return 6
@@ -78,7 +85,7 @@ export default function Grupos() {
     setForm(EMPTY_FORM); setFormError(''); setEditing('new')
   }
   function openEdit(g) {
-    setForm({ name: g.name || '', youtube_key: '', transition_seconds: g.transition_seconds ?? 5, enabled: !!g.enabled })
+    setForm({ name: g.name || '', youtube_key: '', transition_seconds: g.transition_seconds ?? 5, enabled: !!g.enabled, resolution_tier: g.resolution_tier || '1080p' })
     setFormError(''); setEditing(g.id)
   }
   function closeForm() { setEditing(null); setForm(EMPTY_FORM); setFormError('') }
@@ -103,6 +110,7 @@ export default function Grupos() {
       const body = { name: form.name.trim(), transition_seconds: Number(form.transition_seconds) || 5 }
       if (ytKey) body.youtube_key = ytKey
       if (editing === 'new') {
+        body.resolution_tier = form.resolution_tier
         await api.post('/api/groups', body)
       } else {
         body.enabled = form.enabled
@@ -336,6 +344,18 @@ export default function Grupos() {
             {editing !== null && (
               <div className="mt-6 rounded-xl border border-blue-500/60 bg-slate-800/80 p-4">
                 <h2 className="font-display font-semibold text-white">{editing === 'new' ? 'Novo grupo' : 'Editar grupo'}</h2>
+                {editing === 'new' && (
+                  <div className="mt-3 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2.5 text-xs text-sky-200/90">
+                    <p className="font-medium text-sky-100">Como funciona um grupo</p>
+                    <p className="mt-1">Você escolhe a <strong>resolução do grupo</strong> (o trilho). Todas as câmeras do grupo precisam:</p>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                      <li>estar na <strong>mesma resolução</strong> do trilho;</li>
+                      <li>transmitir em <strong>no máximo o FPS</strong> do trilho (1080p = 15 fps);</li>
+                      <li>estar <strong>online</strong> no momento de entrar no grupo.</li>
+                    </ul>
+                    <p className="mt-1">Câmeras fora do padrão são recusadas na hora, com o motivo — assim a transmissão fica sempre estável e em alta qualidade.</p>
+                  </div>
+                )}
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-xs text-slate-400">Nome</label>
@@ -354,6 +374,20 @@ export default function Grupos() {
                     <label className="mb-1 block text-xs text-slate-400">Transição (segundos)</label>
                     <input type="number" className={inputClass} value={form.transition_seconds}
                       onChange={(e) => setForm({ ...form, transition_seconds: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-400">Resolução do grupo (trilho)</label>
+                    {editing === 'new' ? (
+                      <select className={inputClass} value={form.resolution_tier}
+                        onChange={(e) => setForm({ ...form, resolution_tier: e.target.value })}>
+                        {TIERS.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
+                      </select>
+                    ) : (
+                      <p className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-300">
+                        {(TIERS.find((t) => t.v === form.resolution_tier)?.label) || form.resolution_tier}
+                        <span className="text-slate-500"> (definido na criação)</span>
+                      </p>
+                    )}
                   </div>
                   {editing !== 'new' && (
                     <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-200">
@@ -511,6 +545,9 @@ export default function Grupos() {
                                   value={addForm.duration_seconds} onChange={(e) => setAddForm({ ...addForm, duration_seconds: e.target.value })} />
                               </div>
                             </div>
+                            <p className="mt-2 text-xs text-sky-200/80">
+                              A câmera precisa estar <strong>online</strong> e no trilho do grupo (<strong>{g.resolution_tier || '1080p'}</strong>): mesma resolução e FPS dentro do limite. Fora disso, o sistema recusa e explica o porquê.
+                            </p>
                             <p className="mt-2 text-xs text-slate-500">
                               Múltiplo de 2; mínimo {minDuration(cams.length + 1)}s para {cams.length + 1} câmera(s).
                             </p>
