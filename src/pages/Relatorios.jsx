@@ -241,28 +241,28 @@ function SlaPeriodo() {
               <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
                 <tr>
                   <th className="px-4 py-2.5 text-left font-medium">Camera</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Offline no periodo</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Maior queda continua</th>
                   <th className="px-4 py-2.5 text-right font-medium">SLA</th>
                 </tr>
               </thead>
               <tbody>
                 {resultado.cameras.map((c) => {
-                  const estourou = limiteSeg !== null && c.seg_offline !== null && c.seg_offline > limiteSeg
+                  const estourou = limiteSeg !== null && c.maior_queda_seg !== null && c.maior_queda_seg > limiteSeg
                   return (
                     <tr key={c.camera_id} className={`border-t border-slate-800 ${estourou ? 'bg-red-500/10' : ''}`}>
                       <td className="px-4 py-2.5 text-slate-200">{c.nome}</td>
                       <td className={`px-4 py-2.5 text-right font-medium ${estourou ? 'text-red-300' : 'text-slate-300'}`}>
-                        {c.offline_fmt ?? 'sem dados'}
+                        {c.maior_queda_fmt ?? 'sem dados'}
                       </td>
                       <td className="px-4 py-2.5 text-right text-xs">
                         {limiteSeg === null ? (
                           <span className="text-slate-500">defina o SLA</span>
-                        ) : c.seg_offline === null ? (
+                        ) : c.maior_queda_seg === null ? (
                           <span className="text-slate-500">--</span>
                         ) : estourou ? (
-                          <span className="text-red-400">passou {formatExcedente(c.seg_offline - limiteSeg)}</span>
+                          <span className="font-medium text-red-400">Extrapolou o SLA</span>
                         ) : (
-                          <span className="text-green-400">dentro do limite</span>
+                          <span className="text-green-400">Dentro do limite</span>
                         )}
                       </td>
                     </tr>
