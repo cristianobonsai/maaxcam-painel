@@ -130,9 +130,12 @@ export default function Relatorios() {
 // ---------- Disponibilidade (barras) ----------
 function Uptime({ data }) {
   const cams = data.cameras || []
-  const comDados = cams.filter((c) => c.pct_online !== null)
+  const [busca, setBusca] = useState('')
+  const comDados = cams.filter((c) => c.pct_online !== null && c.nome.toLowerCase().includes(busca.toLowerCase()))
   return (
     <div className="mt-5">
+      <input type="text" placeholder="Buscar camera..." value={busca} onChange={(e) => setBusca(e.target.value)}
+        className="mb-3 w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
       {data.coletando_desde
         ? <p className="mb-3 text-xs text-slate-500">Disponibilidade calculada com dados coletados desde {data.coletando_desde}.</p>
         : <p className="mb-3 rounded-lg border border-amber-700/40 bg-amber-500/5 px-4 py-3 text-xs text-amber-300/90">A coleta de disponibilidade começou recentemente — os dados vão ganhar precisão conforme os dias passarem.</p>}
@@ -167,6 +170,8 @@ function Uptime({ data }) {
 // ---------- Quedas (ranking + detalhe ao clicar) ----------
 function Drops({ data, dias }) {
   const cams = data.cameras || []
+  const [busca, setBusca] = useState('')
+  const camsFiltradas = cams.filter((c) => c.nome.toLowerCase().includes(busca.toLowerCase()))
   const [aberta, setAberta] = useState(null)     // camera_id expandida
   const [detalhe, setDetalhe] = useState(null)   // { quedas: [...] }
   const [carregando, setCarregando] = useState(false)
@@ -185,6 +190,9 @@ function Drops({ data, dias }) {
 
   return (
     <div className="mt-5">
+      <PeriodoQuedas cams={cams} />
+      <input type="text" placeholder="Buscar camera..." value={busca} onChange={(e) => setBusca(e.target.value)}
+        className="mb-3 mt-6 w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
       <p className="mb-2 text-xs text-slate-500">Total de {data.total_quedas} {data.total_quedas === 1 ? 'queda' : 'quedas'} nos últimos {data.dias} {data.dias === 1 ? 'dia' : 'dias'}. Clique numa câmera para ver todas as quedas dela.</p>
       <p className="mb-3 text-[11px] text-slate-500">O histórico de quedas fica disponível por até 180 dias.</p>
       <div className="overflow-hidden rounded-lg border border-slate-700">
@@ -197,7 +205,7 @@ function Drops({ data, dias }) {
             </tr>
           </thead>
           <tbody>
-            {cams.map((c) => (
+            {camsFiltradas.map((c) => (
               <>
                 <tr key={c.camera_id}
                   onClick={() => abrir(c)}
@@ -237,7 +245,6 @@ function Drops({ data, dias }) {
           </tbody>
         </table>
       </div>
-      <PeriodoQuedas cams={cams} />
     </div>
   )
 }
@@ -341,10 +348,14 @@ function PeriodoQuedas({ cams }) {
 // ---------- Acessos (lista) ----------
 function Access({ data }) {
   const logins = data.logins || []
+  const [busca, setBusca] = useState('')
+  const loginsFiltrados = logins.filter((l) => (l.email || '').toLowerCase().includes(busca.toLowerCase()))
   return (
     <div className="mt-5">
+      <input type="text" placeholder="Buscar usuario..." value={busca} onChange={(e) => setBusca(e.target.value)}
+        className="mb-3 w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
       <p className="mb-3 text-xs text-slate-500">{data.total} {data.total === 1 ? 'acesso' : 'acessos'} nos últimos {data.dias} dias.</p>
-      {logins.length === 0 ? (
+      {loginsFiltrados.length === 0 ? (
         <p className="text-sm text-slate-500">Nenhum acesso no período.</p>
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-700">
@@ -357,7 +368,7 @@ function Access({ data }) {
               </tr>
             </thead>
             <tbody>
-              {logins.map((l, i) => (
+              {loginsFiltrados.map((l, i) => (
                 <tr key={i} className="border-t border-slate-800">
                   <td className="px-4 py-2.5 text-slate-200">{l.email}</td>
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{l.ip}</td>
