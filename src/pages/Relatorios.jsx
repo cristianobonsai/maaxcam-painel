@@ -237,6 +237,103 @@ function Drops({ data, dias }) {
           </tbody>
         </table>
       </div>
+      <PeriodoQuedas cams={cams} />
+    </div>
+  )
+}
+
+// ---------- Quedas: consulta por periodo customizado ----------
+function PeriodoQuedas({ cams }) {
+  const hoje = new Date().toISOString().slice(0, 10)
+  const [camId, setCamId] = useState(cams[0]?.camera_id || '')
+  const [dataInicio, setDataInicio] = useState(hoje)
+  const [dataFim, setDataFim] = useState(hoje)
+  const [resultado, setResultado] = useState(null)
+  const [carregando, setCarregando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function consultar() {
+    if (!camId) { setErro('Escolha uma camera.'); return }
+    if (!dataInicio || !dataFim) { setErro('Escolha as duas datas.'); return }
+    if (dataFim < dataInicio) { setErro('A data final nao pode ser antes da data inicial.'); return }
+    setCarregando(true); setErro(''); setResultado(null)
+    try {
+      const r = await api.get(`/api/reports/drops/${camId}/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`)
+      setResultado(r)
+    } catch (e) {
+      setErro(e instanceof ApiError ? e.message : 'Erro ao consultar o periodo.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  return (
+    <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Consultar periodo especifico</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Camera</label>
+          <select value={camId} onChange={(e) => setCamId(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none">
+            {cams.map((c) => <option key={c.camera_id} value={c.camera_id}>{c.nome}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data inicio</label>
+          <input type="date" value={dataInicio} max={dataFim} onChange={(e) => setDataInicio(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data fim</label>
+          <input type="date" value={dataFim} min={dataInicio} max={hoje} onChange={(e) => setDataFim(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <button onClick={consultar} disabled={carregando}
+          className="rounded-lg bg-blue-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50">
+          {carregando ? 'Consultando...' : 'Consultar'}
+        </button>
+      </div>
+
+      {erro && <p className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">{erro}</p>}
+
+      {resultado && (
+        <div className="mt-4">
+          <p className="mb-3 text-sm text-slate-200">
+            <span className="font-medium text-white">{resultado.nome}</span> ficou{' '}
+            <span className="font-medium text-amber-300">{resultado.total_offline_fmt}</span> offline entre{' '}
+            {resultado.data_inicio} e {resultado.data_fim} ({resultado.total_quedas} {resultado.total_quedas === 1 ? 'queda' : 'quedas'}).
+          </p>
+          {resultado.coletando_desde && (
+            <p className="mb-3 text-[11px] text-slate-500">Dados coletados desde {resultado.coletando_desde}.</p>
+          )}
+          {resultado.quedas.length === 0 ? (
+            <p className="text-sm text-slate-500">Nenhuma queda no periodo.</p>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-slate-700">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
+                  <tr>
+                    <th className="px-4 py-2.5 text-left font-medium">Caiu em</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Voltou em</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Duracao</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultado.quedas.map((q, i) => (
+                    <tr key={i} className="border-t border-slate-800">
+                      <td className="px-4 py-2.5 text-slate-200">{q.caiu}</td>
+                      <td className="px-4 py-2.5 text-slate-200">
+                        {q.ainda_offline ? <span className="text-red-400">ainda offline</span> : q.voltou}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-slate-300">{q.duracao_fmt}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
