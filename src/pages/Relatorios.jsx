@@ -186,6 +186,8 @@ function SlaPeriodo() {
   const [resultado, setResultado] = useState(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [baixando, setBaixando] = useState(false)
+  const { session } = useAuth()
 
   async function consultar() {
     if (!dataInicio || !dataFim) { setErro('Escolha as duas datas.'); return }
@@ -202,6 +204,32 @@ function SlaPeriodo() {
   }
 
   const limiteSeg = slaDias !== '' && !isNaN(Number(slaDias)) ? Number(slaDias) * 86400 : null
+
+  async function baixarPdf() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const slaParam = slaDias !== '' ? &sla_dias= : ''
+      const res = await fetch(${API_URL}/api/reports/uptime/periodo/pdf?data_inicio=&data_fim=, {
+        headers: { Authorization: Bearer  },
+      })
+      if (!res.ok) throw new Error(Falha ao gerar PDF (HTTP ).)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-sla-periodo-livebybit.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar PDF.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   return (
     <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
@@ -225,6 +253,10 @@ function SlaPeriodo() {
         <button onClick={consultar} disabled={carregando}
           className="rounded-lg bg-blue-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50">
           {carregando ? 'Consultando...' : 'Consultar'}
+        </button>
+        <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar PDF'}
         </button>
       </div>
 
@@ -368,6 +400,8 @@ function PeriodoQuedas({ cams }) {
   const [resultado, setResultado] = useState(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [baixando, setBaixando] = useState(false)
+  const { session } = useAuth()
 
   async function consultar() {
     if (!camId) { setErro('Escolha uma camera.'); return }
@@ -381,6 +415,31 @@ function PeriodoQuedas({ cams }) {
       setErro(e instanceof ApiError ? e.message : 'Erro ao consultar o periodo.')
     } finally {
       setCarregando(false)
+    }
+  }
+
+  async function baixarPdf() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const res = await fetch(${API_URL}/api/reports/drops//periodo/pdf?data_inicio=&data_fim=, {
+        headers: { Authorization: Bearer  },
+      })
+      if (!res.ok) throw new Error(Falha ao gerar PDF (HTTP ).)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-quedas-periodo-livebybit.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar PDF.')
+    } finally {
+      setBaixando(false)
     }
   }
 
@@ -408,6 +467,10 @@ function PeriodoQuedas({ cams }) {
         <button onClick={consultar} disabled={carregando}
           className="rounded-lg bg-blue-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50">
           {carregando ? 'Consultando...' : 'Consultar'}
+        </button>
+        <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar PDF'}
         </button>
       </div>
 
