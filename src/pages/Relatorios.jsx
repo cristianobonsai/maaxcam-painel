@@ -134,6 +134,7 @@ function Uptime({ data }) {
   const comDados = cams.filter((c) => c.pct_online !== null && c.nome.toLowerCase().includes(busca.toLowerCase()))
   return (
     <div className="mt-5">
+      <SlaPeriodo />
       <input type="text" placeholder="Buscar camera..." value={busca} onChange={(e) => setBusca(e.target.value)}
         className="mb-3 w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
       {data.coletando_desde
@@ -161,6 +162,115 @@ function Uptime({ data }) {
               </div>
             )
           })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatExcedente(seg) {
+  seg = Math.round(seg)
+  const dias = Math.floor(seg / 86400)
+  const horas = Math.floor((seg % 86400) / 3600)
+  const minutos = Math.floor((seg % 3600) / 60)
+  if (dias > 0) return `${dias}d ${horas}h do limite`
+  if (horas > 0) return `${horas}h ${minutos}min do limite`
+  return `${minutos}min do limite`
+}
+
+function SlaPeriodo() {
+  const hoje = new Date().toISOString().slice(0, 10)
+  const [dataInicio, setDataInicio] = useState(hoje)
+  const [dataFim, setDataFim] = useState(hoje)
+  const [slaDias, setSlaDias] = useState('')
+  const [resultado, setResultado] = useState(null)
+  const [carregando, setCarregando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function consultar() {
+    if (!dataInicio || !dataFim) { setErro('Escolha as duas datas.'); return }
+    if (dataFim < dataInicio) { setErro('A data final nao pode ser antes da data inicial.'); return }
+    setCarregando(true); setErro(''); setResultado(null)
+    try {
+      const r = await api.get(`/api/reports/uptime/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`)
+      setResultado(r)
+    } catch (e) {
+      setErro(e instanceof ApiError ? e.message : 'Erro ao consultar o periodo.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  const limiteSeg = slaDias !== '' && !isNaN(Number(slaDias)) ? Number(slaDias) * 86400 : null
+
+  return (
+    <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Conferencia de SLA por periodo</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data inicio</label>
+          <input type="date" value={dataInicio} max={dataFim} onChange={(e) => setDataInicio(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data fim</label>
+          <input type="date" value={dataFim} min={dataInicio} max={hoje} onChange={(e) => setDataFim(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">SLA (dias de tolerancia)</label>
+          <input type="number" min="0" step="0.5" placeholder="ex: 4" value={slaDias} onChange={(e) => setSlaDias(e.target.value)}
+            className="w-28 rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <button onClick={consultar} disabled={carregando}
+          className="rounded-lg bg-blue-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50">
+          {carregando ? 'Consultando...' : 'Consultar'}
+        </button>
+      </div>
+
+      {erro && <p className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">{erro}</p>}
+
+      {resultado && (
+        <div className="mt-4">
+          <p className="mb-3 text-[11px] text-slate-500">
+            Periodo: {resultado.data_inicio} a {resultado.data_fim}.
+            {resultado.coletando_desde ? ` Dados coletados desde ${resultado.coletando_desde}.` : ''}
+          </p>
+          <div className="overflow-hidden rounded-lg border border-slate-700">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
+                <tr>
+                  <th className="px-4 py-2.5 text-left font-medium">Camera</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Offline no periodo</th>
+                  <th className="px-4 py-2.5 text-right font-medium">SLA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resultado.cameras.map((c) => {
+                  const estourou = limiteSeg !== null && c.seg_offline !== null && c.seg_offline > limiteSeg
+                  return (
+                    <tr key={c.camera_id} className={`border-t border-slate-800 ${estourou ? 'bg-red-500/10' : ''}`}>
+                      <td className="px-4 py-2.5 text-slate-200">{c.nome}</td>
+                      <td className={`px-4 py-2.5 text-right font-medium ${estourou ? 'text-red-300' : 'text-slate-300'}`}>
+                        {c.offline_fmt ?? 'sem dados'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-xs">
+                        {limiteSeg === null ? (
+                          <span className="text-slate-500">defina o SLA</span>
+                        ) : c.seg_offline === null ? (
+                          <span className="text-slate-500">--</span>
+                        ) : estourou ? (
+                          <span className="text-red-400">passou {formatExcedente(c.seg_offline - limiteSeg)}</span>
+                        ) : (
+                          <span className="text-green-400">dentro do limite</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
