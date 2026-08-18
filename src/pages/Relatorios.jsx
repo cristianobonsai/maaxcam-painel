@@ -210,11 +210,11 @@ function SlaPeriodo() {
     if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
     setBaixando(true); setErro('')
     try {
-      const slaParam = slaDias !== '' ? &sla_dias= : ''
-      const res = await fetch(${API_URL}/api/reports/uptime/periodo/pdf?data_inicio=&data_fim=, {
-        headers: { Authorization: Bearer  },
+      const slaParam = slaDias !== '' ? `&sla_dias=${slaDias}` : ''
+      const res = await fetch(`${API_URL}/api/reports/uptime/periodo/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}${slaParam}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      if (!res.ok) throw new Error(Falha ao gerar PDF (HTTP ).)
+      if (!res.ok) throw new Error(`Falha ao gerar PDF (HTTP ${res.status}).`)
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -423,10 +423,10 @@ function PeriodoQuedas({ cams }) {
     if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
     setBaixando(true); setErro('')
     try {
-      const res = await fetch(${API_URL}/api/reports/drops//periodo/pdf?data_inicio=&data_fim=, {
-        headers: { Authorization: Bearer  },
+      const res = await fetch(`${API_URL}/api/reports/drops/${camId}/periodo/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      if (!res.ok) throw new Error(Falha ao gerar PDF (HTTP ).)
+      if (!res.ok) throw new Error(`Falha ao gerar PDF (HTTP ${res.status}).`)
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
