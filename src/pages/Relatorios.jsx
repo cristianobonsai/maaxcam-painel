@@ -520,6 +520,111 @@ function PeriodoQuedas({ cams }) {
   )
 }
 
+function AcessoPeriodo() {
+  const hoje = new Date().toISOString().slice(0, 10)
+  const [dataInicio, setDataInicio] = useState(hoje)
+  const [dataFim, setDataFim] = useState(hoje)
+  const [resultado, setResultado] = useState(null)
+  const [carregando, setCarregando] = useState(false)
+  const [erro, setErro] = useState('')
+  const [baixando, setBaixando] = useState(false)
+  const { session } = useAuth()
+  async function consultar() {
+    if (!dataInicio || !dataFim) { setErro('Escolha as duas datas.'); return }
+    if (dataFim < dataInicio) { setErro('A data final nao pode ser antes da data inicial.'); return }
+    setCarregando(true); setErro(''); setResultado(null)
+    try {
+      const r = await api.get(`/api/reports/access/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`)
+      setResultado(r)
+    } catch (e) {
+      setErro(e instanceof ApiError ? e.message : 'Erro ao consultar o periodo.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+  async function baixarPdf() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const res = await fetch(`${API_URL}/api/reports/access/periodo/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) throw new Error(`Falha ao gerar PDF (HTTP ${res.status}).`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-acessos-periodo-livebybit.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar PDF.')
+    } finally {
+      setBaixando(false)
+    }
+  }
+  return (
+    <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Consultar periodo especifico</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data inicio</label>
+          <input type="date" value={dataInicio} max={dataFim} onChange={(e) => setDataInicio(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Data fim</label>
+          <input type="date" value={dataFim} min={dataInicio} max={hoje} onChange={(e) => setDataFim(e.target.value)}
+            className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
+        </div>
+        <button onClick={consultar} disabled={carregando}
+          className="rounded-lg bg-blue-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-400 disabled:opacity-50">
+          {carregando ? 'Consultando...' : 'Consultar'}
+        </button>
+        <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar PDF'}
+        </button>
+      </div>
+      {erro && <p className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">{erro}</p>}
+      {resultado && (
+        <div className="mt-4">
+          <p className="mb-3 text-sm text-slate-200">
+            <span className="font-medium text-white">{resultado.total}</span> {resultado.total === 1 ? 'acesso' : 'acessos'} entre {resultado.data_inicio} e {resultado.data_fim}.
+          </p>
+          {resultado.logins.length === 0 ? (
+            <p className="text-sm text-slate-500">Nenhum acesso no periodo.</p>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-slate-700">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
+                  <tr>
+                    <th className="px-4 py-2.5 text-left font-medium">Usuario</th>
+                    <th className="px-4 py-2.5 text-left font-medium">IP</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Quando</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultado.logins.map((l, i) => (
+                    <tr key={i} className="border-t border-slate-800">
+                      <td className="px-4 py-2.5 text-slate-200">{l.email}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{l.ip}</td>
+                      <td className="px-4 py-2.5 text-right text-slate-400">{l.quando}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ---------- Acessos (lista) ----------
 function Access({ data }) {
   const logins = data.logins || []
@@ -527,6 +632,7 @@ function Access({ data }) {
   const loginsFiltrados = logins.filter((l) => (l.email || '').toLowerCase().includes(busca.toLowerCase()))
   return (
     <div className="mt-5">
+      <AcessoPeriodo />
       <input type="text" placeholder="Buscar usuario..." value={busca} onChange={(e) => setBusca(e.target.value)}
         className="mb-3 w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none" />
       <p className="mb-3 text-xs text-slate-500">{data.total} {data.total === 1 ? 'acesso' : 'acessos'} nos últimos {data.dias} dias.</p>
