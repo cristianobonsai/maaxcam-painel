@@ -220,6 +220,31 @@ function SlaPeriodo() {
       setBaixando(false)
     }
   }
+  async function baixarExcel() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const slaParam = slaDias !== '' ? `&sla_dias=${slaDias}` : ''
+      const res = await fetch(`${API_URL}/api/reports/uptime/periodo/excel?data_inicio=${dataInicio}&data_fim=${dataFim}${slaParam}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) throw new Error(`Falha ao gerar Excel (HTTP ${res.status}).`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-sla-periodo-livebybit.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar Excel.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   return (
     <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
@@ -247,6 +272,10 @@ function SlaPeriodo() {
         <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
           className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
           {baixando ? 'Gerando...' : 'Exportar PDF'}
+        </button>
+        <button onClick={baixarExcel} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar Excel'}
         </button>
       </div>
 
@@ -432,6 +461,30 @@ function PeriodoQuedas({ cams }) {
       setBaixando(false)
     }
   }
+  async function baixarExcel() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const res = await fetch(`${API_URL}/api/reports/drops/${camId}/periodo/excel?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) throw new Error(`Falha ao gerar Excel (HTTP ${res.status}).`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-quedas-periodo-livebybit.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar Excel.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   return (
     <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
@@ -461,6 +514,10 @@ function PeriodoQuedas({ cams }) {
         <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
           className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
           {baixando ? 'Gerando...' : 'Exportar PDF'}
+        </button>
+        <button onClick={baixarExcel} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar Excel'}
         </button>
       </div>
 
@@ -554,6 +611,30 @@ function AcessoPeriodo() {
       setBaixando(false)
     }
   }
+  async function baixarExcel() {
+    if (!resultado) return
+    if (!session?.access_token) { setErro('Sessao expirada, faca login novamente.'); return }
+    setBaixando(true); setErro('')
+    try {
+      const res = await fetch(`${API_URL}/api/reports/access/periodo/excel?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) throw new Error(`Falha ao gerar Excel (HTTP ${res.status}).`)
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio-acessos-periodo-livebybit.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(e.message || 'Erro ao baixar Excel.')
+    } finally {
+      setBaixando(false)
+    }
+  }
   return (
     <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/40 p-4">
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Consultar periodo especifico</p>
@@ -575,6 +656,10 @@ function AcessoPeriodo() {
         <button onClick={baixarPdf} disabled={baixando || carregando || !resultado}
           className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
           {baixando ? 'Gerando...' : 'Exportar PDF'}
+        </button>
+        <button onClick={baixarExcel} disabled={baixando || carregando || !resultado}
+          className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+          {baixando ? 'Gerando...' : 'Exportar Excel'}
         </button>
       </div>
       {erro && <p className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">{erro}</p>}
