@@ -105,18 +105,6 @@ export default function Relatorios() {
             </button>
           ))}
         </div>
-
-        {tipo?.key === 'access' && (<>
-        <select value={dias} onChange={(e) => setDias(Number(e.target.value))}
-          className="ml-auto rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none">
-          {(tipo?.dias || [7]).map((d) => <option key={d} value={d}>Últimos {d} {d === 1 ? 'dia' : 'dias'}</option>)}
-        </select>
-
-        <button onClick={baixarPdf} disabled={baixando || loading || !data}
-          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:border-blue-500 disabled:opacity-50">
-          {baixando ? 'Gerando…' : 'Exportar PDF'}
-        </button>
-        </>)}
       </div>
 
       {error && <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
