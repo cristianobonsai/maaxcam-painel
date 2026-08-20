@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext.jsx'
 import { api } from './lib/api'
-
 function Icon({ path, className = '' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -11,7 +10,6 @@ function Icon({ path, className = '' }) {
     </svg>
   )
 }
-
 const ICONS = {
   dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',
   cameras: 'M15 10l4.5-2.3A1 1 0 0 1 21 8.6v6.8a1 1 0 0 1-1.5.9L15 14M4 6h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z',
@@ -27,8 +25,8 @@ const ICONS = {
   usuarios: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
   conta: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM3 21a9 9 0 0 1 18 0',
   relatorios: 'M3 3v18h18M18 17V9M13 17V5M8 17v-3',
+  manual: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
 }
-
 export default function Layout() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
@@ -36,7 +34,6 @@ export default function Layout() {
   const [canUseGroups, setCanUseGroups] = useState(false)
   const [canReports, setCanReports] = useState(false)
   const [open, setOpen] = useState(false)
-
   useEffect(() => {
     let active = true
     ;(async () => {
@@ -54,12 +51,10 @@ export default function Layout() {
     })()
     return () => { active = false }
   }, [])
-
   async function handleLogout() {
     try { await signOut() } catch { /* ignore */ }
     navigate('/login', { replace: true })
   }
-
   const items = [
     { to: '/painel', label: 'Dashboard', icon: ICONS.dashboard, end: true },
     { to: '/painel/cameras', label: 'Câmeras', icon: ICONS.cameras },
@@ -70,32 +65,28 @@ export default function Layout() {
     { to: '/painel/usuarios', label: 'Usuários', icon: ICONS.usuarios },
     { to: '/painel/conta', label: 'Minha conta', icon: ICONS.conta },
     ...(canReports ? [{ to: '/painel/relatorios', label: 'Relatórios', icon: ICONS.relatorios }] : []),
+    { to: '/painel/manual', label: 'Manual do Usuário', icon: ICONS.manual },
     ...(isAdmin ? [
       { to: '/painel/admin', label: 'Admin', icon: ICONS.admin },
       { to: '/painel/logs', label: 'Logs', icon: ICONS.logs },
     ] : []),
   ]
-
   const linkClass = ({ isActive }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium border-l-2 ${
       isActive
         ? 'border-blue-500 bg-blue-500/10 text-white'
         : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
     }`
-
   return (
     <>
       <div className="bg-atmosphere" />
-
       <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur lg:hidden">
         <button onClick={() => setOpen(true)} aria-label="Abrir menu" className="text-slate-200">
           <Icon path={ICONS.menu} className="h-6 w-6" />
         </button>
         <span className="font-display font-bold text-white">LiveByBit</span>
       </div>
-
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
-
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-slate-800 bg-slate-900 p-3 transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-2 py-3">
           <div className="flex items-center gap-2.5">
@@ -108,7 +99,6 @@ export default function Layout() {
             <Icon path={ICONS.close} className="h-5 w-5" />
           </button>
         </div>
-
         <nav className="mt-3 flex flex-col gap-1">
           {items.map((it) => (
             <NavLink key={it.to} to={it.to} end={it.end} onClick={() => setOpen(false)} className={linkClass}>
@@ -117,14 +107,12 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-
         <button onClick={handleLogout}
           className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800/50 hover:text-slate-200">
           <Icon path={ICONS.logout} className="h-5 w-5" />
           Sair
         </button>
       </aside>
-
       <div className="relative z-10 lg:pl-60">
         <Outlet />
       </div>
