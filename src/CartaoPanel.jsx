@@ -7,10 +7,16 @@ const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
 // "city_state" e "weather" existem no motor mas ficam em pausa por enquanto
 // (ver plano_cartoes_intercalados.md - a WeatherAPI errava a localização em
 // cidades litorâneas pequenas). Reativar aqui é só acrescentar na lista.
+// "camera_status" só faz sentido no cartão de offline (mostra "Câmera offline"
+// e troca sozinho pra "Em manutenção" depois do tempo configurado abaixo).
 const DYNAMIC_SOURCES = [
   { value: 'camera_name', label: 'Nome da câmera' },
   { value: 'datetime', label: 'Data e hora' },
+  { value: 'camera_status', label: 'Status da câmera (Offline / Em manutenção)', offlineOnly: true },
 ]
+function dynamicSourcesFor(tab) {
+  return DYNAMIC_SOURCES.filter((s) => !s.offlineOnly || tab === 'offline')
+}
 
 function Icon({ path, className = '' }) {
   return (
@@ -74,6 +80,7 @@ export default function CartaoPanel({ id }) {
   const [tab, setTab] = useState('intro')
   const [itemsByType, setItemsByType] = useState({ intro: [], offline: [] })
   const [duration, setDuration] = useState(5)
+  const [offlineTimeout, setOfflineTimeout] = useState(30)
 
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -96,6 +103,7 @@ export default function CartaoPanel({ id }) {
       setData({ ...card, name: cam.name, camera_id: cam.camera_id })
       setItemsByType({ intro: card.items_intro || [], offline: card.items_offline || [] })
       setDuration(card.card_duration_seconds || 5)
+      setOfflineTimeout(card.card_offline_timeout_minutes || 30)
     } catch (e) { setError(msg(e)) }
     finally { setLoading(false) }
   }, [id])
@@ -130,6 +138,7 @@ export default function CartaoPanel({ id }) {
     try {
       const body = { card_type: tab, items: itemsByType[tab] }
       if (tab === 'intro') body.duration_seconds = duration
+      if (tab === 'offline') body.offline_timeout_minutes = offlineTimeout
       await api.put(`/api/cameras/${id}/card/items`, body)
       setSaveOk(true)
       setTimeout(() => setSaveOk(false), 3000)
@@ -286,6 +295,20 @@ export default function CartaoPanel({ id }) {
             </Card>
           )}
 
+          {tab === 'offline' && (
+            <Card title="Tempo até 'Em manutenção'" icon="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z">
+              <div className="space-y-1">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Depois de {offlineTimeout} minuto{offlineTimeout === 1 ? '' : 's'} offline, o texto troca sozinho</div>
+                <input type="number" min="1" max="1440" value={offlineTimeout}
+                  onChange={(e) => setOfflineTimeout(Math.max(1, Math.min(1440, Number(e.target.value) || 1)))}
+                  className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
+                <p className="text-xs text-slate-500">
+                  Usa o item "Status da câmera" (adicione um item de texto dinâmico com essa opção). Antes desse tempo mostra "Câmera offline", depois muda pra "Em manutenção". Salva junto com os itens.
+                </p>
+              </div>
+            </Card>
+          )}
+
           {perms.canEditCameras && data.card_video_path && (
             <Card title="Remover cartão" icon="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M4 7h16">
               <p className="text-xs text-slate-500">Apaga a imagem de fundo, o vídeo gerado e desativa o cartão. Os itens configurados continuam salvos.</p>
@@ -346,7 +369,7 @@ export default function CartaoPanel({ id }) {
                     ) : (
                       <select value={draft.source} onChange={(e) => setDraft((d) => ({ ...d, source: e.target.value }))}
                         className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
-                        {DYNAMIC_SOURCES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        {dynamicSourcesFor(tab).map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     )}
                     <div className="grid grid-cols-2 gap-3">
