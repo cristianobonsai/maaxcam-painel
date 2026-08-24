@@ -238,6 +238,21 @@ export default function CartaoPanel({ id }) {
               )}
             </div>
             <p className="text-xs text-slate-500">A pré-visualização atualiza depois que você salva. O YouTube adiciona a marca d'água dele por cima — ela não aparece aqui.</p>
+            {perms.canEditCameras && (
+              <div className="flex items-center gap-3">
+                <button disabled={saving} onClick={saveItems}
+                  className="rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 px-4 py-2 text-sm text-white">
+                  {saving ? 'Salvando…' : 'Salvar e atualizar pré-visualização'}
+                </button>
+                {saveOk && (
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M20 6L9 17l-5-5" /></svg>
+                    Salvo
+                  </span>
+                )}
+              </div>
+            )}
+            {saveError && <p className="text-sm text-red-400">{saveError}</p>}
           </Card>
 
           <Card title="Imagem de fundo" icon="M4 5h16v14H4z">
@@ -397,6 +412,15 @@ export default function CartaoPanel({ id }) {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500">0% é o canto esquerdo/superior, 100% é o canto direito/inferior da tela (1920×1080).</p>
+                {draft.type === 'text' && (
+                  <p className="text-xs text-amber-300/90">
+                    {draft.style.align === 'right'
+                      ? 'Alinhamento "Direita": o X marca a borda DIREITA do texto — o texto fica todo à esquerda desse ponto. Pra encostar na borda direita da tela, use X perto de 90-95.'
+                      : draft.style.align === 'center'
+                        ? 'Alinhamento "Centro": o X marca o CENTRO do texto — ele fica metade pra cada lado desse ponto.'
+                        : 'Alinhamento "Esquerda": o X marca a borda esquerda do texto — ele fica todo à direita desse ponto.'}
+                  </p>
+                )}
 
                 <div className="flex gap-3">
                   <button onClick={confirmDraft} disabled={draft.type === 'image' && !draft.image_path}
