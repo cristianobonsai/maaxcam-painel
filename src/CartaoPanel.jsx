@@ -18,6 +18,16 @@ function dynamicSourcesFor(tab) {
   return DYNAMIC_SOURCES.filter((s) => !s.offlineOnly || tab === 'offline')
 }
 
+// Famílias de fonte instaladas no servidor (/opt/camera-relay/fonts/) — cada uma com
+// versão Regular e Negrito. "dejavu" é a fonte original (padrão pros itens já salvos
+// antes desta funcionalidade existir).
+const FONT_FAMILIES = [
+  { value: 'dejavu', label: 'DejaVu Sans (padrão)' },
+  { value: 'montserrat', label: 'Montserrat' },
+  { value: 'roboto', label: 'Roboto' },
+  { value: 'oswald', label: 'Oswald (condensada)' },
+]
+
 function Icon({ path, className = '' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -60,7 +70,7 @@ const emptyDraft = () => ({
   mode: 'fixed',
   content: '',
   source: 'camera_name',
-  style: { font: 'regular', size: 32, color: '#FFFFFF', align: 'left' },
+  style: { font: 'regular', font_family: 'dejavu', size: 32, color: '#FFFFFF', align: 'left' },
   position: { x: 5, y: 5 },
   image_path: '',
   width_pct: 15,
@@ -377,9 +387,16 @@ export default function CartaoPanel({ id }) {
                         Na pré-visualização sempre aparece "Câmera offline" (é só um exemplo — não reflete o status real agora). O texto só calcula certo ("Câmera offline" logo após cair, "Em manutenção" depois do tempo configurado) quando a câmera realmente estiver no ar mostrando este cartão.
                       </p>
                     )}
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Família da fonte</div>
+                      <select value={draft.style.font_family || 'dejavu'} onChange={(e) => setDraft((d) => ({ ...d, style: { ...d.style, font_family: e.target.value } }))}
+                        className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                        {FONT_FAMILIES.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                      </select>
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Fonte</div>
+                        <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Peso</div>
                         <select value={draft.style.font} onChange={(e) => setDraft((d) => ({ ...d, style: { ...d.style, font: e.target.value } }))}
                           className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
                           <option value="regular">Regular</option>
