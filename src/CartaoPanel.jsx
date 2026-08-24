@@ -372,6 +372,11 @@ export default function CartaoPanel({ id }) {
                         {dynamicSourcesFor(tab).map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     )}
+                    {draft.mode === 'dynamic' && draft.source === 'camera_status' && (
+                      <p className="text-xs text-amber-300/90">
+                        Na pré-visualização sempre aparece "Câmera offline" (é só um exemplo — não reflete o status real agora). O texto só calcula certo ("Câmera offline" logo após cair, "Em manutenção" depois do tempo configurado) quando a câmera realmente estiver no ar mostrando este cartão.
+                      </p>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Fonte</div>
