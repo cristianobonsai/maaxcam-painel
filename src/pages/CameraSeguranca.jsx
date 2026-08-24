@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
 import LocationEditor from '../LocationEditor.jsx'
+import CartaoPanel from '../CartaoPanel.jsx'
 
 const PLAY_BASE = 'https://play.livebybit.com'
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
@@ -260,7 +261,7 @@ export default function CameraSeguranca() {
         {error && <div className="rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-sm px-3 py-2">{error}</div>}
 
         <div className="flex gap-6 border-b border-slate-700">
-          {[['edit', 'Editar'], ['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização'], ['monitor', 'Monitoramento']].map(([key, label]) => (
+          {[['edit', 'Editar'], ['stream', 'Transmissão'], ['security', 'Segurança'], ['local', 'Localização'], ['monitor', 'Monitoramento'], ['cartao', 'Cartões']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${tab === key ? 'border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>
               {label}
@@ -539,6 +540,8 @@ export default function CameraSeguranca() {
           </div>
         ) : tab === 'monitor' ? (
           <MonitorPanel id={id} />
+        ) : tab === 'cartao' ? (
+          <CartaoPanel id={id} />
         ) : (
           <LocationEditor cameraId={id} />
         )}
