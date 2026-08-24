@@ -20,12 +20,16 @@ function dynamicSourcesFor(tab) {
 
 // Famílias de fonte instaladas no servidor (/opt/camera-relay/fonts/) — cada uma com
 // versão Regular e Negrito. "dejavu" é a fonte original (padrão pros itens já salvos
-// antes desta funcionalidade existir).
+// antes desta funcionalidade existir). "pacifico" não tem negrito (fonte script de
+// peso único) — o servidor usa a regular nos dois casos.
 const FONT_FAMILIES = [
   { value: 'dejavu', label: 'DejaVu Sans (padrão)' },
   { value: 'montserrat', label: 'Montserrat' },
   { value: 'roboto', label: 'Roboto' },
   { value: 'oswald', label: 'Oswald (condensada)' },
+  { value: 'playfair', label: 'Playfair Display (serifada)' },
+  { value: 'jetbrains', label: 'JetBrains Mono (monoespaçada)' },
+  { value: 'pacifico', label: 'Pacifico (manuscrita)' },
 ]
 
 function Icon({ path, className = '' }) {
