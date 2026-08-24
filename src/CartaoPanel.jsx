@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api, ApiError } from './lib/api'
 import { usePermissions } from './hooks/usePermissions'
 
@@ -69,6 +69,8 @@ function itemSummary(item) {
   return `"${label}" — ${item.style?.size ?? 32}px, (${p.x ?? 0}%, ${p.y ?? 0}%)`
 }
 
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
+
 const emptyDraft = () => ({
   type: 'text',
   mode: 'fixed',
@@ -103,6 +105,8 @@ export default function CartaoPanel({ id }) {
   const [draft, setDraft] = useState(null)
   const [editingIndex, setEditingIndex] = useState(null)
   const [uploadingItemImage, setUploadingItemImage] = useState(false)
+  const previewBoxRef = useRef(null)
+  const [dragging, setDragging] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [saveOk, setSaveOk] = useState(false)
@@ -210,6 +214,31 @@ export default function CartaoPanel({ id }) {
       .finally(() => setUploadingItemImage(false))
   }
 
+  // Arrastar o item na pré-visualização (v2 do editor — antes só dava pra digitar
+  // X/Y em %). O ponto azul representa exatamente o pixel-âncora que o servidor usa
+  // (canto superior esquerdo pra imagem; depende do alinhamento pro texto — ver a
+  // dica de alinhamento mais abaixo). Os campos numéricos continuam existindo como
+  // ajuste fino/preciso.
+  function posFromPointer(e) {
+    const rect = previewBoxRef.current.getBoundingClientRect()
+    const x = clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100)
+    const y = clamp(((e.clientY - rect.top) / rect.height) * 100, 0, 100)
+    return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }
+  }
+  function handleMarkerPointerDown(e) {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragging(true)
+  }
+  function handleMarkerPointerMove(e) {
+    if (!dragging) return
+    setDraft((d) => (d ? { ...d, position: posFromPointer(e) } : d))
+  }
+  function handleMarkerPointerUp(e) {
+    setDragging(false)
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignora */ }
+  }
+
   if (loading) return <p className="text-sm text-slate-400">Carregando cartão…</p>
   if (!data) return <p className="text-sm text-red-400">{error || 'Não foi possível carregar.'}</p>
 
@@ -251,7 +280,7 @@ export default function CartaoPanel({ id }) {
 
         <div className="space-y-5">
           <Card title="Pré-visualização" icon="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10">
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center">
+            <div ref={previewBoxRef} className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center">
               {previewLoading ? (
                 <span className="text-xs text-slate-500">Carregando…</span>
               ) : previewUrl ? (
@@ -259,8 +288,26 @@ export default function CartaoPanel({ id }) {
               ) : (
                 <span className="text-xs text-slate-500 px-4 text-center">Ainda não há pré-visualização — envie uma imagem de fundo e salve os itens.</span>
               )}
+              {draft && (
+                <div
+                  onPointerDown={handleMarkerPointerDown}
+                  onPointerMove={handleMarkerPointerMove}
+                  onPointerUp={handleMarkerPointerUp}
+                  style={{ left: `${draft.position.x}%`, top: `${draft.position.y}%`, touchAction: 'none' }}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 select-none z-10 flex flex-col items-center ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                >
+                  <div className={`h-5 w-5 rounded-full border-2 border-white shadow-lg ${dragging ? 'bg-blue-400 scale-110' : 'bg-blue-500'}`} />
+                  <div className="mt-1 whitespace-nowrap rounded bg-slate-900/90 px-1.5 py-0.5 text-[10px] text-white">
+                    {dragging ? `${draft.position.x}%, ${draft.position.y}%` : 'Arraste'}
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-slate-500">A pré-visualização atualiza depois que você salva. O YouTube adiciona a marca d'água dele por cima — ela não aparece aqui.</p>
+            <p className="text-xs text-slate-500">
+              {draft
+                ? 'Arraste o ponto azul pra posicionar o item que você está editando — os campos X/Y abaixo se ajustam sozinhos, e continuam disponíveis pra ajuste fino.'
+                : "A pré-visualização atualiza depois que você salva. O YouTube adiciona a marca d'água dele por cima — ela não aparece aqui."}
+            </p>
             {perms.canEditCameras && (
               <div className="flex items-center gap-3">
                 <button disabled={saving} onClick={saveItems}
@@ -460,7 +507,7 @@ export default function CartaoPanel({ id }) {
                       className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" />
                   </div>
                 </div>
-                <p className="text-xs text-slate-500">0% é o canto esquerdo/superior, 100% é o canto direito/inferior da tela (1920×1080).</p>
+                <p className="text-xs text-slate-500">0% é o canto esquerdo/superior, 100% é o canto direito/inferior da tela (1920×1080) — dá pra digitar aqui ou arrastar o ponto azul na pré-visualização ao lado.</p>
                 {draft.type === 'text' && (
                   <p className="text-xs text-amber-300/90">
                     {draft.style.align === 'right'
