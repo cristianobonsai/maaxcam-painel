@@ -60,4 +60,20 @@ export const api = {
   put: (path, body) => apiFetch(path, { method: 'PUT', body: JSON.stringify(body ?? {}) }),
   del: (path) => apiFetch(path, { method: 'DELETE' }),
   upload: (path, formData) => apiFetch(path, { method: 'POST', body: formData }),
+  // Busca um recurso binário (ex.: pré-visualização de imagem) com autenticação,
+  // devolvendo um Blob. Útil pra <img src={URL.createObjectURL(blob)}>, já que
+  // uma tag <img> sozinha não manda o header Authorization.
+  getBlob: async (path) => {
+    const token = getAccessToken()
+    const headers = {}
+    if (token) headers.Authorization = `Bearer ${token}`
+    let res
+    try {
+      res = await fetch(`${API_BASE}${path}`, { headers })
+    } catch {
+      throw new ApiError('Falha de conexão com a API.', 0)
+    }
+    if (!res.ok) throw new ApiError(`Erro ${res.status}.`, res.status)
+    return await res.blob()
+  },
 }

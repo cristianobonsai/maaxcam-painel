@@ -402,6 +402,7 @@ export default function Cameras() {
                       {perms.canAddCameras && (
                         <button onClick={() => setDeleting(c)} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-red-300 hover:border-red-500">Excluir</button>
                       )}
+                      <Link to={`/painel/cameras/${c.camera_id}/cartao`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-purple-300 hover:border-purple-500">Cartão</Link>
                       <Link to={`/painel/cameras/${c.camera_id}/seguranca`} className="rounded-md border border-slate-700 px-3 py-1 text-xs text-blue-300 hover:border-blue-500">Gerenciar</Link>
                     </div>
                   </li>
