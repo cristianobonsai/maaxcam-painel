@@ -119,7 +119,7 @@ export default function CartaoPanel({ id }) {
     try {
       const card = await api.get(`/api/cameras/${id}/card`)
       const cam = await api.get(`/api/cameras/${id}`)
-      setData({ ...card, name: cam.name, camera_id: cam.camera_id })
+      setData({ ...card, name: cam.name, camera_id: cam.camera_id, group_name: cam.group_name })
       setItemsByType({ intro: card.items_intro || [], offline: card.items_offline || [] })
       setDuration(card.card_duration_seconds || 5)
       setOfflineTimeout(card.card_offline_timeout_minutes || 30)
@@ -274,7 +274,9 @@ export default function CartaoPanel({ id }) {
 
       {tab === 'offline' && (
         <div className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2.5 text-sm text-sky-200/90">
-          Este cartão ainda não entra automaticamente no ar quando a câmera cai — isso é uma etapa futura. Por enquanto dá pra configurar e pré-visualizar.
+          {data.group_name
+            ? <>Esta câmera faz parte do grupo <strong>{data.group_name}</strong>. A ativação automática do cartão no ar quando a câmera cai ainda não está disponível para câmeras em grupo — por enquanto funciona só pra câmeras avulsas. Dá pra configurar e pré-visualizar o cartão normalmente.</>
+            : <>Esta câmera é avulsa — dá pra ativar abaixo pra que este cartão apareça automaticamente ao vivo no YouTube (no lugar do vídeo de espera genérico) quando a câmera cair.</>}
         </div>
       )}
 
@@ -385,6 +387,26 @@ export default function CartaoPanel({ id }) {
                   Usa o item "Status da câmera" (adicione um item de texto dinâmico com essa opção). Antes desse tempo mostra "Câmera offline", depois muda pra "Em manutenção". Salva junto com os itens.
                 </p>
               </div>
+            </Card>
+          )}
+
+          {tab === 'offline' && !data.group_name && (
+            <Card title="Cartão automático na transmissão" icon="M15 10l4.55-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.45.894L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z">
+              <div className="flex items-center justify-between rounded-md bg-slate-900/60 px-3 py-2.5">
+                <div>
+                  <div className="text-sm text-slate-200">Ativar cartão automático na transmissão</div>
+                  <div className="text-xs text-slate-500">Quando a câmera cair, este cartão aparece ao vivo no YouTube no lugar do vídeo de espera genérico. Some sozinho assim que a câmera volta.</div>
+                </div>
+                <button disabled={busy || !data.card_offline_video_exists}
+                  onClick={() => run(() => api.put(`/api/cameras/${id}/card/offline-live-toggle`, { enabled: !data.card_offline_live_enabled }))}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-40 ${data.card_offline_live_enabled ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                  {data.card_offline_live_enabled ? 'Ativado' : 'Desativado'}
+                </button>
+              </div>
+              {!data.card_offline_video_exists && (
+                <p className="text-xs text-slate-500">Salve o cartão de offline (com a imagem de fundo configurada) pelo menos uma vez antes de ativar isso.</p>
+              )}
+              <p className="text-xs text-amber-300/90">A mudança pode levar até ~1 minuto pra valer, sem precisar reiniciar nada.</p>
             </Card>
           )}
 
