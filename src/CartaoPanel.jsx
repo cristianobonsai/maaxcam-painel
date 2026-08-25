@@ -97,6 +97,7 @@ export default function CartaoPanel({ id }) {
   const [itemsByType, setItemsByType] = useState({ intro: [], offline: [] })
   const [duration, setDuration] = useState(5)
   const [offlineTimeout, setOfflineTimeout] = useState(30)
+  const [useSnapshotBg, setUseSnapshotBg] = useState(false)
 
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -122,6 +123,7 @@ export default function CartaoPanel({ id }) {
       setItemsByType({ intro: card.items_intro || [], offline: card.items_offline || [] })
       setDuration(card.card_duration_seconds || 5)
       setOfflineTimeout(card.card_offline_timeout_minutes || 30)
+      setUseSnapshotBg(!!card.card_offline_use_snapshot)
     } catch (e) { setError(msg(e)) }
     finally { setLoading(false) }
   }, [id])
@@ -156,7 +158,10 @@ export default function CartaoPanel({ id }) {
     try {
       const body = { card_type: tab, items: itemsByType[tab] }
       if (tab === 'intro') body.duration_seconds = duration
-      if (tab === 'offline') body.offline_timeout_minutes = offlineTimeout
+      if (tab === 'offline') {
+        body.offline_timeout_minutes = offlineTimeout
+        body.use_snapshot_bg = useSnapshotBg
+      }
       await api.put(`/api/cameras/${id}/card/items`, body)
       setSaveOk(true)
       setTimeout(() => setSaveOk(false), 3000)
@@ -326,6 +331,18 @@ export default function CartaoPanel({ id }) {
           </Card>
 
           <Card title="Imagem de fundo" icon="M4 5h16v14H4z">
+            {tab === 'offline' && (
+              <div className="flex items-center justify-between rounded-md bg-slate-900/60 px-3 py-2.5">
+                <div>
+                  <div className="text-sm text-slate-200">Usar foto automática da câmera</div>
+                  <div className="text-xs text-slate-500">Atualiza sozinha (a cada 15 min, ou na hora quando a câmera fica ao vivo). Sai levemente escurecida/dessaturada.</div>
+                </div>
+                <button disabled={busy} onClick={() => setUseSnapshotBg((v) => !v)}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-40 ${useSnapshotBg ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                  {useSnapshotBg ? 'Ativado' : 'Desativado'}
+                </button>
+              </div>
+            )}
             <p className="text-xs text-slate-500">{data.card_image_path ? 'Já existe uma imagem de fundo configurada.' : 'Nenhuma imagem de fundo ainda.'}</p>
             <label className={`inline-block rounded-md px-4 py-2 text-sm ${bgUploading ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600 text-white cursor-pointer'}`}>
               {data.card_image_path ? 'Trocar imagem de fundo' : 'Enviar imagem de fundo'}
@@ -333,7 +350,11 @@ export default function CartaoPanel({ id }) {
             </label>
             <p className="text-xs text-slate-500">Depois de trocar a imagem de fundo, clique em <strong>Salvar cartão</strong> de novo pra reaplicar seus itens em cima dela.</p>
             {tab === 'offline' && (
-              <p className="text-xs text-amber-300/90">Hoje o cartão de offline usa a mesma imagem de fundo do cartão de introdução — usar a foto automática da câmera é uma etapa futura.</p>
+              <p className="text-xs text-amber-300/90">
+                {useSnapshotBg
+                  ? 'Com a foto automática ativada, ela é usada no lugar da imagem enviada aqui em cima (que fica como reserva, caso a foto automática ainda não exista pra esta câmera).'
+                  : 'Hoje o cartão de offline usa a mesma imagem de fundo do cartão de introdução, a não ser que você ative a foto automática acima.'}
+              </p>
             )}
           </Card>
 
