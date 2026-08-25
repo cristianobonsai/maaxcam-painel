@@ -406,7 +406,7 @@ export default function CartaoPanel({ id }) {
               {!data.card_offline_video_exists && (
                 <p className="text-xs text-slate-500">Salve o cartão de offline (com a imagem de fundo configurada) pelo menos uma vez antes de ativar isso.</p>
               )}
-              <p className="text-xs text-amber-300/90">A mudança pode levar até ~1 minuto pra valer, sem precisar reiniciar nada.</p>
+              <p className="text-xs text-amber-300/90">Ao ativar, o serviço da câmera reinicia automaticamente (~15s de instabilidade no vídeo). Ao desativar, nada é reiniciado.</p>
             </Card>
           )}
 
