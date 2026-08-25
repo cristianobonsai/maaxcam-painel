@@ -151,6 +151,16 @@ export default function CartaoPanel({ id }) {
     return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
   }, [id, tab, previewNonce])
 
+  // Atualiza a pre-visualizacao sozinha a cada ~1 min. Sem isso, quem deixa a
+  // aba aberta olhando o cartao de offline com "foto automatica" nunca vê a
+  // troca de foto/status acontecer sozinha — só via reload ou clicando em
+  // Salvar. O motor no servidor já atualiza a imagem por conta própria
+  // (render_all_cards.py, a cada 5 min); isso só faz o painel acompanhar.
+  useEffect(() => {
+    const interval = setInterval(() => setPreviewNonce((n) => n + 1), 60000)
+    return () => clearInterval(interval)
+  }, [])
+
   const run = async (fn) => { setBusy(true); setError(''); try { await fn(); await refreshStatus() } catch (e) { setError(msg(e)) } finally { setBusy(false) } }
 
   async function saveItems() {
