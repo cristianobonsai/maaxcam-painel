@@ -249,6 +249,17 @@ export default function Grupos() {
       setBusy(false)
     }
   }
+  async function toggleCard(c) {
+    setBusy(true); setError('')
+    try {
+      await api.put(`/api/cameras/${c.camera_id}/card/toggle`, { enabled: !c.card_enabled })
+      await load()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Erro ao atualizar cartão.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function moveCamera(g, index, dir) {
     const cams = g.cameras || []
@@ -507,6 +518,18 @@ export default function Grupos() {
                               <div key={c.id} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
                                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-slate-700 text-xs font-semibold text-slate-300">{i + 1}</span>
                                 <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{c.camera_name || c.camera_id}<span className="ml-2 text-xs text-slate-500">{c.camera_id}</span></span>
+                                {c.card_video_path ? (
+                                  <button onClick={() => toggleCard(c)} disabled={busy}
+                                    title={c.card_enabled ? 'Cartão de intervalo ativo — clique para desativar' : 'Cartão configurado, mas desativado — clique para ativar'}
+                                    className={`shrink-0 rounded-full border px-2 py-1 text-xs font-medium disabled:opacity-50 ${c.card_enabled ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-slate-600 bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+                                    Cartão {c.card_duration_seconds}s · {c.card_enabled ? 'Ativo' : 'Pausado'}
+                                  </button>
+                                ) : (
+                                  <button onClick={() => navigate(`/painel/cameras/${c.camera_id}/seguranca`)}
+                                    className="shrink-0 rounded-full border border-dashed border-slate-600 px-2 py-1 text-xs text-slate-500 hover:border-slate-400 hover:text-slate-300">
+                                    Sem cartão
+                                  </button>
+                                )}
                                 <input type="number" value={durEdits[c.id] ?? c.duration_seconds}
                                   onChange={(e) => setDurEdits((prev) => ({ ...prev, [c.id]: e.target.value }))}
                                   className="w-14 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-center text-sm text-white focus:border-blue-500 focus:outline-none" />
