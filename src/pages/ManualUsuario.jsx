@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
-const MANUAL_URL = 'https://painel.livebybit.com/LiveByBit-Manual-Usuario-v1.pdf'
-const VERSAO = 'V1'
-const ATUALIZADO_EM = '20/08/2026'
+const MANUAL_URL = 'https://painel.livebybit.com/LiveByBit-Manual-Usuario-v2.pdf'
+const VERSAO = 'V2'
+const ATUALIZADO_EM = '29/08/2026'
 
 export default function ManualUsuario() {
   const [copiado, setCopiado] = useState(false)
