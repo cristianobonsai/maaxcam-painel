@@ -3,7 +3,7 @@ import { api, ApiError } from '../lib/api'
 import { useAuth } from '../auth/AuthContext.jsx'
 import DetalheCobranca from './DetalheCobranca.jsx'
 
-const API_URL = 'https://api.livebybit.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 const money = (v) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const hojeMes = () => new Date().toISOString().slice(0, 7)
 const venc7 = () => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10) }
