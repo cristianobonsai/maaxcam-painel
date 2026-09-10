@@ -3,7 +3,7 @@ import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
 import { useAuth } from '../auth/AuthContext.jsx'
 
-const API_URL = 'https://api.livebybit.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 
 // Tipos de relatório. 'perm' = flag necessária; dias = opções de período.
 const TIPOS = [
