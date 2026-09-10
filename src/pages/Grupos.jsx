@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
 
-const API_URL = 'https://api.livebybit.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false, resolution_tier: '1080p' }
 
 // [PORTEIRO-A3] Trilhos de resolução do grupo (batem com QUALITY_TIERS no backend).
