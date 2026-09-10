@@ -238,7 +238,7 @@ export default function CameraSeguranca() {
   // Enquanto não mandar, libera tudo (mesmo comportamento de hoje, sem regressão).
   const caps = data.caps || { embed: true, youtube: true, audio: true, snapshot: true }
   const firstToken = (data.tokens && data.tokens[0] && data.tokens[0].token) || ''
-  const snapshotBase = `https://api.livebybit.com/api/cameras/${id}/snapshot.jpg`
+  const snapshotBase = `${import.meta.env.VITE_API_URL || 'https://api.livebybit.com'}/api/cameras/${id}/snapshot.jpg`
   const snapshotLink = isPrivate && firstToken ? `${snapshotBase}?key=${firstToken}` : snapshotBase
 
   return (
