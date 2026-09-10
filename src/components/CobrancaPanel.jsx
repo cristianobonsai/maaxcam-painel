@@ -5,7 +5,7 @@ import DadosCobranca from './DadosCobranca.jsx'
 import ListaFaturas from './ListaFaturas.jsx'
 import DetalheCobranca from './DetalheCobranca.jsx'
 
-const API_URL = 'https://api.livebybit.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 const money = (v) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const PLAN_LABELS = { basico: 'Básico', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
 
