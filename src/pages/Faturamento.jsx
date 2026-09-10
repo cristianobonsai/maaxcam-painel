@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { useAuth } from '../auth/AuthContext.jsx'
 
-const API_URL = 'https://api.livebybit.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
 const PLAN_LABELS = { basico: 'Básico', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
