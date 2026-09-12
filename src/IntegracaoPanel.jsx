@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api, ApiError } from './lib/api'
 import { usePermissions } from './hooks/usePermissions'
 
@@ -75,6 +75,7 @@ const ICONS = {
   upload: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
   clock: 'M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
   chart: 'M3 3v18h18M7 14l3-3 4 4 5-6',
+  foto: 'M3 16.5V6.75A2.25 2.25 0 0 1 5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v9.75m-18 0A2.25 2.25 0 0 0 5.25 18.75h13.5A2.25 2.25 0 0 0 21 16.5m-18 0 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0L21 16.5M15 8.25h.008v.008H15V8.25Z',
 }
 
 function minutesOf(hhmm) {
@@ -96,6 +97,120 @@ const STATUS_BADGE = {
   erro: { cls: 'bg-red-500/20 text-red-300', label: 'Erro' },
   pulado: { cls: 'bg-amber-500/20 text-amber-300', label: 'Pulado (fora do horário)' },
 }
+
+const STATUS_CAPTURA_BADGE = {
+  enviados: { cls: 'bg-emerald-500/20 text-emerald-300', label: 'Enviada' },
+  erros: { cls: 'bg-red-500/20 text-red-300', label: 'Erro' },
+  fora_horario: { cls: 'bg-amber-500/20 text-amber-300', label: 'Fora do horário' },
+}
+
+function formatarDataHora(iso) {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' })
+  } catch {
+    return iso
+  }
+}
+
+function CapturasCarousel({ id }) {
+  const [status, setStatus] = useState('todas')
+  const [index, setIndex] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [item, setItem] = useState(null)
+  const [imgUrl, setImgUrl] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const imgUrlRef = useRef(null)
+
+  const carregar = useCallback(async (st, idx) => {
+    setLoading(true); setError('')
+    try {
+      const lista = await api.get(`/api/cameras/${id}/carbigdata/capturas?status=${st}&limit=1&offset=${idx}`)
+      setTotal(lista.total)
+      const it = (lista.items && lista.items[0]) || null
+      setItem(it)
+      if (it) {
+        const blob = await api.getBlob(`/api/cameras/${id}/carbigdata/capturas/${it.status}/${it.filename}`)
+        const novaUrl = URL.createObjectURL(blob)
+        if (imgUrlRef.current) URL.revokeObjectURL(imgUrlRef.current)
+        imgUrlRef.current = novaUrl
+        setImgUrl(novaUrl)
+      } else {
+        if (imgUrlRef.current) URL.revokeObjectURL(imgUrlRef.current)
+        imgUrlRef.current = null
+        setImgUrl(null)
+      }
+    } catch (e) { setError(msg(e)) }
+    finally { setLoading(false) }
+  }, [id])
+
+  useEffect(() => { setIndex(0); carregar(status, 0) }, [status, carregar])
+
+  useEffect(() => {
+    const t = setInterval(() => { if (index === 0) carregar(status, 0) }, 15000)
+    return () => clearInterval(t)
+  }, [status, index, carregar])
+
+  useEffect(() => () => { if (imgUrlRef.current) URL.revokeObjectURL(imgUrlRef.current) }, [])
+
+  function irPara(novoIndex) {
+    if (novoIndex < 0 || novoIndex >= total || loading) return
+    setIndex(novoIndex)
+    carregar(status, novoIndex)
+  }
+
+  const badge = item ? STATUS_CAPTURA_BADGE[item.status] : null
+
+  return (
+    <Card title="Capturas recebidas" icon={ICONS.foto}>
+      <Segmented
+        options={[['todas', 'Todas'], ['enviados', 'Enviadas'], ['erros', 'Erro'], ['fora_horario', 'Fora do horário']]}
+        value={status}
+        onChange={(v) => setStatus(v)}
+      />
+
+      {total === 0 && !loading ? (
+        <p className="text-sm text-slate-400">Nenhuma captura encontrada pra esse filtro.</p>
+      ) : (
+        <div className="space-y-3">
+          <div className="relative flex items-center justify-center rounded-md border border-slate-700 bg-slate-900 min-h-[220px] overflow-hidden">
+            {loading && <p className="text-sm text-slate-400">Carregando…</p>}
+            {!loading && imgUrl && (
+              <img src={imgUrl} alt={item?.filename || 'captura'} className="max-h-[420px] w-full object-contain" />
+            )}
+            {!loading && !imgUrl && !error && <p className="text-sm text-slate-400">Sem imagem.</p>}
+          </div>
+
+          {error && <p className="text-sm text-red-400">{error}</p>}
+
+          {item && (
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+              <span className="truncate">{item.filename}</span>
+              <div className="flex items-center gap-2">
+                {badge && <span className={`rounded-full px-2.5 py-1 font-medium ${badge.cls}`}>{badge.label}</span>}
+                <span>{formatarDataHora(item.timestamp)}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3">
+            <button type="button" disabled={loading || index <= 0} onClick={() => irPara(index - 1)}
+              className="rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-xs text-white">
+              ‹ Mais recente
+            </button>
+            <span className="text-xs text-slate-400 font-mono">{total > 0 ? `${index + 1} de ${total}` : '—'}</span>
+            <button type="button" disabled={loading || index >= total - 1} onClick={() => irPara(index + 1)}
+              className="rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-xs text-white">
+              Mais antiga ›
+            </button>
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 
 export default function IntegracaoPanel({ id }) {
   const perms = usePermissions()
@@ -328,6 +443,8 @@ export default function IntegracaoPanel({ id }) {
             {badge && <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.cls}`}>{badge.label}</span>}
           </div>
         </Card>
+
+        <CapturasCarousel id={id} />
       </div>
 
       {saveError && <div className="rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-sm px-3 py-2">{saveError}</div>}
