@@ -108,6 +108,27 @@ const STATUS_CAPTURA_BADGE = {
   fora_horario: { cls: 'bg-amber-500/20 text-amber-300', label: 'Fora do horário' },
 }
 
+// 24/09/2026: separa a URL do webhook nos campos EXATOS que aparecem no
+// menu de configuração de evento (ISAPI2) da câmera Hikvision - Version,
+// Host IP Address/Domain Name, Host Port, Host URL - em vez de mostrar só a
+// URL inteira pro técnico copiar e colar manualmente em 3 campos diferentes
+// (risco de errar). Usa o objeto URL nativo do navegador, então funciona
+// tanto com o webhook_url de QA (IP, sem porta explícita) quanto o de
+// produção (domínio) sem precisar mexer no backend.
+function parseWebhookUrl(url) {
+  try {
+    const u = new URL(url)
+    return {
+      version: u.protocol === 'https:' ? 'HTTPS' : 'HTTP',
+      host: u.hostname,
+      port: u.port || (u.protocol === 'https:' ? '443' : '80'),
+      path: u.pathname,
+    }
+  } catch {
+    return null
+  }
+}
+
 function formatarDataHora(iso) {
   if (!iso) return ''
   try {
@@ -500,24 +521,56 @@ export default function IntegracaoPanel({ id }) {
           </Card>
         )}
 
-        {tipoExterno && (
-          <Card title="Webhook" icon={ICONS.link}>
-            {!data.webhook_url ? (
-              <p className="text-sm text-slate-400">A URL do webhook é gerada automaticamente na primeira vez que você salvar com o modo Externo ativado.</p>
-            ) : (
-              <>
-                <div className="space-y-1">
-                  <div className="text-xs uppercase tracking-wide text-slate-400">URL do webhook</div>
-                  <div className="flex gap-2 items-center">
-                    <code className="flex-1 truncate rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-emerald-300">{data.webhook_url}</code>
-                    <CopyButton text={data.webhook_url} />
+        {tipoExterno && (() => {
+          const webhook = data.webhook_url ? parseWebhookUrl(data.webhook_url) : null
+          return (
+            <Card title="Webhook" icon={ICONS.link}>
+              {!data.webhook_url || !webhook ? (
+                <p className="text-sm text-slate-400">A URL do webhook é gerada automaticamente na primeira vez que você salvar com o modo Externo ativado.</p>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 -mt-1">
+                    Preencha assim no menu de evento/webhook da câmera (ANPR/Smart Event, ISAPI2) — os nomes abaixo são os mesmos que aparecem lá:
+                  </p>
+
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Host IP Address/Domain Name</div>
+                    <div className="flex gap-2 items-center">
+                      <code className="flex-1 truncate rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-emerald-300">{webhook.host}</code>
+                      <CopyButton text={webhook.host} />
+                    </div>
                   </div>
-                </div>
-                <p className="text-xs text-slate-500">Cole essa URL no campo <strong>Host URL</strong> da configuração de evento/webhook da câmera (menu de ANPR/Smart Event dela).</p>
-              </>
-            )}
-          </Card>
-        )}
+
+                  <div className="flex gap-4">
+                    <div className="space-y-1 w-28 shrink-0">
+                      <div className="text-xs uppercase tracking-wide text-slate-400">Host Port</div>
+                      <div className="flex gap-2 items-center">
+                        <code className="flex-1 truncate rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-emerald-300">{webhook.port}</code>
+                        <CopyButton text={webhook.port} />
+                      </div>
+                    </div>
+                    <div className="space-y-1 w-24 shrink-0">
+                      <div className="text-xs uppercase tracking-wide text-slate-400">Version</div>
+                      <div className="rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-slate-300">{webhook.version}</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wide text-slate-400">Host URL</div>
+                    <div className="flex gap-2 items-center">
+                      <code className="flex-1 truncate rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-emerald-300">{webhook.path}</code>
+                      <CopyButton text={webhook.path} />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Outros campos da câmera: <strong>Authentication Mode</strong> = None · <strong>Upload Binary Image</strong> = habilitado · <strong>Output Binary Image in BMP Format</strong> = habilitado.
+                  </p>
+                </>
+              )}
+            </Card>
+          )
+        })()}
 
         {!tipoExterno && (
           <Card title="Conexão SFTP" icon={ICONS.upload}>
