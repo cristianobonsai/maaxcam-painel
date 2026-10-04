@@ -38,7 +38,8 @@ const GROUP_STATUS = {
 }
 
 function GroupStatusBadge({ g }) {
-  const s = g.health_active ? GROUP_STATUS[g.status] : g.status === 'pausado' ? GROUP_STATUS.pausado : null
+  // 'pausado' (Guardião) sempre aparece; os demais só fazem sentido com o grupo no ar
+  const s = g.status === 'pausado' ? GROUP_STATUS.pausado : (g.health_active && g.relay_active ? GROUP_STATUS[g.status] : null)
   if (!s) return null
   return (
     <span title={s.tip || g.paused_reason || ''} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
@@ -57,6 +58,7 @@ function CamHealthChip({ c, active }) {
       </span>
     )
   }
+  if (c.online === false) return <span className="shrink-0 rounded-full bg-slate-600/40 px-2 py-1 text-xs text-slate-300">Offline</span>
   if (c.health === 'ok') return <span className="shrink-0 text-xs text-emerald-300/80">Estável</span>
   return null
 }
@@ -543,7 +545,7 @@ export default function Grupos() {
                     {g.status === 'pausado' && g.paused_reason && (
                       <p className="mt-2 text-xs text-red-300">Grupo pausado automaticamente: {g.paused_reason}</p>
                     )}
-                    {g.health_active && GROUP_STATUS[g.status]?.tip && g.status !== 'pausado' && (
+                    {g.health_active && g.relay_active && GROUP_STATUS[g.status]?.tip && g.status !== 'pausado' && (
                       <p className="mt-2 text-xs text-slate-400">{GROUP_STATUS[g.status].tip}</p>
                     )}
 
