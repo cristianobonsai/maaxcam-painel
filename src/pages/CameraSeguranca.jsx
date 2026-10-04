@@ -111,6 +111,12 @@ function MonitorPanel({ id }) {
   }
   const saida = saidaMap[mon.saida] || { c: 'gray', t: mon.saida }
   const ajustes = mon.ajustes === 'ajustar' ? { c: 'orange', t: 'Precisa ajustar' } : { c: 'green', t: 'OK' }
+  // [CAMERA-HEALTH] participação da câmera no rodízio do grupo
+  const saude = mon.health === 'instavel'
+    ? { c: 'orange', t: `Instável — fora do rodízio${mon.health_returns_in_s != null ? ` (volta em ~${Math.max(1, Math.ceil(mon.health_returns_in_s / 60))} min)` : ''}` }
+    : { c: 'green', t: 'Estável' }
+  const mostraSaude = !!mon.health_active && (mon.tipo === 'grupo' || mon.health === 'instavel')
+  const historico = mon.health_active ? (mon.health_history || []) : []
 
   const Row = ({ label, dot, text }) => (
     <div className="flex items-center justify-between gap-3 rounded-md bg-slate-900/60 px-3 py-2.5">
@@ -130,8 +136,14 @@ function MonitorPanel({ id }) {
           <Row label="Conexão com o servidor" dot={conexao.c} text={conexao.t} />
           <Row label="Estabilidade (24h)" dot={estab.c} text={estab.t} />
           <Row label="Saída" dot={saida.c} text={saida.t} />
+          {mostraSaude && <Row label="Rodízio do grupo" dot={saude.c} text={saude.t} />}
           <Row label="Ajustes (configuração)" dot={ajustes.c} text={ajustes.t} />
         </div>
+        {mostraSaude && mon.health === 'instavel' && (
+          <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
+            <strong>Câmera instável:</strong> {mon.health_reason || 'oscilações frequentes'}. Ela saiu do rodízio do grupo e volta sozinha quando ficar estável. Verifique a câmera e a internet do local.
+          </div>
+        )}
         {mon.ajustes === 'ajustar' && mon.ajustes_motivo && (
           <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
             <strong>Precisa ajustar:</strong> {mon.ajustes_motivo}. Diminua o I-Frame/GOP da câmera (ideal ~2s) e, se necessário, ajuste o bitrate.
@@ -150,6 +162,21 @@ function MonitorPanel({ id }) {
         </div>
         <p className="text-xs text-slate-500">Atualiza sozinho a cada 20s. Resolução/FPS lidos da câmera; bitrate e keyframe medidos no servidor.</p>
       </Card>
+
+      {historico.length > 0 && (
+        <Card title="Saídas do rodízio (últimos 7 dias)" icon="M12 8v4l3 3M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0">
+          <div className="space-y-1.5">
+            {historico.map((ev, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 rounded-md bg-slate-900/60 px-3 py-2 text-sm">
+                <span className="text-slate-400">{new Date(ev.ts * 1000).toLocaleString('pt-BR')}</span>
+                <span className={ev.to === 'instavel' ? 'text-orange-300' : 'text-emerald-300'}>
+                  {ev.to === 'instavel' ? `Saiu do rodízio — ${ev.reason || 'instável'}` : 'Voltou ao rodízio'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

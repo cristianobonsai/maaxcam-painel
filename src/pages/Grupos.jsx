@@ -29,6 +29,38 @@ function Icon({ path, className = '' }) {
   )
 }
 
+// [CAMERA-HEALTH] Estado do grupo (g.status vem do backend). 'ok' não precisa de selo: já existe "No ar".
+const GROUP_STATUS = {
+  degradado: { cls: 'bg-amber-500/15 text-amber-300', dot: 'bg-amber-400', label: 'Degradado', tip: 'Alguma câmera está fora do rodízio (offline ou instável). O grupo continua no ar com as demais.' },
+  manutencao: { cls: 'bg-orange-500/15 text-orange-300', dot: 'bg-orange-400', label: 'Em manutenção', tip: 'Nenhuma câmera está estável no momento. O grupo continua no ar mostrando o aviso de manutenção e volta ao normal sozinho.' },
+  recuperando: { cls: 'bg-orange-500/15 text-orange-300', dot: 'bg-orange-400', label: 'Recuperando', tip: 'A conexão com o YouTube está instável. Estamos tentando restabelecer.' },
+  pausado: { cls: 'bg-red-500/15 text-red-300', dot: 'bg-red-400', label: 'Pausado', tip: '' },
+}
+
+function GroupStatusBadge({ g }) {
+  const s = g.health_active ? GROUP_STATUS[g.status] : g.status === 'pausado' ? GROUP_STATUS.pausado : null
+  if (!s) return null
+  return (
+    <span title={s.tip || g.paused_reason || ''} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />{s.label}
+    </span>
+  )
+}
+
+function CamHealthChip({ c, active }) {
+  if (!active) return null
+  if (c.health === 'instavel') {
+    const min = c.health_returns_in_s != null ? Math.max(1, Math.ceil(c.health_returns_in_s / 60)) : null
+    return (
+      <span title={c.health_reason || 'Câmera instável'} className="shrink-0 rounded-full border border-amber-500/60 bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-300">
+        Instável · fora do rodízio{min ? ` · volta em ~${min} min` : ''}
+      </span>
+    )
+  }
+  if (c.health === 'ok') return <span className="shrink-0 text-xs text-emerald-300/80">Estável</span>
+  return null
+}
+
 export default function Grupos() {
   const perms = usePermissions()
   const navigate = useNavigate()
@@ -78,6 +110,15 @@ export default function Grupos() {
   }
 
   useEffect(() => { load() }, [])
+
+  // [CAMERA-HEALTH] atualiza o estado dos grupos sozinho (sem piscar a tela nem mexer nas edições em andamento)
+  useEffect(() => {
+    if (!canAccessGroups) return undefined
+    const t = setInterval(async () => {
+      try { const g = await api.get('/api/groups'); if (Array.isArray(g)) setGroups(g) } catch { /* silencioso */ }
+    }, 30000)
+    return () => clearInterval(t)
+  }, [canAccessGroups])
 
   function openNew() {
     if (!canCreateGroup) { setShowPremiumGate(true); return }
@@ -434,6 +475,7 @@ export default function Grupos() {
                         ) : (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-600/40 px-2.5 py-0.5 text-xs font-medium text-slate-300"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Parado</span>
                         )}
+                        <GroupStatusBadge g={g} />
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>
                           {g.enabled ? 'Habilitado' : 'Desabilitado'}
                         </span>
@@ -471,6 +513,7 @@ export default function Grupos() {
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-600/40 px-2.5 py-0.5 text-xs font-medium text-slate-300"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Parado</span>
                           )}
+                          <GroupStatusBadge g={g} />
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>
                             {g.enabled ? 'Habilitado' : 'Desabilitado'}
                           </span>
@@ -497,6 +540,13 @@ export default function Grupos() {
                       </div>
                     </div>
 
+                    {g.status === 'pausado' && g.paused_reason && (
+                      <p className="mt-2 text-xs text-red-300">Grupo pausado automaticamente: {g.paused_reason}</p>
+                    )}
+                    {g.health_active && GROUP_STATUS[g.status]?.tip && g.status !== 'pausado' && (
+                      <p className="mt-2 text-xs text-slate-400">{GROUP_STATUS[g.status].tip}</p>
+                    )}
+
                     {!g.relay_active && (!g.youtube_key || cams.length === 0) && (
                       <p className="mt-2 text-xs text-slate-400">
                         {!g.youtube_key && cams.length === 0
@@ -517,7 +567,10 @@ export default function Grupos() {
                             return (
                               <div key={c.id} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
                                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-slate-700 text-xs font-semibold text-slate-300">{i + 1}</span>
-                                <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{c.camera_name || c.camera_id}<span className="ml-2 text-xs text-slate-500">{c.camera_id}</span></span>
+                                <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{c.camera_name || c.camera_id}<span className="ml-2 text-xs text-slate-500">{c.camera_id}</span>
+                                  {g.health_active && c.health === 'instavel' && c.health_reason && <span className="block truncate text-xs text-amber-300/80">{c.health_reason}</span>}
+                                </span>
+                                <CamHealthChip c={c} active={g.health_active} />
                                 {c.card_video_path ? (
                                   <button onClick={() => toggleCard(c)} disabled={busy}
                                     title={c.card_enabled ? 'Cartão de intervalo ativo — clique para desativar' : 'Cartão configurado, mas desativado — clique para ativar'}
