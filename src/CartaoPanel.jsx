@@ -102,6 +102,8 @@ export default function CartaoPanel({ id }) {
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewNonce, setPreviewNonce] = useState(0)
+  const [autoUrl, setAutoUrl] = useState(null)       // pré-visualização do cartão automático (só câmera em grupo)
+  const [autoLoading, setAutoLoading] = useState(false)
 
   const [draft, setDraft] = useState(null)
   const [editingIndex, setEditingIndex] = useState(null)
@@ -150,6 +152,23 @@ export default function CartaoPanel({ id }) {
       .finally(() => { if (alive) setPreviewLoading(false) })
     return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
   }, [id, tab, previewNonce])
+
+  // Cartão AUTOMÁTICO da câmera de grupo (o que o grupo mostra quando ela sai do rodízio): só na aba Offline.
+  const isGroupCam = !!data?.group_name
+  useEffect(() => {
+    if (tab !== 'offline' || !isGroupCam) { setAutoUrl(null); return undefined }
+    let alive = true
+    let objectUrl = null
+    setAutoLoading(true)
+    api.getBlob(`/api/cameras/${id}/card/auto-preview?_=${previewNonce}`)
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob)
+        if (alive) setAutoUrl(objectUrl)
+      })
+      .catch(() => { if (alive) setAutoUrl(null) })
+      .finally(() => { if (alive) setAutoLoading(false) })
+    return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [id, tab, isGroupCam, previewNonce])
 
   // Atualiza a pre-visualizacao sozinha a cada ~1 min. Sem isso, quem deixa a
   // aba aberta olhando o cartao de offline com "foto automatica" nunca vê a
@@ -285,7 +304,7 @@ export default function CartaoPanel({ id }) {
       {tab === 'offline' && (
         <div className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2.5 text-sm text-sky-200/90">
           {data.group_name
-            ? <>Esta câmera faz parte do grupo <strong>{data.group_name}</strong>. A ativação automática do cartão no ar quando a câmera cai ainda não está disponível para câmeras em grupo — por enquanto funciona só pra câmeras avulsas. Dá pra configurar e pré-visualizar o cartão normalmente.</>
+            ? <>Esta câmera faz parte do grupo <strong>{data.group_name}</strong>. Quando ela ficar fora do ar por mais de 2 minutos, ou instável, o grupo mostra um cartão no lugar dela. Se você salvar um cartão de offline aqui, ele é usado; senão, o grupo usa um cartão automático com o nome da câmera.</>
             : <>Esta câmera é avulsa — dá pra ativar abaixo pra que este cartão apareça automaticamente ao vivo no YouTube (no lugar do vídeo de espera genérico) quando a câmera cair.</>}
         </div>
       )}
@@ -417,6 +436,24 @@ export default function CartaoPanel({ id }) {
                 <p className="text-xs text-slate-500">Salve o cartão de offline (com a imagem de fundo configurada) pelo menos uma vez antes de ativar isso.</p>
               )}
               <p className="text-xs text-amber-300/90">Ao ativar, o serviço da câmera reinicia automaticamente (~15s de instabilidade no vídeo). Ao desativar, nada é reiniciado.</p>
+            </Card>
+          )}
+
+          {tab === 'offline' && data.group_name && (
+            <Card title="Cartão automático do grupo" icon="M15 10l4.55-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.45.894L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z">
+              <p className="text-xs text-slate-400">
+                É o que o grupo <strong>{data.group_name}</strong> mostra no lugar desta câmera quando ela fica fora do ar por mais de 2 minutos, ou instável. Não precisa configurar nada. Para usar o seu, salve um cartão de offline acima.
+              </p>
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center">
+                {autoLoading ? (
+                  <span className="text-xs text-slate-500">Carregando…</span>
+                ) : autoUrl ? (
+                  <img src={autoUrl} alt="Pré-visualização do cartão automático" className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-xs text-slate-500 px-4 text-center">Não foi possível carregar a pré-visualização.</span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">Se houver um cartão de offline salvo, ele tem prioridade sobre este. A foto de fundo é a última imagem da câmera.</p>
             </Card>
           )}
 
