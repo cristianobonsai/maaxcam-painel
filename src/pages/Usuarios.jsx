@@ -292,6 +292,90 @@ function MemberCard({ member, onChanged, onError }) {
         </button>
         {saved && <span className="text-xs text-emerald-300">✓ Salvo</span>}
       </div>
+
+      <GruposTransmissao member={member} onError={onError} />
+    </div>
+  )
+}
+
+// [GRUPOS-COMPARTILHADOS] O dono escolhe, por convidado, quais grupos de transmissão ele pode ver e o nível de cada um.
+const NIVEIS = [
+  { v: '', label: 'Não compartilhar' },
+  { v: 'ver', label: 'Ver' },
+  { v: 'operar', label: 'Operar' },
+  { v: 'editar', label: 'Editar' },
+]
+
+function GruposTransmissao({ member, onError }) {
+  const [grupos, setGrupos] = useState(null)   // grupos do dono (null = carregando)
+  const [niveis, setNiveis] = useState({})     // { [group_id]: 'ver' | 'operar' | 'editar' }
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    let vivo = true
+    ;(async () => {
+      try {
+        const [todos, dele] = await Promise.all([
+          api.get('/api/groups'),
+          api.get(`/api/account/members/${member.user_id}/groups`),
+        ])
+        if (!vivo) return
+        setGrupos((Array.isArray(todos) ? todos : []).filter((g) => !g.my_access || g.my_access === 'dono'))
+        const m = {}
+        for (const g of (dele?.groups || [])) m[g.group_id] = g.level
+        setNiveis(m)
+      } catch (e) {
+        if (!vivo) return
+        setGrupos([])
+        onError(e instanceof ApiError ? e.message : 'Não foi possível carregar os grupos de transmissão.')
+      }
+    })()
+    return () => { vivo = false }
+  }, [member.user_id])
+
+  async function salvar() {
+    setSaving(true); onError('')
+    try {
+      const itens = Object.entries(niveis).filter(([, v]) => v).map(([id, level]) => ({ group_id: Number(id), level }))
+      await api.put(`/api/account/members/${member.user_id}/groups`, { groups: itens })
+      setSaved(true)
+    } catch (e) {
+      onError(e instanceof ApiError ? e.message : 'Não foi possível salvar os grupos compartilhados.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!grupos || grupos.length === 0) return null  // carregando, ou a conta ainda não tem grupos para compartilhar
+
+  return (
+    <div className="mt-3 border-t border-slate-700 pt-3">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Grupos de transmissão</p>
+      <p className="mb-2 text-xs text-slate-400">
+        <strong className="text-slate-300">Ver:</strong> vê o grupo, as câmeras e o estado. {' '}
+        <strong className="text-slate-300">Operar:</strong> também liga e desliga a transmissão. {' '}
+        <strong className="text-slate-300">Editar:</strong> também edita nome, tempos, câmeras, áudio e a chave do YouTube. Excluir grupo, só você.
+      </p>
+      <div className="flex flex-col gap-2">
+        {grupos.map((g) => (
+          <label key={g.id} className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-slate-300">
+            <span className="min-w-0 truncate">{g.name || '(sem nome)'}</span>
+            <select value={niveis[g.id] || ''}
+              onChange={(e) => { setNiveis((n) => ({ ...n, [g.id]: e.target.value })); setSaved(false) }}
+              className="rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none">
+              {NIVEIS.map((n) => <option key={n.v} value={n.v}>{n.label}</option>)}
+            </select>
+          </label>
+        ))}
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <button onClick={salvar} disabled={saving}
+          className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-600 disabled:opacity-60">
+          {saving ? 'Salvando…' : 'Salvar grupos'}
+        </button>
+        {saved && <span className="text-xs text-emerald-300">✓ Salvo</span>}
+      </div>
     </div>
   )
 }

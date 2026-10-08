@@ -63,6 +63,28 @@ function CamHealthChip({ c, active }) {
   return null
 }
 
+// [GRUPOS-COMPARTILHADOS] O que o convidado pode fazer vem da API (my_access e can); dono e admin = tudo, como sempre.
+const ACCESS_LABEL = { ver: 'Ver', operar: 'Operar', editar: 'Editar' }
+const canOperate = (g) => (g.can ? !!g.can.operate : true)
+const canEditGroup = (g) => (g.can ? !!g.can.edit : true)
+const canDeleteGroup = (g) => (g.can ? !!g.can.delete : true)
+// a chave do YouTube só vem na resposta para quem pode editar; has_youtube_key diz se existe
+const hasKey = (g) => (g.has_youtube_key !== undefined ? !!g.has_youtube_key : !!g.youtube_key)
+
+function SharedBadge({ g }) {
+  if (!g.my_access || g.my_access === 'dono') return null
+  const tip = {
+    ver: 'Você pode ver o grupo, as câmeras e o estado.',
+    operar: 'Você pode ver o grupo e ligar/desligar a transmissão.',
+    editar: 'Você pode ver, ligar/desligar e editar o grupo (não pode excluir).',
+  }[g.my_access]
+  return (
+    <span title={tip} className="inline-flex items-center rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-medium text-violet-300">
+      Compartilhado com você · {ACCESS_LABEL[g.my_access] || g.my_access}
+    </span>
+  )
+}
+
 export default function Grupos() {
   const perms = usePermissions()
   const navigate = useNavigate()
@@ -185,7 +207,7 @@ export default function Grupos() {
   }
 
   async function startRelay(g) {
-    if (!g.youtube_key) { setError('Configure a YouTube key do grupo antes de iniciar.'); return }
+    if (!hasKey(g)) { setError('Configure a YouTube key do grupo antes de iniciar.'); return }
     if ((g.cameras?.length ?? 0) === 0) { setError('Adicione ao menos uma câmera antes de iniciar.'); return }
     if (!window.confirm(`Iniciar a transmissão do grupo "${g.name}" no YouTube? Isso para os relays individuais das câmeras do grupo (exclusividade) e usa mais CPU.`)) return
     setBusy(true); setError('')
@@ -345,7 +367,7 @@ export default function Grupos() {
           </div>
         </div>
 
-        {!loading && canAccessGroups && (
+        {!loading && canAccessGroups && (groups.length === 0 || groups.some((g) => !g.my_access || g.my_access === 'dono')) && (
           <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-4 py-2.5 text-sm text-purple-200">
             <Icon path="M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-4M12 8h.01" className="h-4 w-4 shrink-0" />
             <span>Cada grupo custa <strong className="font-semibold text-white">R$ 59,90/mês</strong>, somado ao valor das câmeras Premium que fazem parte dele.</span>
@@ -482,6 +504,7 @@ export default function Grupos() {
                           {g.enabled ? 'Habilitado' : 'Desabilitado'}
                         </span>
                         <span className="text-xs text-slate-400">{(g.cameras?.length ?? 0)} câmera(s)</span>
+                        <SharedBadge g={g} />
                       </div>
                     </div>
                     <button onClick={() => setManagingId(g.id)}
@@ -519,26 +542,31 @@ export default function Grupos() {
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${g.enabled ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-600/40 text-slate-300'}`}>
                             {g.enabled ? 'Habilitado' : 'Desabilitado'}
                           </span>
-                          {!g.youtube_key && <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem YouTube key</span>}
+                          {!hasKey(g) && <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem YouTube key</span>}
+                          <SharedBadge g={g} />
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="mr-1 text-right text-xs text-slate-400"><div>transição: {g.transition_seconds}s</div><div>{cams.length} câmera(s)</div></div>
-                        {g.relay_active ? (
+                        {canOperate(g) && (g.relay_active ? (
                           <button onClick={() => stopRelay(g)} disabled={busy}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">
                             <Icon path="M7 5h3v14H7zM14 5h3v14h-3z" className="h-4 w-4" /> Parar relay
                           </button>
                         ) : (
-                          <button onClick={() => startRelay(g)} disabled={busy || !g.youtube_key || cams.length === 0}
+                          <button onClick={() => startRelay(g)} disabled={busy || !hasKey(g) || cams.length === 0}
                             className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50">
                             <Icon path="M6 4l14 8-14 8V4z" className="h-4 w-4" /> Iniciar relay
                           </button>
+                        ))}
+                        {canEditGroup(g) && (
+                          <button onClick={() => openEdit(g)} disabled={busy}
+                            className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">Editar</button>
                         )}
-                        <button onClick={() => openEdit(g)} disabled={busy}
-                          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 disabled:opacity-50">Editar</button>
-                        <button onClick={() => deleteGroup(g)} disabled={busy}
-                          className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">Excluir</button>
+                        {canDeleteGroup(g) && (
+                          <button onClick={() => deleteGroup(g)} disabled={busy}
+                            className="rounded-lg border border-red-500 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50">Excluir</button>
+                        )}
                       </div>
                     </div>
 
@@ -549,11 +577,11 @@ export default function Grupos() {
                       <p className="mt-2 text-xs text-slate-400">{GROUP_STATUS[g.status].tip}</p>
                     )}
 
-                    {!g.relay_active && (!g.youtube_key || cams.length === 0) && (
+                    {!g.relay_active && (!hasKey(g) || cams.length === 0) && (
                       <p className="mt-2 text-xs text-slate-400">
-                        {!g.youtube_key && cams.length === 0
+                        {!hasKey(g) && cams.length === 0
                           ? 'Configure a YouTube key e adicione câmeras para iniciar.'
-                          : !g.youtube_key
+                          : !hasKey(g)
                           ? 'Configure a YouTube key para iniciar.'
                           : 'Adicione câmeras para iniciar.'}
                       </p>
@@ -573,7 +601,9 @@ export default function Grupos() {
                                   {g.health_active && c.health === 'instavel' && c.health_reason && <span className="block truncate text-xs text-amber-300/80">{c.health_reason}</span>}
                                 </span>
                                 <CamHealthChip c={c} active={g.health_active} />
-                                {c.card_video_path ? (
+                                {c.visible === false ? (
+                                  <span title="Esta câmera não está liberada para você; só o nome e o estado aparecem." className="shrink-0 rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-500">Câmera não liberada</span>
+                                ) : c.card_video_path ? (
                                   <button onClick={() => toggleCard(c)} disabled={busy}
                                     title={c.card_enabled ? 'Cartão de intervalo ativo — clique para desativar' : 'Cartão configurado, mas desativado — clique para ativar'}
                                     className={`shrink-0 rounded-full border px-2 py-1 text-xs font-medium disabled:opacity-50 ${c.card_enabled ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-slate-600 bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
@@ -585,26 +615,32 @@ export default function Grupos() {
                                     Sem cartão
                                   </button>
                                 )}
-                                <input type="number" value={durEdits[c.id] ?? c.duration_seconds}
-                                  onChange={(e) => setDurEdits((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                                  className="w-14 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-center text-sm text-white focus:border-blue-500 focus:outline-none" />
-                                <span className="text-xs text-slate-400">s</span>
-                                {changed && (
-                                  <button onClick={() => saveDuration(g, c)} disabled={busy}
-                                    className="rounded border border-blue-500 px-2 py-1 text-xs text-blue-200 hover:bg-blue-500 hover:text-white disabled:opacity-50">Salvar</button>
+                                {canEditGroup(g) ? (
+                                  <>
+                                    <input type="number" value={durEdits[c.id] ?? c.duration_seconds}
+                                      onChange={(e) => setDurEdits((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                                      className="w-14 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-center text-sm text-white focus:border-blue-500 focus:outline-none" />
+                                    <span className="text-xs text-slate-400">s</span>
+                                    {changed && (
+                                      <button onClick={() => saveDuration(g, c)} disabled={busy}
+                                        className="rounded border border-blue-500 px-2 py-1 text-xs text-blue-200 hover:bg-blue-500 hover:text-white disabled:opacity-50">Salvar</button>
+                                    )}
+                                    <button onClick={() => moveCamera(g, i, -1)} disabled={busy || i === 0}
+                                      className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M18 15l-6-6-6 6" className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => moveCamera(g, i, 1)} disabled={busy || i === cams.length - 1}
+                                      className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M6 9l6 6 6-6" className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => removeCamera(g, c)} disabled={busy}
+                                      className="grid h-7 w-7 place-items-center rounded border border-red-500/60 text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50"><Icon path="M18 6 6 18M6 6l12 12" className="h-3.5 w-3.5" /></button>
+                                  </>
+                                ) : (
+                                  <span className="shrink-0 text-xs text-slate-400">{c.duration_seconds}s</span>
                                 )}
-                                <button onClick={() => moveCamera(g, i, -1)} disabled={busy || i === 0}
-                                  className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M18 15l-6-6-6 6" className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => moveCamera(g, i, 1)} disabled={busy || i === cams.length - 1}
-                                  className="grid h-7 w-7 place-items-center rounded border border-slate-600 text-slate-300 hover:border-blue-500 disabled:opacity-30"><Icon path="M6 9l6 6 6-6" className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => removeCamera(g, c)} disabled={busy}
-                                  className="grid h-7 w-7 place-items-center rounded border border-red-500/60 text-red-300 hover:bg-red-500 hover:text-white disabled:opacity-50"><Icon path="M18 6 6 18M6 6l12 12" className="h-3.5 w-3.5" /></button>
                               </div>
                             )
                           })}
                         </div>
 
-                        {addingTo === g.id ? (
+                        {!canEditGroup(g) ? null : addingTo === g.id ? (
                           <div className="mt-2 rounded-lg border border-blue-500 bg-slate-900 p-3">
                             <div className="flex flex-wrap items-end gap-2">
                               <div className="min-w-0 flex-1">
@@ -651,23 +687,25 @@ export default function Grupos() {
                           <div className="mb-2 text-xs uppercase tracking-wide text-slate-400">Transmissão YouTube</div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-400">Chave</span>
-                            {g.youtube_key ? (
+                            {hasKey(g) ? (
                               <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-xs font-medium text-blue-300">Configurada</span>
                             ) : (
                               <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem chave</span>
                             )}
                           </div>
-                          <p className="mt-1.5 text-xs text-slate-500">Defina ou troque a chave pelo botão Editar do grupo.</p>
+                          {canEditGroup(g) && <p className="mt-1.5 text-xs text-slate-500">Defina ou troque a chave pelo botão Editar do grupo.</p>}
                         </div>
 
                         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
                           <div className="mb-2 text-xs uppercase tracking-wide text-slate-400">Áudio em loop</div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="min-w-0 truncate text-sm text-slate-200">{g.audio_file ? g.audio_file.split('/').pop() : 'nenhum'}</span>
-                            <label className="shrink-0 cursor-pointer rounded-lg border border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:border-blue-500">
-                              Enviar .mp3
-                              <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={(e) => uploadAudio(g, e.target)} />
-                            </label>
+                            {canEditGroup(g) && (
+                              <label className="shrink-0 cursor-pointer rounded-lg border border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:border-blue-500">
+                                Enviar .mp3
+                                <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={(e) => uploadAudio(g, e.target)} />
+                              </label>
+                            )}
                           </div>
                         </div>
 
