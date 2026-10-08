@@ -338,8 +338,12 @@ function GruposTransmissao({ member, onError }) {
     setSaving(true); onError('')
     try {
       const itens = Object.entries(niveis).filter(([, v]) => v).map(([id, level]) => ({ group_id: Number(id), level }))
-      await api.put(`/api/account/members/${member.user_id}/groups`, { groups: itens })
-      setSaved(true)
+      const r = await api.put(`/api/account/members/${member.user_id}/groups`, { groups: itens })
+      if (r && Array.isArray(r.ignored) && r.ignored.length > 0) {
+        onError('Alguns grupos não pertencem a esta conta e foram ignorados. Atualize a página e confira.')
+      } else {
+        setSaved(true)
+      }
     } catch (e) {
       onError(e instanceof ApiError ? e.message : 'Não foi possível salvar os grupos compartilhados.')
     } finally {
@@ -354,8 +358,8 @@ function GruposTransmissao({ member, onError }) {
       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Grupos de transmissão</p>
       <p className="mb-2 text-xs text-slate-400">
         <strong className="text-slate-300">Ver:</strong> vê o grupo, as câmeras e o estado. {' '}
-        <strong className="text-slate-300">Operar:</strong> também liga e desliga a transmissão. {' '}
-        <strong className="text-slate-300">Editar:</strong> também edita nome, tempos, câmeras, áudio e a chave do YouTube. Excluir grupo, só você.
+        <strong className="text-slate-300">Operar:</strong> também liga e desliga a transmissão (isso pausa os relays individuais das câmeras do grupo, como quando você liga). {' '}
+        <strong className="text-slate-300">Editar:</strong> também edita nome, tempos, câmeras, áudio e <strong className="text-slate-300">troca a chave do YouTube</strong> (ele só mexe nas câmeras que já enxerga). Excluir grupo, só você.
       </p>
       <div className="flex flex-col gap-2">
         {grupos.map((g) => (
