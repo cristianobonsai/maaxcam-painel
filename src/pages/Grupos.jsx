@@ -97,6 +97,7 @@ export default function Grupos() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [audioPend, setAudioPend] = useState({})   // { [group_id]: true } = áudio enviado, ainda não aplicado no ar
 
   const [editing, setEditing] = useState(null) // null | 'new' | id
   const [managingId, setManagingId] = useState(null) // null = lista simples | id = detalhe do grupo
@@ -253,9 +254,25 @@ export default function Grupos() {
       })
       if (!res.ok) throw new Error(`Upload falhou (HTTP ${res.status}).`)
       inputEl.value = ''
+      if (g.relay_active) setAudioPend((p) => ({ ...p, [g.id]: true }))   // grupo no ar: o áudio novo só entra ao reiniciar
       await load()
     } catch (e) {
       setError(e.message || 'Erro no upload do áudio.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // O áudio é lido uma vez, quando o grupo começa a transmitir; para valer no ar o grupo precisa reiniciar.
+  async function applyAudio(g) {
+    if (!window.confirm(`Reiniciar o grupo "${g.name}" para aplicar o áudio novo? A transmissão no YouTube cai por cerca de 1 a 2 minutos e volta sozinha.`)) return
+    setBusy(true); setError('')
+    try {
+      await api.post(`/api/groups/${g.id}/relay/restart`)
+      setAudioPend((p) => { const n = { ...p }; delete n[g.id]; return n })
+      await load()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Erro ao reiniciar o grupo.')
     } finally {
       setBusy(false)
     }
@@ -712,6 +729,19 @@ export default function Grupos() {
                               </label>
                             )}
                           </div>
+                          {g.relay_active && (
+                            <div className="mt-2">
+                              <p className={`text-xs ${audioPend[g.id] ? 'text-amber-300' : 'text-slate-500'}`}>
+                                {audioPend[g.id] ? 'Áudio novo enviado. ' : ''}No ar, o áudio só muda quando o grupo reinicia (isso acontece sozinho a cada 11 h).
+                              </p>
+                              {canOperate(g) && (
+                                <button onClick={() => applyAudio(g)} disabled={busy}
+                                  className="mt-1.5 rounded-lg border border-amber-500/50 px-2.5 py-1 text-xs text-amber-200 hover:bg-amber-500/10 disabled:opacity-50">
+                                  Aplicar áudio agora (reinicia o grupo)
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <p className="text-xs text-slate-500"><span className="font-medium text-slate-300">Exclusividade:</span> com o grupo no ar, os relays individuais dessas câmeras ficam pausados.</p>
