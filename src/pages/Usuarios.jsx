@@ -309,6 +309,7 @@ const NIVEIS = [
 function GruposTransmissao({ member, onError }) {
   const [grupos, setGrupos] = useState(null)   // grupos do dono (null = carregando)
   const [niveis, setNiveis] = useState({})     // { [group_id]: 'ver' | 'operar' | 'editar' }
+  const [chaves, setChaves] = useState({})     // { [group_id]: true } = autorizado a ver/trocar a chave do YouTube (só no Editar)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -323,8 +324,10 @@ function GruposTransmissao({ member, onError }) {
         if (!vivo) return
         setGrupos((Array.isArray(todos) ? todos : []).filter((g) => !g.my_access || g.my_access === 'dono'))
         const m = {}
-        for (const g of (dele?.groups || [])) m[g.group_id] = g.level
+        const k = {}
+        for (const g of (dele?.groups || [])) { m[g.group_id] = g.level; if (g.youtube_key) k[g.group_id] = true }
         setNiveis(m)
+        setChaves(k)
       } catch (e) {
         if (!vivo) return
         setGrupos([])
@@ -337,7 +340,7 @@ function GruposTransmissao({ member, onError }) {
   async function salvar() {
     setSaving(true); onError('')
     try {
-      const itens = Object.entries(niveis).filter(([, v]) => v).map(([id, level]) => ({ group_id: Number(id), level }))
+      const itens = Object.entries(niveis).filter(([, v]) => v).map(([id, level]) => ({ group_id: Number(id), level, youtube_key: level === 'editar' && !!chaves[id] }))
       const r = await api.put(`/api/account/members/${member.user_id}/groups`, { groups: itens })
       if (r && Array.isArray(r.ignored) && r.ignored.length > 0) {
         onError('Alguns grupos não pertencem a esta conta e foram ignorados. Atualize a página e confira.')
@@ -359,18 +362,28 @@ function GruposTransmissao({ member, onError }) {
       <p className="mb-2 text-xs text-slate-400">
         <strong className="text-slate-300">Ver:</strong> vê o grupo, as câmeras e o estado. {' '}
         <strong className="text-slate-300">Operar:</strong> também liga e desliga a transmissão (isso pausa os relays individuais das câmeras do grupo, como quando você liga). {' '}
-        <strong className="text-slate-300">Editar:</strong> também edita nome, tempos, câmeras, áudio e <strong className="text-slate-300">troca a chave do YouTube</strong> (ele só mexe nas câmeras que já enxerga). Excluir grupo, só você.
+        <strong className="text-slate-300">Editar:</strong> também edita nome, tempos, câmeras (só as que já enxerga) e áudio. {' '}
+        <strong className="text-slate-300">Chave do YouTube:</strong> ver e trocar a chave é uma autorização à parte, desligada por padrão — marque só para quem for de confiança. Excluir grupo, só você.
       </p>
       <div className="flex flex-col gap-2">
         {grupos.map((g) => (
-          <label key={g.id} className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-slate-300">
-            <span className="min-w-0 truncate">{g.name || '(sem nome)'}</span>
-            <select value={niveis[g.id] || ''}
-              onChange={(e) => { setNiveis((n) => ({ ...n, [g.id]: e.target.value })); setSaved(false) }}
-              className="rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none">
-              {NIVEIS.map((n) => <option key={n.v} value={n.v}>{n.label}</option>)}
-            </select>
-          </label>
+          <div key={g.id}>
+            <label className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-slate-300">
+              <span className="min-w-0 truncate">{g.name || '(sem nome)'}</span>
+              <select value={niveis[g.id] || ''}
+                onChange={(e) => { setNiveis((n) => ({ ...n, [g.id]: e.target.value })); setSaved(false) }}
+                className="rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none">
+                {NIVEIS.map((n) => <option key={n.v} value={n.v}>{n.label}</option>)}
+              </select>
+            </label>
+            {niveis[g.id] === 'editar' && (
+              <label className="mt-1 flex items-center gap-2 pl-3 text-xs text-slate-400">
+                <input type="checkbox" checked={!!chaves[g.id]}
+                  onChange={(e) => { setChaves((k) => ({ ...k, [g.id]: e.target.checked })); setSaved(false) }} />
+                Pode ver e trocar a chave do YouTube
+              </label>
+            )}
+          </div>
         ))}
       </div>
       <div className="mt-3 flex items-center gap-3">

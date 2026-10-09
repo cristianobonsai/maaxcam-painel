@@ -69,6 +69,8 @@ const canOperate = (g) => (g.can ? !!g.can.operate : true)
 const canEditGroup = (g) => (g.can ? !!g.can.edit : true)
 const canDeleteGroup = (g) => (g.can ? !!g.can.delete : true)
 // a chave do YouTube só vem na resposta para quem pode editar; has_youtube_key diz se existe
+// o dono da conta autoriza (por convidado e por grupo) quem pode ver/trocar a chave; sem isso o campo some
+const canKey = (g) => (g.can ? !!g.can.youtube_key : true)
 const hasKey = (g) => (g.has_youtube_key !== undefined ? !!g.has_youtube_key : !!g.youtube_key)
 
 function SharedBadge({ g }) {
@@ -438,6 +440,7 @@ export default function Grupos() {
                     <input className={inputClass} value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Grupo Centro" />
                   </div>
+                  {(editing === 'new' || canKey(groups.find((x) => x.id === editing) || {})) && (
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-xs text-slate-400">
                       YouTube key{editing !== 'new' ? ' (deixe em branco para manter a atual)' : ''}
@@ -446,6 +449,7 @@ export default function Grupos() {
                       onChange={(e) => setForm({ ...form, youtube_key: e.target.value })}
                       placeholder={editing === 'new' ? 'opcional' : '••••••••'} />
                   </div>
+                  )}
                   <div>
                     <label className="mb-1 block text-xs text-slate-400">Transição (segundos)</label>
                     <input type="number" className={inputClass} value={form.transition_seconds}
@@ -693,7 +697,8 @@ export default function Grupos() {
                               <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-300">Sem chave</span>
                             )}
                           </div>
-                          {canEditGroup(g) && <p className="mt-1.5 text-xs text-slate-500">Defina ou troque a chave pelo botão Editar do grupo.</p>}
+                          {canEditGroup(g) && canKey(g) && <p className="mt-1.5 text-xs text-slate-500">Defina ou troque a chave pelo botão Editar do grupo.</p>}
+                          {canEditGroup(g) && !canKey(g) && <p className="mt-1.5 text-xs text-slate-500">A troca da chave precisa de autorização do dono da conta.</p>}
                         </div>
 
                         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
