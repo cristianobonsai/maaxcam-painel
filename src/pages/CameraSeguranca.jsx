@@ -98,7 +98,11 @@ function MonitorPanel({ id }) {
   if (!mon) return null
 
   const tipoLabel = { hls: 'HLS direto', youtube: 'YouTube', grupo: 'Grupo' }[mon.tipo] || mon.tipo
-  const conexao = mon.conexao === 'conectada' ? { c: 'green', t: 'Conectada' } : { c: 'red', t: 'Sem sinal' }
+  // [INGEST] chave RTMP em uso por dois equipamentos (o segundo é bloqueado pelo gateway; o primeiro segue no ar)
+  const dup = !!mon.ingest?.duplicate
+  const conexao = dup
+    ? { c: 'orange', t: 'Chave em uso por dois equipamentos' }
+    : mon.conexao === 'conectada' ? { c: 'green', t: 'Conectada' } : { c: 'red', t: 'Sem sinal' }
   const estab = mon.estabilidade === 'instavel'
     ? { c: 'red', t: `Instável (${mon.drops_24h} quedas/24h)` }
     : { c: 'green', t: `Estável (${mon.drops_24h} quedas/24h)` }
@@ -139,6 +143,11 @@ function MonitorPanel({ id }) {
           {mostraSaude && <Row label="Rodízio do grupo" dot={saude.c} text={saude.t} />}
           <Row label="Ajustes (configuração)" dot={ajustes.c} text={ajustes.t} />
         </div>
+        {dup && (
+          <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
+            <strong>Chave RTMP em uso por dois equipamentos:</strong> um segundo equipamento{mon.ingest.ip_blocked ? ` (IP ${mon.ingest.ip_blocked})` : ''} está tentando transmitir com a mesma chave desta câmera{mon.ingest.since_ts ? ` desde ${new Date(mon.ingest.since_ts * 1000).toLocaleString('pt-BR')}` : ''}{mon.ingest.attempts ? ` (${mon.ingest.attempts} tentativas bloqueadas)` : ''}. <strong>Bloqueamos o segundo equipamento; a transmissão original segue no ar.</strong> Cada equipamento precisa da sua própria câmera e chave: se for uma câmera nova, cadastre-a em Câmeras → Adicionar câmera; se foi engano, desligue ou reconfigure o equipamento duplicado.
+          </div>
+        )}
         {mostraSaude && mon.health === 'instavel' && (
           <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
             <strong>Câmera instável:</strong> {mon.health_reason || 'oscilações frequentes'}. Ela saiu do rodízio do grupo e volta sozinha quando ficar estável. Verifique a câmera e a internet do local.
@@ -374,6 +383,9 @@ export default function CameraSeguranca() {
 
               <Card title="Transmissão (RTMP)" icon="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12">
                 <Field label="URL RTMP" value={data.rtmp_url} hint="Cole isto na sua câmera IP (campo de servidor/URL RTMP) para começar a transmitir." />
+                <div className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2.5 text-sm text-sky-200">
+                  🔑 Use esta chave em <strong>um único equipamento</strong>. Para outra câmera, adicione uma <strong>nova câmera</strong> — cada equipamento precisa da sua própria chave.
+                </div>
                 <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
                   🔊 <strong>Áudio:</strong> configure a câmera em <strong>G.711A</strong>. Evite <strong>AAC</strong> — pode causar atraso na abertura do vídeo.
                 </div>
