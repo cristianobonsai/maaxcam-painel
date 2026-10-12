@@ -122,9 +122,10 @@ export async function executar(argv) {
       const loc = (alvo) => localizar(page, alvo, ctxLoc)
       const arquivo = join(capDir, nomeArquivo(roteiro.id, indice, passo.id))
       try {
-        if (passo.ir) await page.goto(servidor.origem + passo.ir, { waitUntil: 'networkidle' })
+        if (passo.ir) await page.goto(servidor.origem + passo.ir, { waitUntil: 'domcontentloaded' })
         if (passo.acao) await passo.acao({ page, loc })
-        await page.waitForLoadState('networkidle')
+        // espera a rede aquietar, mas no maximo 3 s (players/iframes mantem atividade e nao devem travar o robo)
+        await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
         await page.waitForTimeout(400)
         if (errosApi.length) throw errosApi[0]
         const alvos = []
