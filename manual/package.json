@@ -1,0 +1,13 @@
+{
+  "name": "livebybit-manual-robo",
+  "private": true,
+  "type": "module",
+  "description": "Robo que tira os prints do Manual do Usuario num painel de demonstracao (dados ficticios).",
+  "scripts": {
+    "test": "node --test",
+    "manual": "node robo/run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
