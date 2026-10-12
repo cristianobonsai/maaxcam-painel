@@ -118,7 +118,7 @@ export async function executar(argv) {
     for (const passo of roteiro.passos) {
       indice++
       const { page } = await contexto(passo.contexto === 'logado' ? 'logado' : 'sem-sessao')
-      const ctxLoc = { relatorio, capitulo: roteiro.id, passo: passo.id }
+      const ctxLoc = { relatorio, capitulo: roteiro.id, passo: passo.id, espera: 4000 }
       const loc = (alvo) => localizar(page, alvo, ctxLoc)
       const arquivo = join(capDir, nomeArquivo(roteiro.id, indice, passo.id))
       try {

@@ -55,9 +55,22 @@ function construirLocator(page, papel, nome, alvo) {
   return page.getByRole(papel, { name: nome })
 }
 
-async function tentarPorNome(page, papel, nome, alvo, ctx) {
+const pausa = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Espera (ate `espera` ms) o elemento aparecer: telas que mostram "Carregando..." nao podem virar "elemento sumiu".
+async function contar(loc, espera) {
+  let n = await loc.count()
+  const ate = Date.now() + espera
+  while (n === 0 && Date.now() < ate) {
+    await pausa(200)
+    n = await loc.count()
+  }
+  return n
+}
+
+async function tentarPorNome(page, papel, nome, alvo, ctx, espera = 0) {
   const loc = construirLocator(page, papel, nome, alvo)
-  const n = await loc.count()
+  const n = await contar(loc, espera)
   if (n === 1) return loc
   if (n > 1) {
     if (alvo.primeiro) return loc.first()
@@ -72,7 +85,7 @@ async function tentarPorNome(page, papel, nome, alvo, ctx) {
  */
 export async function localizar(page, alvo, ctx) {
   const texto = alvo.texto || textoDoAlvo(alvo.nome)
-  const direto = await tentarPorNome(page, alvo.papel, alvo.nome, alvo, ctx)
+  const direto = await tentarPorNome(page, alvo.papel, alvo.nome, alvo, ctx, ctx.espera || 0)
   if (direto) return direto
 
   for (const alt of alvo.alternativas || []) {

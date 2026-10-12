@@ -113,6 +113,31 @@ test('localizar por css: usa locator(seletor) com as mesmas regras', async () =>
   await assert.rejects(localizar(pagina, { por: 'css', nome: 'dl' }, ctx), (e) => e.motivo === 'nenhum')
 })
 
+test('localizar espera o elemento exato aparecer (tela carregando) antes de tentar o autoajuste', async () => {
+  const rel = relatorioEspiao()
+  let consultas = 0
+  const pagina = {
+    getByRole(papel, opcoes) {
+      if (opcoes && opcoes.name !== undefined) {
+        return { _chave: `${papel}:${opcoes.name}`, count: async () => (++consultas >= 3 ? 1 : 0), first() { return this } }
+      }
+      return { all: async () => [elemento('Outra coisa')] }
+    },
+  }
+  const loc = await localizar(pagina, { papel: 'button', nome: 'Transmissão' },
+    { relatorio: rel, capitulo: 'c', passo: 'p', espera: 2000 })
+  assert.equal(loc._chave, 'button:Transmissão')
+  assert.ok(consultas >= 3)
+  assert.equal(rel.chamadas.length, 0)                     // apareceu sozinho: nao houve ajuste
+})
+
+test('localizar sem espera (padrao dos testes) nao demora e cai no autoajuste/quebra', async () => {
+  const pagina = paginaFalsa({ elementos: { button: ['Mapa'] } })
+  const t0 = Date.now()
+  await assert.rejects(localizar(pagina, { papel: 'button', nome: 'Transmissão' }, { relatorio: relatorioEspiao(), capitulo: 'c', passo: 'p' }))
+  assert.ok(Date.now() - t0 < 500)
+})
+
 test('localizar: varios resultados exatos => quebra, salvo alvo.primeiro', async () => {
   const pagina = paginaFalsa({ exatos: { 'link:Gerenciar': 2 } })
   const ctx = { relatorio: relatorioEspiao(), capitulo: 'c', passo: 'p' }
