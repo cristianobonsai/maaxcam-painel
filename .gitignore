@@ -6,3 +6,7 @@ patch_*.py
 *.local
 .DS_Store
 package-lock.json
+
+# robo do manual
+manual/node_modules/
+manual/saida/
