@@ -84,7 +84,8 @@ export function rotas(estado) {
           brand: corpo?.brand || '', cloud: corpo?.cloud || '', youtube_key: '', quality_tier: corpo?.quality_tier || '1080p',
           stream_key: `demo-nova${String(n).padStart(2, '0')}`, playback_id: `demo-pb-${n}` }
         estado.cameras.push(c)
-        return { json: { camera_id: c.camera_id, name: c.name, stream_key: c.stream_key, rtmp_url: rtmpUrl(c), hls_url: hlsUrl(c) } }
+        return { json: { camera_id: c.camera_id, name: c.name, stream_key: c.stream_key, rtmp_url: rtmpUrl(c),
+          hls_url: `https://play.livebybit.com/hls/${c.stream_key}.m3u8` } }
       },
     },
     {
