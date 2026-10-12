@@ -66,7 +66,7 @@ export default {
         await (await loc({ papel: 'button', nome: 'Transmissão' })).click()
         await page.getByText('Cole isto na sua câmera IP').first().waitFor()
       },
-      destacar: [{ por: 'texto', nome: 'Cole isto na sua câmera IP' }, { papel: 'button', nome: 'Copiar', primeiro: true, numero: 'direita' }],
+      destacar: [{ por: 'texto', nome: 'rtmp://ingest.livebybit.com/live/' }, { papel: 'button', nome: 'Copiar', primeiro: true, numero: 'direita' }],
     },
     {
       id: 'verificar', titulo: 'Conferir se a imagem chegou', contexto: 'logado',
