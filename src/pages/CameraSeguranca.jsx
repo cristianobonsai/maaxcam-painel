@@ -121,6 +121,11 @@ function MonitorPanel({ id }) {
     : { c: 'green', t: 'Estável' }
   const mostraSaude = !!mon.health_active && (mon.tipo === 'grupo' || mon.health === 'instavel')
   const historico = mon.health_active ? (mon.health_history || []) : []
+  // [INGEST] diagnóstico + histórico unificado (liberado por conta no backend; sem isso a tela fica como antes)
+  const diag = mon.diag?.enabled ? mon.diag : null
+  const mostraDiag = !!diag && diag.cause !== 'ok' && !dup
+  const hist = mon.diag?.enabled ? (mon.history || []) : null
+  const histCor = { queda: 'text-red-300', volta: 'text-emerald-300', troca_ip: 'text-orange-300', bloqueio: 'text-orange-300', rodizio: 'text-orange-300', plataforma: 'text-slate-400' }
 
   const Row = ({ label, dot, text }) => (
     <div className="flex items-center justify-between gap-3 rounded-md bg-slate-900/60 px-3 py-2.5">
@@ -148,6 +153,23 @@ function MonitorPanel({ id }) {
             <strong>Chave RTMP em uso por dois equipamentos:</strong> um segundo equipamento{mon.ingest.ip_blocked ? ` (IP ${mon.ingest.ip_blocked})` : ''} está tentando transmitir com a mesma chave desta câmera{mon.ingest.since_ts ? ` desde ${new Date(mon.ingest.since_ts * 1000).toLocaleString('pt-BR')}` : ''}{mon.ingest.attempts ? ` (${mon.ingest.attempts} tentativas bloqueadas)` : ''}. <strong>Bloqueamos o segundo equipamento; a transmissão original segue no ar.</strong> Cada equipamento precisa da sua própria câmera e chave: se for uma câmera nova, cadastre-a em Câmeras → Adicionar câmera; se foi engano, desligue ou reconfigure o equipamento duplicado.
           </div>
         )}
+        {mostraDiag && (
+          <div className={`rounded-md border text-sm px-3 py-2 ${diag.severity === 'crit' ? 'bg-red-500/15 border-red-500/30 text-red-200' : 'bg-orange-500/15 border-orange-500/30 text-orange-200'}`}>
+            <strong>{diag.title}</strong>
+            {diag.since_ts ? <span className="opacity-80"> (desde {new Date(diag.since_ts * 1000).toLocaleString('pt-BR')})</span> : null}
+            <ul className="mt-1 list-disc pl-5 space-y-0.5">
+              {(diag.facts || []).map((f, i) => <li key={i}>{f}</li>)}
+            </ul>
+            {(diag.what_to_check || []).length > 0 && (
+              <>
+                <div className="mt-2 font-medium">O que conferir:</div>
+                <ul className="list-disc pl-5 space-y-0.5">
+                  {diag.what_to_check.map((w, i) => <li key={i}>{w}</li>)}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
         {mostraSaude && mon.health === 'instavel' && (
           <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
             <strong>Câmera instável:</strong> {mon.health_reason || 'oscilações frequentes'}. Ela saiu do rodízio do grupo e volta sozinha quando ficar estável. Verifique a câmera e a internet do local.
@@ -172,7 +194,27 @@ function MonitorPanel({ id }) {
         <p className="text-xs text-slate-500">Atualiza sozinho a cada 20s. Resolução/FPS lidos da câmera; bitrate e keyframe medidos no servidor.</p>
       </Card>
 
-      {historico.length > 0 && (
+      {hist && (
+        <Card title="Histórico (últimos 7 dias)" icon="M12 8v4l3 3M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0">
+          {hist.length === 0 ? (
+            <p className="text-sm text-slate-400">Nenhum evento nos últimos 7 dias.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {hist.map((ev, i) => (
+                <div key={i} className="rounded-md bg-slate-900/60 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-400">{new Date(ev.ts * 1000).toLocaleString('pt-BR')}</span>
+                    <span className={histCor[ev.type] || 'text-slate-300'}>{ev.title}</span>
+                  </div>
+                  {ev.detail ? <div className="mt-0.5 text-right text-xs text-slate-500">{ev.detail}</div> : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {!hist && historico.length > 0 && (
         <Card title="Saídas do rodízio (últimos 7 dias)" icon="M12 8v4l3 3M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0">
           <div className="space-y-1.5">
             {historico.map((ev, i) => (
