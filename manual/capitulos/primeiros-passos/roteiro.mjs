@@ -34,7 +34,7 @@ export default {
     {
       id: 'lista', titulo: 'Ver as suas câmeras', contexto: 'logado', ir: '/painel/cameras',
       legenda: 'Aqui aparecem todas as suas câmeras. Para cadastrar uma nova, clique em "Nova câmera".',
-      destacar: [{ papel: 'button', nome: 'Nova câmera' }],
+      destacar: [{ papel: 'button', nome: 'Nova câmera', numero: 'abaixo' }],
     },
     {
       id: 'formulario', titulo: 'Preencher os dados da câmera', contexto: 'logado',
@@ -45,7 +45,7 @@ export default {
       },
       destacar: [
         { papel: 'textbox', nome: /^Nome/, texto: 'Nome' },
-        { papel: 'combobox', nome: /Plano desta câmera/, texto: 'Plano desta câmera' },
+        { papel: 'combobox', nome: /Plano desta câmera/, texto: 'Plano desta câmera', numero: 'direita' },
         { papel: 'button', nome: 'Criar câmera' },
       ],
     },
@@ -66,7 +66,7 @@ export default {
         await (await loc({ papel: 'button', nome: 'Transmissão' })).click()
         await page.getByText('Cole isto na sua câmera IP').first().waitFor()
       },
-      destacar: [{ por: 'texto', nome: 'Cole isto na sua câmera IP' }, { papel: 'button', nome: 'Copiar', primeiro: true }],
+      destacar: [{ por: 'texto', nome: 'Cole isto na sua câmera IP' }, { papel: 'button', nome: 'Copiar', primeiro: true, numero: 'direita' }],
     },
     {
       id: 'verificar', titulo: 'Conferir se a imagem chegou', contexto: 'logado',

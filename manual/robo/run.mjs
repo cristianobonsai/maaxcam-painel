@@ -16,6 +16,7 @@ import { servirEstatico } from './servidor.mjs'
 
 export const API_DEMO = 'https://api-demo.invalid'
 export const CHAVE_SESSAO = 'sb-qtvrzdwgfeomzahtjwpz-auth-token'
+export const VIEWPORT = { width: 1440, height: 900 }     // tela de notebook comum; mostra o layout completo do painel
 const CTX_HOSTS = { apiHost: 'api-demo.invalid', playHost: 'play.livebybit.com', authHost: 'qtvrzdwgfeomzahtjwpz.supabase.co' }
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const MANUAL_DIR = resolve(AQUI, '..')
@@ -82,7 +83,7 @@ export async function executar(argv) {
   const contextos = {}
   async function contexto(tipo) {
     if (contextos[tipo]) return contextos[tipo]
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'pt-BR' })
+    const ctx = await browser.newContext({ viewport: VIEWPORT, locale: 'pt-BR' })
     ctx.setDefaultTimeout(10_000)
     if (tipo === 'logado') {
       await ctx.addInitScript(([chave, valor]) => localStorage.setItem(chave, valor), [CHAVE_SESSAO, JSON.stringify(sessaoFalsa())])
@@ -130,7 +131,7 @@ export async function executar(argv) {
         if (errosApi.length) throw errosApi[0]
         const alvos = []
         for (const a of passo.destacar) alvos.push(await loc(a))
-        await destacarEFotografar(page, { alvos, arquivo, numeros: true })
+        await destacarEFotografar(page, { alvos, arquivo, numeros: true, lados: passo.destacar.map((a) => a.numero) })
         relatorio.ok(roteiro.id, passo.id, `print ${nomeArquivo(roteiro.id, indice, passo.id)}`)
         manifest.push({ arquivo: nomeArquivo(roteiro.id, indice, passo.id), id: passo.id, titulo: passo.titulo,
           legenda: passo.legenda, destacados: passo.destacar.length })

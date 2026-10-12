@@ -35,6 +35,7 @@ test('roteiro de Primeiros passos: 8 passos com ids unicos, contexto valido e al
     for (const a of p.destacar) {
       assert.ok(a.nome instanceof RegExp || (typeof a.nome === 'string' && a.nome.length > 0), p.id)
       assert.ok(a.por ? ['texto', 'css'].includes(a.por) : !!a.papel, p.id)
+      assert.ok(a.numero === undefined || ['esquerda', 'direita', 'acima', 'abaixo'].includes(a.numero), p.id)
     }
   }
 })

@@ -1,6 +1,24 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calcularCaixa, destacarEFotografar } from '../robo/destaque.mjs'
+import { calcularCaixa, destacarEFotografar, posicaoNumero } from '../robo/destaque.mjs'
+
+const TELA = { largura: 1440, altura: 900 }
+
+test('posicaoNumero: esquerda (padrao), direita, acima e abaixo, relativas a caixa', () => {
+  const caixa = { left: 300, top: 300, width: 200, height: 40 }
+  assert.deepEqual(posicaoNumero(caixa, undefined, TELA), { left: -32, top: 7 })        // esquerda, centrado na altura
+  assert.deepEqual(posicaoNumero(caixa, 'esquerda', TELA), { left: -32, top: 7 })
+  assert.deepEqual(posicaoNumero(caixa, 'direita', TELA), { left: 206, top: 7 })
+  assert.deepEqual(posicaoNumero(caixa, 'acima', TELA), { left: 4, top: -30 })
+  assert.deepEqual(posicaoNumero(caixa, 'abaixo', TELA), { left: 4, top: 44 })
+})
+
+test('posicaoNumero: se sairia da tela, troca de lado sozinho', () => {
+  assert.equal(posicaoNumero({ left: 6, top: 300, width: 200, height: 40 }, 'esquerda', TELA).left, 206)   // vai para a direita
+  assert.equal(posicaoNumero({ left: 300, top: 3, width: 200, height: 40 }, 'acima', TELA).top, 44)        // vai para baixo
+  assert.equal(posicaoNumero({ left: 1300, top: 300, width: 130, height: 40 }, 'direita', TELA).left, -32) // vai para a esquerda
+  assert.equal(posicaoNumero({ left: 300, top: 880, width: 200, height: 40 }, 'abaixo', TELA).top, -30)    // vai para cima
+})
 
 test('calcularCaixa aplica margem e nunca fica negativa', () => {
   assert.deepEqual(calcularCaixa({ x: 2, y: 3, width: 100, height: 20 }, 6), { left: 0, top: 0, width: 112, height: 32 })
@@ -27,6 +45,7 @@ test('destacarEFotografar: desenha numerado, fotografa e remove', async () => {
   const desenho = pagina.eventos[0].arg
   assert.equal(desenho.caixas.length, 2)
   assert.equal(desenho.numeros, true)
+  assert.ok(desenho.caixas.every((c) => typeof c.numero.left === 'number' && typeof c.numero.top === 'number'))
   assert.equal(pagina.eventos[1].opcoes.path, 'saida/x.png')
 })
 
