@@ -86,6 +86,33 @@ test('localizar: dois candidatos parecidos => quebra (nao adivinha)', async () =
   )
 })
 
+// ---- alvos por texto e por CSS (elementos sem "papel") ----
+function paginaPorTextoCss({ textos = {}, css = {} } = {}) {
+  const loc = (n, chave) => ({ _chave: chave, count: async () => n, first() { return { _primeiro: chave } } })
+  return {
+    getByText: (t) => loc(textos[t] ?? 0, `texto:${t}`),
+    locator: (sel) => loc(css[sel] ?? 0, `css:${sel}`),
+  }
+}
+
+test('localizar por texto: 1 resultado ok; 0 => quebra sem fuzzy; varios => quebra salvo primeiro', async () => {
+  const rel = relatorioEspiao()
+  const ctx = { relatorio: rel, capitulo: 'c', passo: 'p' }
+  const pagina = paginaPorTextoCss({ textos: { 'Link enviado': 1, 'Stream key': 2 } })
+  assert.equal((await localizar(pagina, { por: 'texto', nome: 'Link enviado' }, ctx))._chave, 'texto:Link enviado')
+  await assert.rejects(localizar(pagina, { por: 'texto', nome: 'Nada' }, ctx), (e) => e.motivo === 'nenhum')
+  await assert.rejects(localizar(pagina, { por: 'texto', nome: 'Stream key' }, ctx), (e) => e.motivo === 'ambiguo')
+  assert.equal((await localizar(pagina, { por: 'texto', nome: 'Stream key', primeiro: true }, ctx))._primeiro, 'texto:Stream key')
+  assert.equal(rel.chamadas.length, 0)
+})
+
+test('localizar por css: usa locator(seletor) com as mesmas regras', async () => {
+  const ctx = { relatorio: relatorioEspiao(), capitulo: 'c', passo: 'p' }
+  const pagina = paginaPorTextoCss({ css: { iframe: 1, dl: 0 } })
+  assert.equal((await localizar(pagina, { por: 'css', nome: 'iframe' }, ctx))._chave, 'css:iframe')
+  await assert.rejects(localizar(pagina, { por: 'css', nome: 'dl' }, ctx), (e) => e.motivo === 'nenhum')
+})
+
 test('localizar: varios resultados exatos => quebra, salvo alvo.primeiro', async () => {
   const pagina = paginaFalsa({ exatos: { 'link:Gerenciar': 2 } })
   const ctx = { relatorio: relatorioEspiao(), capitulo: 'c', passo: 'p' }

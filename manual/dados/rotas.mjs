@@ -103,6 +103,6 @@ export function rotas(estado) {
     { metodo: 'GET', padrao: /^\/api\/groups$/, resposta: () => ({ json: [] }) },
     { metodo: 'GET', padrao: /^\/api\/monitoring\?mine=1$/, resposta: () => ({ json: [] }) },
     { metodo: 'GET', padrao: /^\/embed\/[^/?]+/, resposta: () => ({ html: HTML_EMBED }) },
-    { metodo: 'POST', padrao: /^\/auth\/v1\/otp$/, resposta: () => ({ json: {} }) },
+    { metodo: 'POST', padrao: /^\/auth\/v1\/otp(\?.*)?$/, resposta: () => ({ json: {} }) },
   ]
 }

@@ -49,8 +49,14 @@ export function escolherCandidato(alvo, textos, limiar = 0.7) {
 
 const textoDoAlvo = (nome) => (typeof nome === 'string' ? nome : nome.source.replace(/[\\^$.*+?()[\]{}|]/g, ''))
 
+function construirLocator(page, papel, nome, alvo) {
+  if (alvo.por === 'texto') return page.getByText(nome)
+  if (alvo.por === 'css') return page.locator(nome)
+  return page.getByRole(papel, { name: nome })
+}
+
 async function tentarPorNome(page, papel, nome, alvo, ctx) {
-  const loc = page.getByRole(papel, { name: nome })
+  const loc = construirLocator(page, papel, nome, alvo)
   const n = await loc.count()
   if (n === 1) return loc
   if (n > 1) {
@@ -76,6 +82,9 @@ export async function localizar(page, alvo, ctx) {
       return loc
     }
   }
+
+  // sem "papel" (texto/css) nao ha autoajuste: nao achou => quebra
+  if (alvo.por === 'texto' || alvo.por === 'css') throw new ErroPassoQuebrado(ctx.capitulo, ctx.passo, 'nenhum', texto)
 
   const todos = await page.getByRole(alvo.papel).all()
   const visiveis = []

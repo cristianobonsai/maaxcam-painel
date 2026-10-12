@@ -63,6 +63,7 @@ test('rotas da tela Gerenciar devolvem os campos que a tela le', () => {
   assert.equal(m.responder('GET', '/api/monitoring?mine=1').json.length, 0)
   assert.match(m.responder('GET', '/embed/demo-pb-1').html, /Imagem de exemplo/)
   assert.equal(m.responder('POST', '/auth/v1/otp', { email: 'cliente@exemplo.com' }).status, 200)
+  assert.equal(m.responder('POST', '/auth/v1/otp?redirect_to=http%3A%2F%2F127.0.0.1%3A4173%2Fpainel', {}).status, 200)
 })
 
 test('snapshot devolve um PNG valido', () => {
