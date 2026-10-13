@@ -18,8 +18,8 @@ export default {
         await page.getByText('Privacidade').first().waitFor()
       },
       destacar: [
-        { papel: 'button', nome: 'Público', numero: 'abaixo' },
-        { papel: 'button', nome: 'Privado', numero: 'abaixo' },
+        { papel: 'button', nome: 'Público', numero: 'esquerda' },
+        { papel: 'button', nome: 'Privado', numero: 'direita' },
         { por: 'css', nome: 'p:has-text("Público: qualquer pessoa")', numero: 'direita' },
       ],
     },

@@ -24,7 +24,7 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'div[class*="border-amber-500/30"]', numero: 'esquerda' },
-        { por: 'css', nome: 'a:text-is("Gerenciar") >> nth=0', numero: 'abaixo' },
+        { por: 'css', nome: 'a:text-is("Gerenciar") >> nth=0', numero: 'esquerda' },
       ],
     },
   ],

@@ -437,7 +437,7 @@ export default function CameraSeguranca() {
                 {!caps.snapshot ? (
                   <LockedNote>O link da foto (time-lapse) está disponível nos planos Pro e Premium.</LockedNote>
                 ) : (<>
-                  <p className="text-sm text-slate-400">Link que sempre devolve a última foto da câmera (atualiza a cada 30 min). Use no seu site ou time-lapse.</p>
+                  <p className="text-sm text-slate-400">Link que sempre devolve a última foto da câmera (atualiza a cada 15 min). Use no seu site ou time-lapse.</p>
                   <div className="flex gap-2 items-start">
                     <code className="flex-1 break-all rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-emerald-300">{snapshotLink}</code>
                     <CopyButton text={snapshotLink} />

@@ -15,7 +15,7 @@ export default {
         await page.locator('input[placeholder="Ex.: Portão da frente"]').waitFor()
       },
       destacar: [
-        { por: 'css', nome: 'div.flex.gap-6.border-b', numero: 'acima' },
+        { por: 'css', nome: 'div.flex.gap-6.border-b', numero: 'esquerda' },
         { por: 'css', nome: 'span:text-is("Público")', numero: 'esquerda' },
         { por: 'css', nome: 'input[placeholder="Ex.: Portão da frente"]', numero: 'direita' },
         { por: 'css', nome: 'select', numero: 'direita' },
@@ -32,8 +32,8 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'iframe', numero: 'esquerda' },
-        { por: 'css', nome: 'input[placeholder^="rtmp://a.rtmp.youtube.com"]', numero: 'acima' },
-        { por: 'css', nome: 'div:has(> button:text-is("Iniciar"))', numero: 'abaixo' },
+        { por: 'css', nome: 'input[placeholder^="rtmp://a.rtmp.youtube.com"]', numero: 'esquerda' },
+        { por: 'css', nome: 'div:has(> button:text-is("Iniciar"))', numero: 'esquerda' },
       ],
     },
     {
@@ -55,8 +55,8 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'label:has-text("Enviar áudio (.mp3)")', numero: 'esquerda' },
-        { por: 'texto', nome: 'https://play.livebybit.com/v2/hls/', numero: 'acima' },
-        { por: 'css', nome: 'code:has-text("<iframe")', numero: 'abaixo' },
+        { por: 'texto', nome: 'https://play.livebybit.com/v2/hls/', numero: 'esquerda' },
+        { por: 'css', nome: 'code:has-text("<iframe")', numero: 'esquerda' },
       ],
     },
   ],

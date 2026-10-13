@@ -18,7 +18,7 @@ export default {
       },
       destacar: [
         { por: 'texto', nome: 'Pro: 1', numero: 'acima' },
-        { por: 'css', nome: 'div.mb-3.flex.flex-wrap.gap-2', numero: 'acima' },
+        { por: 'css', nome: 'div.mb-3.flex.flex-wrap.gap-2', numero: 'esquerda' },
         { por: 'css', nome: 'input[placeholder^="Buscar"]', numero: 'direita' },
         { por: 'css', nome: `${LINHA('Entrada')} >> nth=0`, numero: 'esquerda' },
         { papel: 'button', nome: 'Nova câmera', numero: 'abaixo' },
@@ -33,7 +33,7 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'div[class*="flex-col"][class*="border-blue-500"]', numero: 'acima' },
-        { por: 'css', nome: 'button:has-text("Trocar para Premium")', numero: 'abaixo' },
+        { por: 'css', nome: 'button:has-text("Trocar para Premium")', numero: 'direita' },
         { por: 'css', nome: 'div[class*="border-amber-500/30"][class*="text-xs"]', numero: 'esquerda' },
       ],
     },
@@ -46,7 +46,7 @@ export default {
         await page.getByText('Excluir câmera').first().waitFor()
       },
       destacar: [
-        { por: 'texto', nome: 'não pode ser desfeita', numero: 'esquerda' },
+        { por: 'css', nome: 'div[class*="border-red-900"] p:has-text("Esta ação")', numero: 'esquerda' },
         { por: 'css', nome: 'div[class*="border-red-900"] button:text-is("Cancelar")', numero: 'abaixo' },
       ],
     },
