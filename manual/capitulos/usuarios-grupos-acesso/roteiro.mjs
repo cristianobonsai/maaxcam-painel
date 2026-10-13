@@ -15,8 +15,8 @@ export default {
       destacar: [
         { por: 'css', nome: 'input[placeholder^="Nome do novo grupo"]', numero: 'esquerda' },
         { papel: 'button', nome: 'Criar grupo', numero: 'direita' },
-        { papel: 'button', nome: 'Ajuste fino por convidado', numero: 'abaixo' },
-        { papel: 'button', nome: 'Resumo de acessos', numero: 'abaixo' },
+        { papel: 'button', nome: 'Ajuste fino por convidado', numero: 'esquerda' },
+        { papel: 'button', nome: 'Resumo de acessos', numero: 'direita' },
         { por: 'css', nome: 'button:has-text("Equipe da loja")', numero: 'esquerda' },
       ],
     },

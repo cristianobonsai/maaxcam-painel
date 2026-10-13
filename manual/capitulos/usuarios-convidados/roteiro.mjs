@@ -39,6 +39,7 @@ export default {
       legenda: 'Marque as permissões do convidado e clique em Salvar permissões.',
       acao: async ({ page }) => {
         await page.getByRole('button', { name: 'Entendi' }).click()
+        await page.locator('input[type="email"]').fill('')
         await page.getByText('Cadastrar câmeras').click()
         await page.getByRole('button', { name: 'Salvar permissões' }).click()
         await page.getByText('✓ Salvo').first().waitFor()
