@@ -38,12 +38,12 @@ export function lerCapitulos(srcManual) {
 const LOGO = '<svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#2f7bff"/><path d="M19 14.5v19l16-9.5z" fill="#fff"/></svg>'
 
 const CSS = `
-@page { size: A4; margin: 20mm 18mm 22mm 18mm;
+@page { size: A4; margin: 17mm 16mm 20mm 16mm;
   @bottom-left { content: "LiveByBit · Manual do Usuário"; font: 8.5pt Helvetica, Arial, sans-serif; color: #64748b; }
   @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8.5pt Helvetica, Arial, sans-serif; color: #64748b; } }
 @page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-html { font: 10.5pt/1.55 Helvetica, Arial, "Liberation Sans", "DejaVu Sans", sans-serif; color: #1e293b; }
+html { font: 10pt/1.5 Helvetica, Arial, "Liberation Sans", "DejaVu Sans", sans-serif; color: #1e293b; }
 body { margin: 0; }
 .capa { width: 210mm; height: 296.6mm; padding: 38mm 24mm 24mm; color: #fff; display: flex; flex-direction: column;
   background: linear-gradient(160deg, #0b1220 0%, #12264f 55%, #1d4ed8 130%); break-after: page; }
@@ -75,7 +75,7 @@ strong { color: #0f172a; }
 code { font: 9pt "DejaVu Sans Mono", Menlo, Consolas, monospace; background: #f1f5f9; padding: 0 3pt; border-radius: 2pt; }
 a { color: #2563eb; text-decoration: none; }
 figure { margin: 10pt 0 12pt; break-inside: avoid; text-align: center; }
-figure img { display: block; width: auto; max-width: 100%; height: auto; max-height: 88mm; margin: 0 auto; border: .75pt solid #cbd5e1; border-radius: 5pt; }
+figure img { display: block; width: auto; max-width: 100%; height: auto; max-height: 80mm; margin: 0 auto; border: .75pt solid #cbd5e1; border-radius: 5pt; }
 figcaption { margin-top: 4pt; font-size: 8.5pt; font-style: italic; color: #64748b; }
 `
 
