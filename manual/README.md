@@ -33,3 +33,10 @@ Depois: commit (nominal), push do PC e deploy normal do painel (`git pull && npm
 ## Regras de segurança (testadas em `tests/`)
 - Só `localhost`; requisições externas abortadas; sessão de login falsa; nada de credencial real.
 - Varredura automática nos dados e nos textos: sem e-mail fora de `@exemplo.com`, sem IP (exceto `203.0.113.x`), sem chave do Supabase, sem as palavras `placa`, `lpr`, `carbigdata`.
+
+## Gerar o PDF do manual (no Serv QA)
+```bash
+cd /opt/painel && git pull && cd manual && npm run pdf -- --versao 3.0
+```
+Lê `src/manual/capitulos.json`, os textos `src/manual/<cap>.md` e os prints `public/manual/img/` (a **mesma fonte da página do painel**) e imprime um HTML A4 pelo Chromium do Playwright: capa, sumário com a página de cada capítulo, cada capítulo começando em página nova, legenda em cada print e rodapé "Página X de Y". Saída: `manual/saida/pdf/LiveByBit-Manual-Usuario-v3.pdf`. O gerador mede quantas páginas cada capítulo ocupa para escrever o sumário e **falha** se o total não bater (capa ou sumário passando de 1 página). Para olhar as páginas: `pdftoppm -r 60 -png arquivo.pdf pg/p` (pacote `poppler-utils`, instalado no QA).
+Depois de aprovado: copiar o PDF para `public/LiveByBit-Manual-Usuario-v3.pdf`, trocar o link do rodapé em `src/pages/ManualUsuario.jsx` e retirar os PDFs antigos.
