@@ -37,6 +37,23 @@ export function parsearArgs(argv) {
 
 export const nomeArquivo = (cap, indice, id) => `${cap}-${String(indice).padStart(2, '0')}-${id}.png`
 
+// O painel de demonstracao e compilado apontando para API_DEMO (nada sai do computador). Na tela, onde esse
+// endereco aparece (ex.: link da foto), mostramos o endereco real do painel: so texto, so antes do print.
+export const HOST_REAL = 'api.livebybit.com'
+export const substituirHostDemo = (s) => String(s).replaceAll(new URL(API_DEMO).hostname, HOST_REAL)
+
+async function mostrarHostReal(page) {
+  await page.evaluate(([de, para]) => {
+    const it = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    for (let n = it.nextNode(); n; n = it.nextNode()) {
+      if (n.nodeValue.includes(de)) n.nodeValue = n.nodeValue.replaceAll(de, para)
+    }
+    for (const el of document.querySelectorAll('input,textarea')) {
+      if (el.value && el.value.includes(de)) el.value = el.value.replaceAll(de, para)
+    }
+  }, [new URL(API_DEMO).hostname, HOST_REAL])
+}
+
 /** Sessao de login de mentira no formato do supabase-js (nenhuma credencial real). */
 export function sessaoFalsa(agora = Math.floor(Date.now() / 1000)) {
   return {
@@ -140,11 +157,12 @@ export async function executar(argv) {
       }
       try {
         if (passo.ir) await page.goto(servidor.origem + passo.ir, { waitUntil: 'domcontentloaded' })
-        if (passo.acao) await passo.acao({ page, loc })
+        if (passo.acao) await passo.acao({ page, loc, mock })
         // espera a rede aquietar, mas no maximo 3 s (players/iframes mantem atividade e nao devem travar o robo)
         await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
         await page.waitForTimeout(400)
         conferirRede()                                                // antes de localizar: erro de API explica o "nao achei"
+        await mostrarHostReal(page)
         const alvos = []
         for (const a of passo.destacar) alvos.push(await loc(a))
         await destacarEFotografar(page, { alvos, arquivo, numeros: true, lados: passo.destacar.map((a) => a.numero) })

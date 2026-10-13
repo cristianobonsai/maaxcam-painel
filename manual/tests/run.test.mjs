@@ -14,6 +14,13 @@ test('parsearArgs: cap, porta e painel com padroes', () => {
   }
 })
 
+test('substituirHostDemo: na tela o endereco ficticio da API aparece como o real (so cosmetico, so no print)', async () => {
+  const { substituirHostDemo } = await import('../robo/run.mjs')
+  assert.equal(substituirHostDemo('https://api-demo.invalid/api/cameras/MAADEMO1/snapshot.jpg'), 'https://api.livebybit.com/api/cameras/MAADEMO1/snapshot.jpg')
+  assert.equal(substituirHostDemo('sem host aqui'), 'sem host aqui')
+  assert.equal(substituirHostDemo('a api-demo.invalid e outra api-demo.invalid'), 'a api.livebybit.com e outra api.livebybit.com')
+})
+
 test('nomeArquivo: nome estavel com dois digitos', () => {
   assert.equal(nomeArquivo('primeiros-passos', 5, 'formulario'), 'primeiros-passos-05-formulario.png')
   assert.equal(nomeArquivo('primeiros-passos', 12, 'x'), 'primeiros-passos-12-x.png')

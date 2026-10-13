@@ -84,6 +84,71 @@ test('camera inexistente: 404 (nao 200 vazio nem excecao)', () => {
   }
 })
 
+test('monitoramento do dashboard: cenario "atencao" lista cameras com problema; padrao = tudo certo (lista vazia)', () => {
+  const m = novoMock()
+  assert.deepEqual(m.responder('GET', '/api/monitoring?mine=1').json, [])
+  m.estado().cenario = 'atencao'
+  const lista = m.responder('GET', '/api/monitoring?mine=1').json
+  assert.ok(lista.length >= 1)
+  for (const c of lista) {
+    assert.ok(c.camera_id && c.name && c.status_geral && c.status_geral !== 'ok')
+  }
+  assert.ok(lista.some((c) => c.status_geral === 'fora_do_ar'))
+  assert.deepEqual(varrerTexto(JSON.stringify(lista)), [])
+})
+
+test('PUT /api/cameras/{id} grava no estado (nome, qualidade, ativa, plano, chave do YouTube); 404 se nao existe', () => {
+  const m = novoMock()
+  const r = m.responder('PUT', '/api/cameras/MAADEMO1', { name: 'Entrada principal', enabled: false, quality_tier: '2k', plan: 'premium', youtube_key: 'rtmp://exemplo/live2/abc' })
+  assert.equal(r.status, 200)
+  const c = m.responder('GET', '/api/cameras/MAADEMO1').json
+  assert.equal(c.name, 'Entrada principal')
+  assert.equal(c.enabled, false)
+  assert.equal(c.quality_tier, '2k')
+  assert.equal(c.plan, 'premium')
+  assert.equal(c.youtube_key, 'rtmp://exemplo/live2/abc')
+  assert.equal(m.responder('GET', '/api/cameras/MAADEMO1/security').json.youtube_key, 'rtmp://exemplo/live2/abc')
+  assert.equal(m.responder('PUT', '/api/cameras/NAOEXISTE', { name: 'x' }).status, 404)
+})
+
+test('seguranca: privacidade, dominios, IPs e tokens funcionam no estado e aparecem no GET /security', () => {
+  const m = novoMock()
+  const antes = m.responder('GET', '/api/cameras/MAADEMO1/security').json
+  assert.equal(antes.stream_privacy, 'public')
+  assert.deepEqual([antes.domains, antes.ips, antes.tokens], [[], [], []])
+
+  assert.equal(m.responder('PUT', '/api/cameras/MAADEMO1/security/privacy', { stream_privacy: 'private' }).status, 200)
+  assert.equal(m.responder('POST', '/api/cameras/MAADEMO1/security/domains', { domain: 'exemplo.com.br' }).status, 200)
+  assert.equal(m.responder('POST', '/api/cameras/MAADEMO1/security/ips', { cidr: '203.0.113.0/24', label: 'Servidor A' }).status, 200)
+  const t = m.responder('POST', '/api/cameras/MAADEMO1/security/tokens', { label: 'Servidor A' })
+  assert.equal(t.status, 200)
+
+  const s = m.responder('GET', '/api/cameras/MAADEMO1/security').json
+  assert.equal(s.stream_privacy, 'private')
+  assert.equal(s.domains[0].domain, 'exemplo.com.br')
+  assert.equal(s.ips[0].cidr, '203.0.113.0/24')
+  assert.equal(s.ips[0].label, 'Servidor A')
+  assert.equal(s.tokens[0].label, 'Servidor A')
+  assert.match(s.tokens[0].token, /^demo-/)
+  assert.deepEqual(varrerTexto(JSON.stringify(s)), [])
+
+  assert.equal(m.responder('DELETE', `/api/cameras/MAADEMO1/security/tokens/${s.tokens[0].id}`).status, 200)
+  assert.equal(m.responder('DELETE', `/api/cameras/MAADEMO1/security/domains/${s.domains[0].id}`).status, 200)
+  assert.equal(m.responder('DELETE', `/api/cameras/MAADEMO1/security/ips/${s.ips[0].id}`).status, 200)
+  const vazio = m.responder('GET', '/api/cameras/MAADEMO1/security').json
+  assert.deepEqual([vazio.domains, vazio.ips, vazio.tokens], [[], [], []])
+  assert.equal(m.responder('PUT', '/api/cameras/NAOEXISTE/security/privacy', { stream_privacy: 'private' }).status, 404)
+})
+
+test('reset() volta tambem a seguranca e o cenario ao inicio', () => {
+  const m = novoMock()
+  m.estado().cenario = 'atencao'
+  m.responder('PUT', '/api/cameras/MAADEMO1/security/privacy', { stream_privacy: 'private' })
+  m.reset()
+  assert.equal(m.estado().cenario, undefined)
+  assert.equal(m.responder('GET', '/api/cameras/MAADEMO1/security').json.stream_privacy, 'public')
+})
+
 test('snapshot devolve um PNG valido', () => {
   const r = novoMock().responder('GET', '/api/cameras/MAADEMO1/snapshot.jpg')
   assert.ok(Buffer.isBuffer(r.imagem))
