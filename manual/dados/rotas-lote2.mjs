@@ -9,7 +9,14 @@ const ENDERECOS = [
 
 const TS_EXEMPLO = Date.UTC(2026, 9, 13, 13, 15) / 1000      // 13/10/2026 10:15 (Brasilia)
 
-function monitoramento(c, cenario) {
+const TS_SILENCIO_ATE = Date.UTC(2026, 9, 20, 13, 15) / 1000   // 20/10/2026 10:15 (Brasilia): "silenciar 7 dias" no print
+
+/** Resposta de `notice` (avisos da camera) para cada modo: off | 7d | sempre. Sempre pode editar (dono da conta). */
+function avisoPublico(modo) {
+  return { mode: modo, muted_until: modo === '7d' ? TS_SILENCIO_ATE : null, muted_forever: modo === 'sempre', can_edit: true }
+}
+
+function monitoramento(c, cenario, aviso = 'off') {
   const no_ar = !!c.is_streaming
   const m = {
     tipo: c.youtube_key ? 'youtube' : 'hls',
@@ -20,6 +27,7 @@ function monitoramento(c, cenario) {
     resolucao: no_ar ? '1920x1080' : null, fps: no_ar ? 15 : null,
     bitrate_kbps: no_ar ? 2048 : null, keyframe_s: no_ar ? 2 : null, codec: no_ar ? 'H.264' : null,
     health_active: false,
+    notice: avisoPublico(aviso),
   }
   if (cenario === 'problemas') {
     Object.assign(m, { estabilidade: 'instavel', drops_24h: 7, ajustes: 'ajustar',
@@ -132,7 +140,16 @@ export function rotasLote2(estado, comCamera) {
 
     // monitoramento
     { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/monitoring$/,
-      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: monitoramento(c, estado.monitoramento) })) },
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: monitoramento(c, estado.monitoramento, (estado.avisos ||= {})[c.camera_id] || 'off') })) },
+    // avisos da camera (silenciar / reativar)
+    { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/notice$/,
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: avisoPublico((estado.avisos ||= {})[c.camera_id] || 'off') })) },
+    { metodo: 'PUT', padrao: /^\/api\/cameras\/([^/?]+)\/notice$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        const modo = ['7d', 'sempre', 'off'].includes(corpo?.mode) ? corpo.mode : 'off';
+        (estado.avisos ||= {})[c.camera_id] = modo
+        return { json: avisoPublico(modo) }
+      }) },
 
     // cartoes
     { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/card$/,

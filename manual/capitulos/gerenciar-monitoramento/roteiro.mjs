@@ -1,5 +1,5 @@
-// roteiro.mjs - capitulo "Gerenciar: Monitoramento" (3 passos): estado normal, avisos de problema e chave duplicada.
-// Camera "Entrada". Os cenarios 'problemas' e 'duplicada' vem do mock (nada real).
+// roteiro.mjs - capitulo "Gerenciar: Monitoramento" (5 passos): estado normal, avisos de problema, chave duplicada e a linha
+// "Avisos desta camera" (ligados e silenciados). Camera "Entrada". Os cenarios 'problemas' e 'duplicada' vem do mock (nada real).
 
 const LINHA = (rotulo) => `div:has(> span:text-is("${rotulo}"))`
 const CARD = (titulo) => `section:has(h2:text-is("${titulo}"))`
@@ -49,6 +49,33 @@ export default {
       destacar: [
         { por: 'css', nome: LINHA('Conexão com o servidor'), numero: 'esquerda' },
         { por: 'css', nome: 'div[class*="bg-orange-500/15"]:has-text("Chave RTMP em uso por dois equipamentos:")', numero: 'esquerda' },
+      ],
+    },
+    {
+      id: 'avisos', titulo: 'Avisos desta câmera', contexto: 'logado',
+      legenda: 'Na linha Avisos desta câmera você vê se os avisos estão ligados e pode silenciá-los por 7 dias ou até você reativar.',
+      acao: async ({ page, loc, mock }) => {
+        mock.estado().monitoramento = null
+        await page.reload()
+        await abrirMonitoramento({ page, loc })
+        await page.getByText('Avisos desta câmera').first().waitFor()
+      },
+      destacar: [
+        { por: 'css', nome: LINHA('Avisos desta câmera'), numero: 'esquerda' },
+        { papel: 'button', nome: 'Silenciar 7 dias', numero: 'abaixo' },
+        { papel: 'button', nome: 'Não avisar mais', numero: 'abaixo' },
+      ],
+    },
+    {
+      id: 'avisos-silenciados', titulo: 'Avisos silenciados', contexto: 'logado',
+      legenda: 'Depois de silenciar, a linha mostra até quando. Clique em Reativar para voltar a receber os avisos.',
+      acao: async ({ page }) => {
+        await page.getByRole('button', { name: 'Silenciar 7 dias' }).click()
+        await page.getByText('Silenciados até 20/10').first().waitFor()
+      },
+      destacar: [
+        { por: 'css', nome: LINHA('Avisos desta câmera'), numero: 'esquerda' },
+        { papel: 'button', nome: 'Reativar', numero: 'abaixo' },
       ],
     },
   ],
