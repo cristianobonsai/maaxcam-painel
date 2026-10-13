@@ -92,6 +92,17 @@ function MonitorPanel({ id }) {
     finally { setLoading(false) }
   }, [id])
   useEffect(() => { fetchMon(); const t = setInterval(fetchMon, 20000); return () => clearInterval(t) }, [fetchMon])
+  // [AVISOS] silenciar/reativar os avisos desta câmera (Etapa 3A): o estado e o histórico continuam aparecendo
+  const [noticeBusy, setNoticeBusy] = useState(false)
+  const [noticeErr, setNoticeErr] = useState('')
+  const setNotice = async (mode) => {
+    setNoticeBusy(true); setNoticeErr('')
+    try {
+      const res = await api.put(`/api/cameras/${id}/notice`, { mode })
+      setMon(prev => (prev ? { ...prev, notice: res } : prev))
+    } catch (e) { setNoticeErr(msg(e)) }
+    finally { setNoticeBusy(false) }
+  }
 
   if (loading) return <p className="text-sm text-slate-400">Carregando monitoramento…</p>
   if (err) return <p className="text-sm text-red-400">{err}</p>
@@ -127,6 +138,12 @@ function MonitorPanel({ id }) {
   const hist = mon.diag?.enabled ? (mon.history || []) : null
   const histCor = { queda: 'text-red-300', volta: 'text-emerald-300', troca_ip: 'text-orange-300', bloqueio: 'text-orange-300', rodizio: 'text-orange-300', plataforma: 'text-slate-400' }
 
+  const notice = mon.notice || null
+  const noticeText = !notice || notice.mode === 'off' ? 'Ligados'
+    : notice.mode === 'sempre' ? 'Silenciados'
+    : `Silenciados até ${new Date(notice.muted_until * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
+  const noticeBtn = 'rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50'
+
   const Row = ({ label, dot, text }) => (
     <div className="flex items-center justify-between gap-3 rounded-md bg-slate-900/60 px-3 py-2.5">
       <span className="text-sm text-slate-400">{label}</span>
@@ -147,7 +164,21 @@ function MonitorPanel({ id }) {
           <Row label="Saída" dot={saida.c} text={saida.t} />
           {mostraSaude && <Row label="Rodízio do grupo" dot={saude.c} text={saude.t} />}
           <Row label="Ajustes (configuração)" dot={ajustes.c} text={ajustes.t} />
+          {notice && <Row label="Avisos desta câmera" dot={notice.mode === 'off' ? 'green' : 'yellow'} text={noticeText} />}
         </div>
+        {notice && (
+          <div className="space-y-2">
+            {notice.can_edit && (
+              <div className="flex flex-wrap gap-2">
+                {notice.mode !== '7d' && <button type="button" disabled={noticeBusy} className={noticeBtn} onClick={() => setNotice('7d')}>Silenciar 7 dias</button>}
+                {notice.mode !== 'sempre' && <button type="button" disabled={noticeBusy} className={noticeBtn} onClick={() => setNotice('sempre')}>Não avisar mais</button>}
+                {notice.mode !== 'off' && <button type="button" disabled={noticeBusy} className={noticeBtn} onClick={() => setNotice('off')}>Reativar</button>}
+              </div>
+            )}
+            {noticeErr && <p className="text-xs text-red-400">{noticeErr}</p>}
+            <p className="text-xs text-slate-500">Silenciar vale só para os avisos. O estado e o histórico continuam aqui.</p>
+          </div>
+        )}
         {dup && (
           <div className="rounded-md bg-orange-500/15 border border-orange-500/30 text-orange-200 text-sm px-3 py-2">
             <strong>Chave RTMP em uso por dois equipamentos:</strong> um segundo equipamento{mon.ingest.ip_blocked ? ` (IP ${mon.ingest.ip_blocked})` : ''} está tentando transmitir com a mesma chave desta câmera{mon.ingest.since_ts ? ` desde ${new Date(mon.ingest.since_ts * 1000).toLocaleString('pt-BR')}` : ''}{mon.ingest.attempts ? ` (${mon.ingest.attempts} tentativas bloqueadas)` : ''}. <strong>Bloqueamos o segundo equipamento; a transmissão original segue no ar.</strong> Cada equipamento precisa da sua própria câmera e chave: se for uma câmera nova, cadastre-a em Câmeras → Adicionar câmera; se foi engano, desligue ou reconfigure o equipamento duplicado.

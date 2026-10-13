@@ -49,7 +49,7 @@ Em **Configurações Avançadas** você ajusta o jeito de avisar:
 
 1. **Câmera offline — alertar após** (**1**): o painel só avisa se a câmera ficar offline por esse tempo (de 1 a 60 minutos). Isso evita alarme falso quando a câmera apenas oscila por alguns instantes.
 2. **2º alerta se continuar offline**: reenvia um aviso se a câmera seguir offline depois de um tempo que você escolhe (de 1 a 12 horas). Vem **Desligado**.
-3. **Horário de silêncio** (**2**): liga um período do dia em que **nenhum aviso é enviado**, por exemplo das 22:00 às 07:00. Ao ligar, aparecem os campos de início e de fim.
+3. **Horário de silêncio** (**2**): liga um período do dia em que **os avisos de câmera não são enviados na hora**, por exemplo das 22:00 às 07:00. Ao ligar, aparecem os campos de início e de fim. Quando o período termina, você recebe **um único resumo** com o que aconteceu enquanto estava em silêncio (veja o item 8). A única exceção é o aviso de **chave em uso por dois equipamentos**, que chega na hora.
 4. **Horário do resumo diário** (**3**): a hora em que o Resumo Diário chega. Esse campo só aparece com o **Resumo Diário** ligado.
 
 Depois de ajustar, clique em **Salvar Configurações** (**4**). Se você não salvar, as mudanças não valem.
@@ -73,3 +73,32 @@ Cada convidado tem um cartão:
 3. **Grupos de acesso** (**3**): marque os grupos de câmeras dos quais ele recebe avisos. Use a busca se tiver muitos.
 4. **Câmeras avulsas** (**4**): marque câmeras específicas, além dos grupos.
 5. Clique em **Salvar** (**5**) no cartão desse convidado. Aparece "✓ Salvo".
+
+## 8. Como são os avisos
+
+Cada aviso conta o que aconteceu com números reais da câmera, e não só "a câmera caiu":
+
+- **Câmera sem sinal:** diz desde que horas a câmera está sem enviar imagem, há quantos minutos, quantas quedas ela teve nas últimas 24 horas e **o que conferir** (por exemplo energia e internet do local).
+- **Câmera continua sem sinal:** é o **2º alerta** (item 5), com há quanto tempo a câmera está fora.
+- **Câmera voltou:** diz quanto tempo ela ficou sem imagem e entre que horas. Só chega se você recebeu o aviso de que ela tinha caído.
+- **Conexão oscilando:** chega quando a câmera cai várias vezes (3 vezes em 30 minutos ou 6 vezes em 24 horas). Normalmente é o roteador, o cabo ou o provedor do local. Quando a conexão fica **30 minutos sem queda**, chega o aviso **Conexão estável**.
+- **Várias câmeras juntas:** se várias câmeras do mesmo local ficarem sem sinal ao mesmo tempo, você recebe **uma mensagem só**, com o nome de todas.
+- **Resumo do período de silêncio:** ao fim do horário de silêncio, uma mensagem diz quais câmeras tiveram queda e já voltaram e quais seguem sem sinal.
+
+Para você não ser incomodado à toa, o painel também faz o seguinte:
+
+- Quando **várias câmeras de clientes diferentes** ficam sem sinal no mesmo minuto, esperamos **10 minutos** antes de avisar. Só quem continuar sem sinal recebe o aviso.
+- Cada câmera envia no máximo **3 avisos** e cada conta no máximo **6 avisos** a cada 24 horas. Nessa conta não entram "voltou", "2º alerta", "conexão estável" e os resumos. Passando do limite, chega uma mensagem **Avisos pausados**, e o histórico da câmera continua no painel (aba **Monitoramento**).
+- O mesmo tipo de aviso da mesma câmera não se repete em menos de **6 horas**.
+
+## 9. Silenciar os avisos de uma câmera
+
+Nas mensagens de **sem sinal**, **continua sem sinal** e **conexão oscilando**, o Telegram e o e-mail trazem botões para o dono da conta:
+
+- **Ver câmera:** abre a câmera no painel.
+- **Silenciar 7 dias:** para os avisos dessa câmera por 7 dias.
+- **Não avisar mais desta câmera:** para os avisos dessa câmera até você reativar.
+
+Ao tocar em um botão de silenciar, abre uma página pedindo que você **confirme**. Nada muda antes de você confirmar, e a mesma página tem a opção de **desfazer**. Você também pode silenciar e reativar pelo painel, em **Gerenciar → Monitoramento** (veja o capítulo **Gerenciar: Monitoramento**).
+
+**Silenciar vale só para os avisos.** O estado e o histórico da câmera continuam no painel. Os convidados recebem os mesmos avisos, mas **sem os botões de silenciar**.

@@ -13,6 +13,7 @@ O quadro **Estado da câmera** (**1**) tem uma linha para cada ponto importante.
 - **Estabilidade (24h):** **Estável** ou **Instável**, com o número de quedas nas últimas 24 horas.
 - **Saída:** onde a imagem está indo: **Publicando (HLS)**, **No ar (YouTube)**, **No grupo** ou **Relay desligado**.
 - **Ajustes (configuração):** **OK** ou **Precisa ajustar**.
+- **Avisos desta câmera:** **Ligados** ou **Silenciados** (veja o item 4).
 
 O quadro **Números da transmissão** (**2**) mostra o que o servidor mede: **Resolução**, **FPS** (quadros por segundo), **Bitrate**, **Keyframe** (intervalo entre quadros-chave, o ideal é cerca de 2 segundos), **Quedas (24h)** e **Codec**. A resolução e o FPS são lidos da câmera; o bitrate e o keyframe são medidos no servidor.
 
@@ -39,3 +40,20 @@ Cada câmera tem a sua chave, e cada chave deve ser usada em **um único equipam
 - **Bloqueamos o segundo equipamento e a transmissão original segue no ar.** Nada cai.
 
 O que fazer: se o segundo equipamento é uma **câmera nova**, cadastre-a em **Câmeras → Nova câmera**, para ela ter a própria chave. Se foi engano, desligue ou reconfigure o equipamento duplicado. O dono da conta também recebe um aviso pelos canais configurados em **Notificações**.
+
+## 4. Avisos desta câmera: silenciar e reativar
+
+![Linha Avisos desta câmera com os botões para silenciar](img:gerenciar-monitoramento-04-avisos)
+
+A linha **Avisos desta câmera** (**1**) diz se os avisos dessa câmera (sem sinal, voltou, conexão oscilando) estão **Ligados**. Se você não quer receber os avisos de uma câmera específica, por exemplo uma câmera de teste, use os botões:
+
+- **Silenciar 7 dias** (**2**): para de avisar por 7 dias e depois volta sozinho.
+- **Não avisar mais** (**3**): para de avisar até você reativar.
+
+Esses botões aparecem para o dono da conta e para os convidados com permissão de editar as notificações. Os outros veem só o estado.
+
+![Linha Avisos desta câmera mostrando Silenciados e o botão Reativar](img:gerenciar-monitoramento-05-avisos-silenciados)
+
+Com os avisos silenciados, a linha mostra **Silenciados até** a data (**1**), ou **Silenciados** quando for sem prazo. Para voltar a receber, clique em **Reativar** (**2**).
+
+**Silenciar vale só para os avisos.** O estado da câmera e o histórico continuam aparecendo normalmente aqui na aba. Você também pode silenciar direto na mensagem de aviso, pelos botões que chegam no Telegram e no e-mail (veja o capítulo **Notificações**).
