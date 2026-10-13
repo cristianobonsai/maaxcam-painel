@@ -60,6 +60,7 @@ for (const { id, titulo } of LISTA) {
     for (const e of esperados) assert.ok(existsSync(join(PAINEL, 'public', 'manual', 'img', `${e}.png`)), `falta o print publicado ${e}.png`)
 
     const fonte = readFileSync(join(MANUAL, 'capitulos', id, 'roteiro.mjs'), 'utf8')
-    assert.deepEqual(varrerTexto(fonte.replaceAll(id, 'capitulo')), [], 'roteiro nao pode ter dado real nem palavra proibida')
+    // (o capitulo que pode citar a Carbigdata no texto tambem pode usar o nome dela nos seletores do roteiro)
+    assert.deepEqual(varrerTexto(fonte.replaceAll(id, 'capitulo'), { permitir }), [], 'roteiro nao pode ter dado real nem palavra proibida')
   })
 }

@@ -21,6 +21,23 @@ test('substituirHostDemo: na tela o endereco ficticio da API aparece como o real
   assert.equal(substituirHostDemo('a api-demo.invalid e outra api-demo.invalid'), 'a api.livebybit.com e outra api.livebybit.com')
 })
 
+test('montarResposta: json, html, imagem PNG, imagem SVG e sem corpo (204); CORS sempre presente', async () => {
+  const { montarResposta } = await import('../robo/run.mjs')
+  const j = montarResposta({ status: 200, json: { a: 1 } })
+  assert.equal(j.contentType, 'application/json')
+  assert.equal(j.body, '{"a":1}')
+  assert.equal(montarResposta({ status: 200, html: '<b>x</b>' }).contentType, 'text/html; charset=utf-8')
+  const png = Buffer.from([1, 2, 3])
+  assert.deepEqual(montarResposta({ status: 200, imagem: png }), { status: 200, contentType: 'image/png', body: png, headers: j.headers })
+  const svg = montarResposta({ status: 200, svg: '<svg xmlns="http://www.w3.org/2000/svg"/>' })
+  assert.equal(svg.contentType, 'image/svg+xml')
+  assert.equal(svg.body, '<svg xmlns="http://www.w3.org/2000/svg"/>')
+  const vazio = montarResposta({ status: 204 })
+  assert.equal(vazio.status, 204)
+  assert.equal(vazio.contentType, undefined)
+  assert.equal(vazio.headers['access-control-allow-origin'], '*')
+})
+
 test('nomeArquivo: nome estavel com dois digitos', () => {
   assert.equal(nomeArquivo('primeiros-passos', 5, 'formulario'), 'primeiros-passos-05-formulario.png')
   assert.equal(nomeArquivo('primeiros-passos', 12, 'x'), 'primeiros-passos-12-x.png')

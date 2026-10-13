@@ -37,6 +37,18 @@ export function parsearArgs(argv) {
 
 export const nomeArquivo = (cap, indice, id) => `${cap}-${String(indice).padStart(2, '0')}-${id}.png`
 
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
+
+/** Resposta do mock ({status, json|html|imagem|svg}) -> argumentos do route.fulfill do Playwright. */
+export function montarResposta(r) {
+  const base = { status: r.status, headers: CORS }
+  if (r.imagem) return { ...base, contentType: 'image/png', body: r.imagem }
+  if (r.svg) return { ...base, contentType: 'image/svg+xml', body: r.svg }
+  if (r.html) return { ...base, contentType: 'text/html; charset=utf-8', body: r.html }
+  if (r.json !== undefined) return { ...base, contentType: 'application/json', body: JSON.stringify(r.json) }
+  return base
+}
+
 // O painel de demonstracao e compilado apontando para API_DEMO (nada sai do computador). Na tela, onde esse
 // endereco aparece (ex.: link da foto), mostramos o endereco real do painel: so texto, so antes do print.
 export const HOST_REAL = 'api.livebybit.com'
@@ -119,13 +131,10 @@ export async function executar(argv) {
       const u = new URL(req.url())
       let corpo
       try { corpo = req.postDataJSON() } catch { corpo = undefined }
-      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
+      const cors = CORS
       try {
         const r = mock.responder(req.method(), u.pathname + u.search, corpo)
-        if (r.imagem) return route.fulfill({ status: r.status, contentType: 'image/png', body: r.imagem, headers: cors })
-        if (r.html) return route.fulfill({ status: r.status, contentType: 'text/html; charset=utf-8', body: r.html, headers: cors })
-        if (r.json !== undefined) return route.fulfill({ status: r.status, contentType: 'application/json', body: JSON.stringify(r.json), headers: cors })
-        return route.fulfill({ status: r.status, headers: cors })
+        return route.fulfill(montarResposta(r))
       } catch (e) {
         // qualquer falha do handler vira erro registrado (o passo quebra dizendo o que foi) + 500 para a pagina
         if (e instanceof ErroApiSemDado) errosApi.push(e)

@@ -1,6 +1,7 @@
 // rotas.mjs - respostas FICTICIAS da API para o capitulo "Primeiros passos" (cliente "Padaria Exemplo").
 // Nada aqui pode ser real: a varredura (robo/seguranca.mjs) roda nos testes e na integracao.
 import { deflateSync } from 'node:zlib'
+import { rotasLote2 } from './rotas-lote2.mjs'
 
 const CLIENTE = {
   user_id: 'demo-cliente',
@@ -18,15 +19,16 @@ const CLIENTE = {
 const CAMERAS_INICIAIS = [
   { camera_id: 'MAADEMO1', name: 'Entrada', enabled: true, is_streaming: true, youtube_relay_active: false,
     group_name: null, plan: 'pro', location: 'Centro', project: 'Padaria Exemplo', brand: 'Intelbras', cloud: '',
-    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-entrada01', playback_id: 'demo-pb-1' },
+    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-entrada01', playback_id: 'demo-pb-1', lat: -27.5954, lng: -48.548 },
   { camera_id: 'MAADEMO2', name: 'Estacionamento', enabled: true, is_streaming: false, youtube_relay_active: false,
     group_name: null, plan: 'basico', location: 'Centro', project: 'Padaria Exemplo', brand: 'Hikvision', cloud: '',
-    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-estac02', playback_id: 'demo-pb-2' },
+    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-estac02', playback_id: 'demo-pb-2', lat: -27.5961, lng: -48.5448 },
 ]
 
 export function estadoInicial() {
   // seguranca: dominios/IPs/tokens por camera; seq: ids deles; cenario: 'atencao' liga o aviso do Dashboard
-  return { cameras: CAMERAS_INICIAIS.map((c) => ({ ...c })), proximo: 3, seguranca: {}, seq: 1 }
+  // cartao/integracao: configuracao por camera (criada na 1a leitura); monitoramento: 'problemas' | 'duplicada'
+  return { cameras: CAMERAS_INICIAIS.map((c) => ({ ...c })), proximo: 3, seguranca: {}, seq: 1, cartao: {}, integracao: {} }
 }
 
 const segDe = (estado, id) => (estado.seguranca[id] ||= { domains: [], ips: [], tokens: [] })
@@ -100,7 +102,7 @@ export function rotas(estado) {
         const n = estado.proximo++
         const c = { camera_id: `MAADEMO${n}`, name: (corpo?.name || 'Nova câmera'), enabled: true, is_streaming: false,
           youtube_relay_active: false, group_name: null, plan: corpo?.plan || 'basico', location: '', project: corpo?.project || '',
-          brand: corpo?.brand || '', cloud: corpo?.cloud || '', youtube_key: '', quality_tier: corpo?.quality_tier || '1080p',
+          brand: corpo?.brand || '', cloud: corpo?.cloud || '', youtube_key: '', lat: null, lng: null, quality_tier: corpo?.quality_tier || '1080p',
           stream_key: `demo-nova${String(n).padStart(2, '0')}`, playback_id: `demo-pb-${n}` }
         estado.cameras.push(c)
         return { json: { camera_id: c.camera_id, name: c.name, stream_key: c.stream_key, rtmp_url: rtmpUrl(c),
@@ -177,5 +179,6 @@ export function rotas(estado) {
     },
     { metodo: 'GET', padrao: /^\/embed\/[^/?]+/, resposta: () => ({ html: HTML_EMBED }) },
     { metodo: 'POST', padrao: /^\/auth\/v1\/otp(\?.*)?$/, resposta: () => ({ json: {} }) },
+    ...rotasLote2(estado, comCamera),
   ]
 }

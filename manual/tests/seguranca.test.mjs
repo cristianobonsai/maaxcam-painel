@@ -38,7 +38,14 @@ test('decidirRequisicao: app, mock, estatico e abortar', () => {
 test('decidirRequisicao: data/blob ficam no app e hosts estaticos sao os esperados', () => {
   assert.equal(decidirRequisicao('data:image/png;base64,AAAA', 'GET', CTX), 'app')
   assert.equal(decidirRequisicao('blob:http://localhost:4173/abc', 'GET', CTX), 'app')
-  assert.deepEqual(HOSTS_ESTATICOS, ['fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com'])
+  assert.deepEqual(HOSTS_ESTATICOS, ['fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com', 'tile.openstreetmap.org'])
+})
+
+test('mapa: so o servidor de tiles do OpenStreetMap passa, so GET (imagens do mapa; nenhum dado nosso vai junto)', () => {
+  assert.equal(decidirRequisicao('https://tile.openstreetmap.org/12/1453/2430.png', 'GET', CTX), 'estatico')
+  assert.equal(decidirRequisicao('https://tile.openstreetmap.org/12/1453/2430.png', 'POST', CTX), 'abortar')
+  assert.equal(decidirRequisicao('https://nominatim.openstreetmap.org/search?q=x', 'GET', CTX), 'abortar')
+  assert.equal(decidirRequisicao('https://tile.openstreetmap.org.evil.com/1.png', 'GET', CTX), 'abortar')
 })
 
 test('varrerTexto: texto limpo nao tem violacao', () => {

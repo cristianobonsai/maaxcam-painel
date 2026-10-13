@@ -4,5 +4,9 @@
   { "id": "cameras", "titulo": "Câmeras" },
   { "id": "gerenciar-editar-transmissao", "titulo": "Gerenciar: Editar e Transmissão" },
   { "id": "gerenciar-seguranca", "titulo": "Gerenciar: Segurança" },
+  { "id": "gerenciar-localizacao-mapa", "titulo": "Gerenciar: Localização e Mapa" },
+  { "id": "gerenciar-monitoramento", "titulo": "Gerenciar: Monitoramento" },
+  { "id": "gerenciar-cartoes", "titulo": "Gerenciar: Cartões" },
+  { "id": "gerenciar-integracao", "titulo": "Gerenciar: Integração" },
   { "id": "compartilhar-carbigdata", "titulo": "Compartilhar com a Carbigdata" }
 ]
