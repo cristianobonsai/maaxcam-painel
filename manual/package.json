@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "manual": "node robo/run.mjs",
-    "publicar": "node robo/publicar-cli.mjs"
+    "publicar": "node robo/publicar-cli.mjs",
+    "pdf": "node robo/pdf-cli.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.0"
