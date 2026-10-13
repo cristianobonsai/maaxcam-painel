@@ -5,7 +5,8 @@ import capitulos from '../manual/capitulos.json'
 // Textos dos capítulos (Markdown) e prints gerados pelo robô do manual (public/manual/img).
 // Para atualizar: rodar o robô (manual/), publicar e fazer o deploy do painel. Ver docs do projeto.
 const textos = import.meta.glob('../manual/*.md', { query: '?raw', import: 'default', eager: true })
-const PDF_ANTIGO = 'https://painel.livebybit.com/LiveByBit-Manual-Usuario-v2.pdf'
+// PDF completo (gerado pelo robô: `npm run pdf` no Serv QA; copiar para public/). Atualizar o nome e o texto do botão a cada versão.
+const PDF_MANUAL = '/LiveByBit-Manual-Usuario-v3.pdf'
 
 const ESTILO = `
 .manual-conteudo h1 { font-size: 1.6rem; font-weight: 700; color: #fff; margin: 0 0 .75rem; }
@@ -41,8 +42,16 @@ export default function ManualUsuario() {
   return (
     <main className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 py-8">
       <style>{ESTILO}</style>
-      <h1 className="font-display text-2xl font-bold text-white">Manual do Usuário</h1>
-      <p className="mt-1 text-sm text-slate-400">Como usar o painel do LiveByBit, passo a passo.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-white">Manual do Usuário</h1>
+          <p className="mt-1 text-sm text-slate-400">Como usar o painel do LiveByBit, passo a passo.</p>
+        </div>
+        <a href={PDF_MANUAL} target="_blank" rel="noopener noreferrer"
+          className="rounded-lg border border-blue-500 bg-blue-500/10 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500/20">
+          Baixar o manual em PDF <span className="text-xs text-slate-400">(versão 3.0 · 12 MB)</span>
+        </a>
+      </div>
 
       {disponiveis.length === 0 ? (
         <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/60 p-6 text-sm text-slate-300">
@@ -88,10 +97,6 @@ export default function ManualUsuario() {
         </div>
       )}
 
-      <p className="mt-6 text-xs text-slate-500">
-        Precisa da versão anterior?{' '}
-        <a href={PDF_ANTIGO} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300">Manual em PDF (v2)</a>
-      </p>
     </main>
   )
 }
