@@ -1,8 +1,9 @@
-// roteiro.mjs - capitulo "Notificações" (6 passos): Telegram (nao conectado, link, conectado), e-mail e tipos de
+// roteiro.mjs - capitulo "Notificações" (7 passos): Telegram (nao conectado, link, conectado), e-mail e tipos de
 // alerta, aba Convidados. Bot, chat e e-mails inventados; nenhum aviso real e enviado.
 import { aplicarCenario } from '../../dados/rotas-lote3.mjs'
 import { alinharNoTopo, irParaOTopo } from '../../robo/ajudantes.mjs'
 
+const CARTAO_CONVIDADO = 'div.rounded-xl.p-4:has(span:text-is("funcionario@exemplo.com"))'
 const LIGAR = (titulo) => `div:has(> div > p:text-is("${titulo}")) > button[role="switch"]`
 
 export default {
@@ -67,7 +68,7 @@ export default {
       acao: async ({ page }) => {
         await page.locator(LIGAR('Horário de silêncio')).click()
         await page.getByText('Horário do resumo diário').first().waitFor()
-        await alinharNoTopo(page, 'h2:text-is("Configurações Avançadas")', 60)
+        await alinharNoTopo(page, 'h2:text-is("Configurações Avançadas")', 20)   // Salvar precisa caber na tela sem rolar de novo
       },
       destacar: [
         { por: 'css', nome: 'div.px-5.py-4:has(p:text-is("Câmera offline — alertar após"))', numero: 'esquerda' },
@@ -78,16 +79,30 @@ export default {
     },
     {
       id: 'convidados', titulo: 'Alertas para convidados', contexto: 'logado',
-      legenda: 'Na aba Convidados, o dono escolhe quem mais recebe alertas, por quais canais e de quais câmeras.',
+      legenda: 'Na aba Convidados, o dono escolhe quem mais recebe alertas. O atalho aplica a escolha a todo um grupo de acesso de uma vez.',
       acao: async ({ page }) => {
         await irParaOTopo(page)
         await page.getByRole('button', { name: 'Convidados', exact: true }).click()
         await page.getByText('funcionario@exemplo.com').first().waitFor()
-        await alinharNoTopo(page, 'p:text-is("Atalho por grupo")', 120)
+        await page.waitForTimeout(500)
       },
       destacar: [
+        { por: 'css', nome: 'p:has-text("Escolha quais convidados recebem")', numero: 'esquerda' },
         { por: 'css', nome: 'div.mt-5.rounded-xl:has(> p:text-is("Atalho por grupo"))', numero: 'esquerda' },
-        { por: 'css', nome: 'div.rounded-xl:has-text("funcionario@exemplo.com")', numero: 'esquerda' },
+      ],
+    },
+    {
+      id: 'convidado-opcoes', titulo: 'Escolher canais e câmeras de cada convidado', contexto: 'logado',
+      legenda: 'Para cada convidado: ligue os alertas, escolha Email e/ou Telegram, marque os grupos de acesso ou câmeras avulsas e clique em Salvar.',
+      acao: async ({ page }) => {
+        await alinharNoTopo(page, 'p:text-is("Convidados")', 40)
+      },
+      destacar: [
+        { por: 'css', nome: `${CARTAO_CONVIDADO} >> button >> nth=0`, numero: 'esquerda' },
+        { por: 'css', nome: `${CARTAO_CONVIDADO} div.mt-3.flex.flex-wrap.gap-x-5`, numero: 'esquerda' },
+        { por: 'css', nome: `${CARTAO_CONVIDADO} div.mt-3.border-t:has(> p:text-is("Grupos de acesso"))`, numero: 'esquerda' },
+        { por: 'css', nome: `${CARTAO_CONVIDADO} div.mt-3.border-t:has(> p:text-is("Câmeras avulsas"))`, numero: 'esquerda' },
+        { por: 'css', nome: `${CARTAO_CONVIDADO} button:text-is("Salvar")`, numero: 'direita' },
       ],
     },
   ],
