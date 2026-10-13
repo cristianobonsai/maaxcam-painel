@@ -9,6 +9,7 @@ const FIM = '2026-10-12'
 async function preencherPeriodo(page, bloco) {
   await page.locator(`${bloco} input[type="date"]`).first().fill(INICIO)
   await page.locator(`${bloco} input[type="date"]`).nth(1).fill(FIM)
+  await page.evaluate(() => document.activeElement?.blur())   // sem o realce azul de campo selecionado no print
 }
 
 export default {
