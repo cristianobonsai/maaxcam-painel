@@ -43,6 +43,23 @@ test('roteiro de Primeiros passos: 8 passos com ids unicos, contexto valido e al
   }
 })
 
+test('roteiro da Carbigdata: 2 passos, o ultimo destaca o link HLS e o botao Copiar; sem palavra proibida no codigo', async () => {
+  const r = (await import('../capitulos/compartilhar-carbigdata/roteiro.mjs')).default
+  assert.equal(r.id, 'compartilhar-carbigdata')
+  assert.deepEqual(r.passos.map((p) => p.id), ['gerenciar', 'link-hls'])
+  for (const p of r.passos) {
+    assert.equal(p.contexto, 'logado', p.id)
+    assert.ok(p.titulo && p.legenda && p.destacar.length >= 1, p.id)
+  }
+  const hls = r.passos[1].destacar
+  assert.ok(hls.some((a) => a.por === 'texto' && String(a.nome).includes('/hls/')), 'destaca o link HLS')
+  const { readFileSync } = await import('node:fs')
+  const { fileURLToPath } = await import('node:url')
+  const fonte = readFileSync(fileURLToPath(new URL('../capitulos/compartilhar-carbigdata/roteiro.mjs', import.meta.url)), 'utf8')
+  // a palavra so aparece no texto.md; no codigo ela existe apenas dentro do identificador do capitulo
+  assert.deepEqual(varrerTexto(fonte.replaceAll('compartilhar-carbigdata', 'capitulo')), [])
+})
+
 test('o codigo-fonte do roteiro e dos dados ficticios nao tem dado real (constantes digitadas na tela)', async () => {
   const { readFileSync } = await import('node:fs')
   const { fileURLToPath } = await import('node:url')

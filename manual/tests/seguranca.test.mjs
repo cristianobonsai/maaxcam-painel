@@ -60,3 +60,13 @@ test('varrerTexto: acusa e-mail real, IP real, chave do supabase e palavras proi
     assert.ok(varrerTexto(palavra).length >= 1, palavra)
   }
 })
+
+test('varrerTexto: "permitir" libera SO a palavra pedida (texto do capitulo da Carbigdata)', () => {
+  const texto = 'Envie o link para a Carbigdata.'
+  assert.equal(varrerTexto(texto).length, 1)                                          // padrao: continua proibida
+  assert.deepEqual(varrerTexto(texto, { permitir: ['carbigdata'] }), [])
+  assert.deepEqual(varrerTexto('carbigdata CARBIGDATA', { permitir: ['carbigdata'] }), [])   // sem diferenciar maiuscula
+  assert.equal(varrerTexto('A Carbigdata le placas', { permitir: ['carbigdata'] }).length, 1)  // placa segue proibida
+  assert.equal(varrerTexto('Carbigdata e LPR', { permitir: ['carbigdata'] }).length, 1)
+  assert.equal(varrerTexto('joao@gmail.com Carbigdata', { permitir: ['carbigdata'] }).length, 1) // o resto da varredura vale
+})

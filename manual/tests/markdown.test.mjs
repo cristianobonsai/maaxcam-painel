@@ -57,3 +57,28 @@ test('texto.md: sem dado real nem palavra proibida e referencia exatamente os 8 
 test('texto publicado em src/manual e igual ao do capitulo (rode publicar depois de editar)', () => {
   assert.equal(readFileSync(PUBLICADO, 'utf8'), readFileSync(TEXTO, 'utf8'))
 })
+
+// ---- capitulo "Compartilhar com a Carbigdata" (a ultima pagina do manual) ----
+const CAP_CARBIGDATA = 'compartilhar-carbigdata'
+const TEXTO_CARBIGDATA = join(AQUI, '..', 'capitulos', CAP_CARBIGDATA, 'texto.md')
+const PUBLICADO_CARBIGDATA = join(AQUI, '..', '..', 'src', 'manual', `${CAP_CARBIGDATA}.md`)
+
+test('capitulo da Carbigdata: cita a Carbigdata (so ela), sem dado real, e referencia exatamente os prints do roteiro', async () => {
+  const roteiroCarbigdata = (await import(`../capitulos/${CAP_CARBIGDATA}/roteiro.mjs`)).default
+  const texto = readFileSync(TEXTO_CARBIGDATA, 'utf8')
+  assert.match(texto, /Carbigdata/)                                                    // escrito assim: C maiusculo, resto minusculo
+  const semIds = texto.replace(/img:[a-z0-9-]+/g, '').replace(/Carbigdata/g, '')       // o identificador do capitulo/print tem a palavra em minuscula
+  assert.ok(!/carbigdata/i.test(semIds), 'so a grafia "Carbigdata"')
+  assert.match(texto, /\.m3u8/)                                                       // diz como e o link HLS
+  assert.deepEqual(varrerTexto(texto, { permitir: ['carbigdata'] }), [])
+  const usados = [...texto.matchAll(/img:([a-z0-9-]+)/g)].map((m) => m[1]).sort()
+  const esperados = roteiroCarbigdata.passos.map((p, i) => nomeArquivo(roteiroCarbigdata.id, i + 1, p.id).replace(/\.png$/, '')).sort()
+  assert.deepEqual(usados, esperados)
+})
+
+test('capitulo da Carbigdata publicado em src/manual e listado por ultimo em capitulos.json', () => {
+  assert.equal(readFileSync(PUBLICADO_CARBIGDATA, 'utf8'), readFileSync(TEXTO_CARBIGDATA, 'utf8'))
+  const lista = JSON.parse(readFileSync(join(AQUI, '..', '..', 'src', 'manual', 'capitulos.json'), 'utf8'))
+  assert.equal(lista[lista.length - 1].id, CAP_CARBIGDATA)
+  assert.equal(lista[lista.length - 1].titulo, 'Compartilhar com a Carbigdata')
+})

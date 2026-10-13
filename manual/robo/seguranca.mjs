@@ -29,8 +29,12 @@ export function decidirRequisicao(url, metodo, ctx) {
   return 'abortar'
 }
 
-/** Procura dado real/proibido em um texto. Devolve a lista de violacoes (vazia = limpo). */
-export function varrerTexto(texto) {
+/**
+ * Procura dado real/proibido em um texto. Devolve a lista de violacoes (vazia = limpo).
+ * `permitir`: palavras proibidas (minusculas) que ESTE texto pode conter - so o texto escrito para o cliente
+ * (texto.md) usa isso; dados ficticios, roteiros e prints continuam sem nenhuma.
+ */
+export function varrerTexto(texto, { permitir = [] } = {}) {
   const violacoes = []
   for (const m of texto.matchAll(/[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/g)) {
     if (!EMAILS_FICTICIOS.includes(m[1].toLowerCase())) violacoes.push(`e-mail real: ${m[0]}`)
@@ -39,6 +43,8 @@ export function varrerTexto(texto) {
     if (!m[0].startsWith('203.0.113.')) violacoes.push(`IP: ${m[0]}`)
   }
   if (/sb_(publishable|secret)/i.test(texto)) violacoes.push('chave do supabase')
-  for (const m of texto.matchAll(/\b(placas?|a?lpr|carbigdata)\b/gi)) violacoes.push(`palavra proibida: ${m[0]}`)
+  for (const m of texto.matchAll(/\b(placas?|a?lpr|carbigdata)\b/gi)) {
+    if (!permitir.includes(m[0].toLowerCase())) violacoes.push(`palavra proibida: ${m[0]}`)
+  }
   return violacoes
 }
