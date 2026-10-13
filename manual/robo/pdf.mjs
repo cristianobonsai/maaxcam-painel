@@ -117,7 +117,7 @@ ${corpoDoCapitulo(c.md, baseImg)}
 <html lang="pt-BR"><head><meta charset="utf-8"><title>Manual do Usuário LiveByBit — versão ${esc(versao)}</title>
 <style>${CSS}</style></head>
 <body>
-${corpoApenas ? '' : `${capa}\n${sumario}\n`}${corpo}
+${corpoApenas ? '<div class="pagina-zero"></div>\n' : `${capa}\n${sumario}\n`}${corpo}
 </body></html>`
 }
 
