@@ -40,7 +40,7 @@ export default {
         await alinharNoTopo(page, bloco, 70)
       },
       destacar: [
-        { por: 'css', nome: 'input[placeholder="ex: 4"]', numero: 'acima' },
+        { por: 'css', nome: 'input[placeholder="ex: 4"]', numero: 'abaixo' },
         { por: 'css', nome: 'table >> nth=0', numero: 'esquerda' },
         { por: 'css', nome: 'button:text-is("Exportar PDF")', numero: 'acima' },
       ],
@@ -51,6 +51,7 @@ export default {
       acao: async ({ page }) => {
         await page.getByRole('button', { name: 'Quedas', exact: true }).click()
         await page.getByText('Total de 5 quedas').first().waitFor()
+        await preencherPeriodo(page, BLOCO('Consultar periodo especifico'))
         await page.locator('tr:has-text("Estacionamento")').first().click()
         await page.getByText('Todas as quedas (4)').first().waitFor()
         await alinharNoTopo(page, BLOCO('Consultar periodo especifico'), 80)
