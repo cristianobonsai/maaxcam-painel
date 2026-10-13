@@ -12,7 +12,7 @@ export default {
     {
       id: 'gerenciar', titulo: 'Abrir a câmera', contexto: 'logado', ir: '/painel/cameras',
       legenda: 'Na lista de câmeras, clique em "Gerenciar" na câmera que você vai compartilhar.',
-      destacar: [GERENCIAR],
+      destacar: [{ ...GERENCIAR, numero: 'abaixo' }],
     },
     {
       id: 'link-hls', titulo: 'Copiar o link HLS', contexto: 'logado',
