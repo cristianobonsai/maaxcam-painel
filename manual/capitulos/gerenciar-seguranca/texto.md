@@ -35,4 +35,4 @@ Para voltar ao normal, clique em **Público**. Os controles somem e o link volta
 2. **IP** (**2**): digite o IP do servidor ou uma faixa, por exemplo `203.0.113.4` ou `203.0.113.0/24`, e, se quiser, um rótulo para lembrar de quem é (como "Escritório"). Clique em **Adicionar**. Com a câmera privada, o link HLS por token só funciona desses IPs. Enquanto a lista estiver vazia ("Nenhum IP"), não há restrição de IP.
 3. **Token** (**3**): escreva um rótulo (por exemplo, "Servidor A") e clique em **Gerar token**. O painel mostra o link HLS já com a chave de acesso (`?key=...`). Clique em **Copiar** e use esse link no outro serviço.
 
-Cada item tem o botão **Remover**. Ao remover um token, o link dele para de funcionar na hora. Se a câmera for privada e você ainda não tiver nenhum token, o link da foto (aba **Transmissão**) pede que você gere um aqui antes.
+Cada item tem o botão **Remover**. Ao remover um token, o link dele deixa de funcionar. Se a câmera for privada e você ainda não tiver nenhum token, o link da foto (aba **Transmissão**) pede que você gere um aqui antes.
