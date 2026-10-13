@@ -3,6 +3,7 @@
 import { deflateSync } from 'node:zlib'
 import { rotasLote2 } from './rotas-lote2.mjs'
 import { rotasLote3 } from './rotas-lote3.mjs'
+import { rotasLote4 } from './rotas-lote4.mjs'
 
 const CLIENTE = {
   user_id: 'demo-cliente',
@@ -96,7 +97,11 @@ const HTML_EMBED = '<!doctype html><html><body style="margin:0;background:#0b122
 export function rotas(estado) {
   return [
     // grupos de transmissao so aparecem no menu quando o cenario "grupos" esta ligado (rotas-lote3.mjs)
-    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: { ...CLIENTE, can_use_groups: !!estado.grupos_ativos, permissions: { ...CLIENTE.permissions, can_create_groups: !!estado.grupos_ativos } } }) },
+    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: {
+      ...CLIENTE, can_use_groups: !!estado.grupos_ativos, permissions: { ...CLIENTE.permissions, can_create_groups: !!estado.grupos_ativos },
+      // cenario "convidado" (Minha conta): quem entra como convidado tem o dono da conta preenchido
+      ...(estado.me_convidado ? { owner_id: 'demo-dono', owner_email: 'dono@exemplo.com' } : {}),
+    } }) },
     { metodo: 'GET', padrao: /^\/api\/cameras\?mine=1$/, resposta: () => ({ json: estado.cameras.map((c) => ({ ...c })) }) },
     {
       metodo: 'POST', padrao: /^\/api\/cameras$/,
@@ -182,5 +187,6 @@ export function rotas(estado) {
     { metodo: 'POST', padrao: /^\/auth\/v1\/otp(\?.*)?$/, resposta: () => ({ json: {} }) },
     ...rotasLote2(estado, comCamera),
     ...rotasLote3(estado, comCamera),
+    ...rotasLote4(estado),
   ]
 }

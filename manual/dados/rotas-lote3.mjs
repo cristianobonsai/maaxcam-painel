@@ -66,6 +66,14 @@ function grupoJson(estado, g) {
   }
 }
 
+/** O convidado ficticio (um so), compartilhado com as telas de Usuarios do lote 4. */
+export function convidadoDe(estado) {
+  return (estado.convidado ||= {
+    user_id: 'demo-convidado', email: 'funcionario@exemplo.com', enabled: true, via_email: true, via_telegram: false,
+    telegram_linked: false, scope: [{ type: 'group', id: '1' }],
+  })
+}
+
 const NOME_CAMERAS = { MAADEMO1: 'Entrada', MAADEMO2: 'Estacionamento', MAADEMO3: 'Balcão' }
 
 /**
@@ -78,10 +86,7 @@ export function rotasLote3(estado, comCamera) {
   const comGrupo = (id, fazer) => { const g = grupo(id); return g ? fazer(g) : NAO_ENCONTRADO }
   const notif = () => (estado.notif ||= { ...PLANO_PADRAO_NOTIF })
   const extra = () => (estado.notifExtra ||= { ...EXTRA_PADRAO })
-  const convidado = () => (estado.convidado ||= {
-    user_id: 'demo-convidado', email: 'funcionario@exemplo.com', enabled: true, via_email: true, via_telegram: false,
-    telegram_linked: false, scope: [{ type: 'group', id: '1' }],
-  })
+  const convidado = () => convidadoDe(estado)
 
   return [
     { metodo: 'GET', padrao: /^\/api\/cameras$/, resposta: () => ({ json: estado.cameras.map((c) => ({ ...c })) }) },
@@ -148,8 +153,7 @@ export function rotasLote3(estado, comCamera) {
     { metodo: 'GET', padrao: /^\/api\/notifications\/guests$/, resposta: () => ({ json: { guests: [{ ...convidado() }] } }) },
     { metodo: 'PUT', padrao: /^\/api\/notifications\/guests\/([^/?]+)$/,
       resposta: (_m, corpo) => { Object.assign(convidado(), corpo || {}); return { json: { ok: true } } } },
-    { metodo: 'GET', padrao: /^\/api\/access-groups$/,
-      resposta: () => ({ json: [{ id: 1, name: 'Equipe da loja', member_ids: [convidado().user_id] }] }) },
+    // os grupos de acesso (/api/access-groups) ficam em rotas-lote4.mjs
 
     // ---- relatorios ----
     { metodo: 'GET', padrao: /^\/api\/reports\/uptime\?/,
