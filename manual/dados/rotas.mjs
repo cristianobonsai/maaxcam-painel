@@ -2,6 +2,7 @@
 // Nada aqui pode ser real: a varredura (robo/seguranca.mjs) roda nos testes e na integracao.
 import { deflateSync } from 'node:zlib'
 import { rotasLote2 } from './rotas-lote2.mjs'
+import { rotasLote3 } from './rotas-lote3.mjs'
 
 const CLIENTE = {
   user_id: 'demo-cliente',
@@ -94,7 +95,8 @@ const HTML_EMBED = '<!doctype html><html><body style="margin:0;background:#0b122
 
 export function rotas(estado) {
   return [
-    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: CLIENTE }) },
+    // grupos de transmissao so aparecem no menu quando o cenario "grupos" esta ligado (rotas-lote3.mjs)
+    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: { ...CLIENTE, can_use_groups: !!estado.grupos_ativos, permissions: { ...CLIENTE.permissions, can_create_groups: !!estado.grupos_ativos } } }) },
     { metodo: 'GET', padrao: /^\/api\/cameras\?mine=1$/, resposta: () => ({ json: estado.cameras.map((c) => ({ ...c })) }) },
     {
       metodo: 'POST', padrao: /^\/api\/cameras$/,
@@ -172,7 +174,6 @@ export function rotas(estado) {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/snapshot\.jpg/,
       resposta: () => ({ imagem: pngSolido(320, 180, [30, 41, 59]) }),
     },
-    { metodo: 'GET', padrao: /^\/api\/groups$/, resposta: () => ({ json: [] }) },
     {
       metodo: 'GET', padrao: /^\/api\/monitoring\?mine=1$/,
       resposta: () => ({ json: estado.cenario === 'atencao' ? PROBLEMAS.map((p) => ({ ...p })) : [] }),
@@ -180,5 +181,6 @@ export function rotas(estado) {
     { metodo: 'GET', padrao: /^\/embed\/[^/?]+/, resposta: () => ({ html: HTML_EMBED }) },
     { metodo: 'POST', padrao: /^\/auth\/v1\/otp(\?.*)?$/, resposta: () => ({ json: {} }) },
     ...rotasLote2(estado, comCamera),
+    ...rotasLote3(estado, comCamera),
   ]
 }

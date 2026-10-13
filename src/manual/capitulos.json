@@ -8,5 +8,9 @@
   { "id": "gerenciar-monitoramento", "titulo": "Gerenciar: Monitoramento" },
   { "id": "gerenciar-cartoes", "titulo": "Gerenciar: Cartões" },
   { "id": "gerenciar-integracao", "titulo": "Gerenciar: Integração" },
+  { "id": "grupo-de-transmissao", "titulo": "Grupo de transmissão" },
+  { "id": "notificacoes", "titulo": "Notificações" },
+  { "id": "relatorios", "titulo": "Relatórios" },
+  { "id": "faturamento", "titulo": "Faturamento" },
   { "id": "compartilhar-carbigdata", "titulo": "Compartilhar com a Carbigdata" }
 ]
