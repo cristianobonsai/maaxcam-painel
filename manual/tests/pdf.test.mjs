@@ -69,9 +69,10 @@ test('montarHtml: o titulo do texto (h1) nao se repete — o titulo do capitulo 
   assert.equal((html.match(/<h1>Segundo<\/h1>/g) || []).length, 1)
 })
 
-test('montarHtml com corpoApenas (medicao de paginas) nao traz capa nem sumario', () => {
+test('montarHtml com corpoApenas (medicao de paginas) nao traz capa nem sumario, mas ocupa a 1a pagina (a da capa) em branco', () => {
   const html = montarHtml({ ...base, corpoApenas: true })
   assert.ok(!html.includes('class="capa"') && !html.includes('class="sumario"'))
+  assert.ok(html.indexOf('class="pagina-zero"') > -1 && html.indexOf('class="pagina-zero"') < html.indexOf('id="cap-um"'), 'a pagina sem margem da regra :first nao pode ser a de um capitulo')
   assert.ok(html.includes('id="cap-um"'))
 })
 

@@ -52,6 +52,7 @@ body { margin: 0; }
 .capa .sub { margin-top: 14pt; max-width: 120mm; font-size: 14pt; color: #cbd5e1; line-height: 1.4; }
 .capa .versao { margin-top: 26pt; font-size: 12pt; color: #93c5fd; font-weight: 700; letter-spacing: .5pt; }
 .capa .rodape { margin-top: auto; font-size: 10pt; color: #94a3b8; line-height: 1.6; }
+.pagina-zero { width: 210mm; height: 296.6mm; break-after: page; }
 .sumario { break-after: page; }
 .sumario h2 { margin: 0 0 14pt; font-size: 22pt; color: #0f172a; }
 .toc { list-style: none; margin: 0; padding: 0; }
@@ -139,7 +140,7 @@ export async function gerarPdf({ capitulos, versao, data, baseImg, pasta, nomePd
     const contagens = []
     for (const c of capitulos) {
       const pdf = await imprimir(montarHtml({ capitulos: [c], versao, data, inicios: [1], baseImg, corpoApenas: true }), join(pasta, `medida-${c.id}.html`))
-      contagens.push(contarPaginas(pdf))
+      contagens.push(contarPaginas(pdf) - 1)   // menos a pagina em branco que faz o papel da capa
     }
     // capa (1 pagina) + sumario (1 pagina) vem antes do primeiro capitulo
     const inicios = calcularInicios(contagens, 3)
