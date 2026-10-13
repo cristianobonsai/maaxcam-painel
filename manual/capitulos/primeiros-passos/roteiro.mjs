@@ -12,12 +12,12 @@ export default {
   titulo: 'Primeiros passos',
   passos: [
     {
-      id: 'entrar', titulo: 'Entrar no painel', contexto: 'sem-sessao', ir: '/login',
+      id: 'entrar', titulo: 'Entrar no painel', contexto: 'sem-sessao', ir: '/login', viewport: { width: 760, height: 560 },
       legenda: 'Digite o seu e-mail e clique em "Enviar link de acesso". Não existe senha: você recebe um link por e-mail.',
       destacar: [CAMPO_EMAIL, BOTAO_ENVIAR],
     },
     {
-      id: 'link-enviado', titulo: 'Abrir o link que chegou no e-mail', contexto: 'sem-sessao',
+      id: 'link-enviado', titulo: 'Abrir o link que chegou no e-mail', contexto: 'sem-sessao', viewport: { width: 760, height: 560 },
       legenda: 'Pronto: o painel avisa que o link foi enviado. Abra o e-mail (olhe também o spam) e clique no link para entrar.',
       acao: async ({ page, loc }) => {
         await (await loc(CAMPO_EMAIL)).fill(EMAIL)

@@ -18,7 +18,8 @@ const ESTILO = `
 .manual-conteudo strong { color: #fff; }
 .manual-conteudo code { background: #0f172a; padding: 1px 6px; border-radius: 4px; }
 .manual-conteudo a { color: #60a5fa; text-decoration: underline; }
-.manual-conteudo p, .manual-conteudo ul, .manual-conteudo ol { max-width: 78ch; }
+.manual-conteudo p:not(:has(img)), .manual-conteudo ul, .manual-conteudo ol { max-width: 78ch; }
+.manual-conteudo p:has(img) { max-width: none; }
 .manual-conteudo img.manual-img { display: block; width: 100%; height: auto; border: 1px solid #334155; border-radius: 10px; margin: 1rem 0 1.5rem; cursor: zoom-in; }
 `
 
