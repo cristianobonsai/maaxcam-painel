@@ -62,8 +62,8 @@ export default {
       },
       destacar: [
         { por: 'css', nome: LINHA('Avisos desta câmera'), numero: 'esquerda' },
-        { papel: 'button', nome: 'Silenciar 7 dias', numero: 'abaixo' },
-        { papel: 'button', nome: 'Não avisar mais', numero: 'abaixo' },
+        { papel: 'button', nome: 'Silenciar 7 dias', numero: 'esquerda' },
+        { papel: 'button', nome: 'Não avisar mais', numero: 'direita' },
       ],
     },
     {
@@ -75,7 +75,7 @@ export default {
       },
       destacar: [
         { por: 'css', nome: LINHA('Avisos desta câmera'), numero: 'esquerda' },
-        { papel: 'button', nome: 'Reativar', numero: 'abaixo' },
+        { papel: 'button', nome: 'Reativar', numero: 'direita' },
       ],
     },
   ],
