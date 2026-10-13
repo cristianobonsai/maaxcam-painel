@@ -12,5 +12,8 @@
   { "id": "notificacoes", "titulo": "Notificações" },
   { "id": "relatorios", "titulo": "Relatórios" },
   { "id": "faturamento", "titulo": "Faturamento" },
+  { "id": "usuarios-convidados", "titulo": "Usuários: Convidados" },
+  { "id": "usuarios-grupos-acesso", "titulo": "Usuários: Grupos de acesso" },
+  { "id": "minha-conta", "titulo": "Minha conta" },
   { "id": "compartilhar-carbigdata", "titulo": "Compartilhar com a Carbigdata" }
 ]
