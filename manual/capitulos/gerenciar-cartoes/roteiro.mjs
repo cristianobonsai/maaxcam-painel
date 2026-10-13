@@ -50,7 +50,7 @@ export default {
         { por: 'css', nome: `${FORM} > div.flex.gap-4 >> nth=0`, numero: 'esquerda' },
         { por: 'css', nome: 'input[placeholder="Texto a exibir"]', numero: 'direita' },
         { por: 'css', nome: `${FORM} div.grid.grid-cols-2.gap-3 >> nth=1`, numero: 'direita' },
-        { papel: 'button', nome: 'Adicionar item', numero: 'direita' },
+        { papel: 'button', nome: 'Adicionar item', numero: 'abaixo' },
       ],
     },
     {
