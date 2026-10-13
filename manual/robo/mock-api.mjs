@@ -40,5 +40,6 @@ export function criarMock(rotas, estadoInicial = () => ({})) {
     usadas = []
   }
 
-  return { responder, reset, usadas: () => [...usadas] }
+  // `estado()` deixa o roteiro ligar cenarios (ex.: estado().cenario = 'atencao') antes de recarregar a tela
+  return { responder, reset, usadas: () => [...usadas], estado: () => estado }
 }

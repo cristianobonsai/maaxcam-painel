@@ -56,8 +56,12 @@ export async function destacarEFotografar(page, { alvos, arquivo, numeros = true
   const vp = typeof page.viewportSize === 'function' ? page.viewportSize() : null
   const tela = vp ? { largura: vp.width, altura: vp.height } : undefined
   const caixas = []
-  for (const [i, alvo] of alvos.entries()) {
+  // 1o passo: rola ate cada alvo; 2o passo: mede todos. Medir enquanto rola deixava as caixas das primeiras
+  // medidas deslocadas quando um alvo mais abaixo puxava a pagina depois.
+  for (const alvo of alvos) {
     if (typeof alvo.scrollIntoViewIfNeeded === 'function') await alvo.scrollIntoViewIfNeeded()
+  }
+  for (const [i, alvo] of alvos.entries()) {
     const box = await alvo.boundingBox()
     if (!box) throw new Error('Elemento a destacar sem posição na tela (invisível?).')
     const caixa = calcularCaixa(box)

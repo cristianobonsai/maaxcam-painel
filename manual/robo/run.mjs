@@ -37,6 +37,35 @@ export function parsearArgs(argv) {
 
 export const nomeArquivo = (cap, indice, id) => `${cap}-${String(indice).padStart(2, '0')}-${id}.png`
 
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
+
+/** Resposta do mock ({status, json|html|imagem|svg}) -> argumentos do route.fulfill do Playwright. */
+export function montarResposta(r) {
+  const base = { status: r.status, headers: CORS }
+  if (r.imagem) return { ...base, contentType: 'image/png', body: r.imagem }
+  if (r.svg) return { ...base, contentType: 'image/svg+xml', body: r.svg }
+  if (r.html) return { ...base, contentType: 'text/html; charset=utf-8', body: r.html }
+  if (r.json !== undefined) return { ...base, contentType: 'application/json', body: JSON.stringify(r.json) }
+  return base
+}
+
+// O painel de demonstracao e compilado apontando para API_DEMO (nada sai do computador). Na tela, onde esse
+// endereco aparece (ex.: link da foto), mostramos o endereco real do painel: so texto, so antes do print.
+export const HOST_REAL = 'api.livebybit.com'
+export const substituirHostDemo = (s) => String(s).replaceAll(new URL(API_DEMO).hostname, HOST_REAL)
+
+async function mostrarHostReal(page) {
+  await page.evaluate(([de, para]) => {
+    const it = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    for (let n = it.nextNode(); n; n = it.nextNode()) {
+      if (n.nodeValue.includes(de)) n.nodeValue = n.nodeValue.replaceAll(de, para)
+    }
+    for (const el of document.querySelectorAll('input,textarea')) {
+      if (el.value && el.value.includes(de)) el.value = el.value.replaceAll(de, para)
+    }
+  }, [new URL(API_DEMO).hostname, HOST_REAL])
+}
+
 /** Sessao de login de mentira no formato do supabase-js (nenhuma credencial real). */
 export function sessaoFalsa(agora = Math.floor(Date.now() / 1000)) {
   return {
@@ -82,7 +111,8 @@ export async function executar(argv) {
   const rede = { app: 0, mock: 0, estatico: 0, abortadas: [] }
   const errosApi = []
 
-  const browser = await chromium.launch()
+  // --lang: o campo de data do Chromium usa o idioma do navegador (dd/mm/aaaa, como o cliente ve)
+  const browser = await chromium.launch({ args: ['--lang=pt-BR'], env: { ...process.env, LANGUAGE: 'pt_BR:pt', LC_ALL: 'pt_BR.UTF-8', LANG: 'pt_BR.UTF-8' } })
   const contextos = {}
   async function contexto(tipo) {
     if (contextos[tipo]) return contextos[tipo]
@@ -102,13 +132,10 @@ export async function executar(argv) {
       const u = new URL(req.url())
       let corpo
       try { corpo = req.postDataJSON() } catch { corpo = undefined }
-      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' }
+      const cors = CORS
       try {
         const r = mock.responder(req.method(), u.pathname + u.search, corpo)
-        if (r.imagem) return route.fulfill({ status: r.status, contentType: 'image/png', body: r.imagem, headers: cors })
-        if (r.html) return route.fulfill({ status: r.status, contentType: 'text/html; charset=utf-8', body: r.html, headers: cors })
-        if (r.json !== undefined) return route.fulfill({ status: r.status, contentType: 'application/json', body: JSON.stringify(r.json), headers: cors })
-        return route.fulfill({ status: r.status, headers: cors })
+        return route.fulfill(montarResposta(r))
       } catch (e) {
         // qualquer falha do handler vira erro registrado (o passo quebra dizendo o que foi) + 500 para a pagina
         if (e instanceof ErroApiSemDado) errosApi.push(e)
@@ -140,11 +167,12 @@ export async function executar(argv) {
       }
       try {
         if (passo.ir) await page.goto(servidor.origem + passo.ir, { waitUntil: 'domcontentloaded' })
-        if (passo.acao) await passo.acao({ page, loc })
+        if (passo.acao) await passo.acao({ page, loc, mock })
         // espera a rede aquietar, mas no maximo 3 s (players/iframes mantem atividade e nao devem travar o robo)
         await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
         await page.waitForTimeout(400)
         conferirRede()                                                // antes de localizar: erro de API explica o "nao achei"
+        await mostrarHostReal(page)
         const alvos = []
         for (const a of passo.destacar) alvos.push(await loc(a))
         await destacarEFotografar(page, { alvos, arquivo, numeros: true, lados: passo.destacar.map((a) => a.numero) })

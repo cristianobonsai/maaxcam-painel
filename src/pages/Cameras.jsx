@@ -234,7 +234,7 @@ export default function Cameras() {
                 <select value={form.plan} onChange={(e) => setField('plan', e.target.value)} className={inputCls}>
                   <option value="basico">Básico — R$9,90/mês (só transmissão)</option>
                   <option value="pro">Pro — R$29,90/mês (+ embed, YouTube, áudio, foto)</option>
-                  <option value="premium">Premium — R$29,90/mês (+ pode entrar em Grupos)</option>
+                  <option value="premium">Premium — R$32,90/mês (+ pode entrar em Grupos)</option>
                 </select>
               </label>
 

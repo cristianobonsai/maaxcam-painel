@@ -1,7 +1,8 @@
 // seguranca.mjs - regras de seguranca do robo do Manual (spec 2026-10-12, secoes 3 e 7).
 // O robo so roda em localhost, intercepta TODA requisicao do navegador e varre os dados em busca de qualquer coisa real.
 
-export const HOSTS_ESTATICOS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com']
+// Fontes, bibliotecas (Leaflet) e imagens do mapa: so GET, nenhum dado nosso vai junto (as coordenadas sao inventadas).
+export const HOSTS_ESTATICOS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com', 'tile.openstreetmap.org']
 const HOSTS_LOCAIS = ['localhost', '127.0.0.1', '[::1]']
 const EMAILS_FICTICIOS = ['exemplo.com', 'example.com']
 

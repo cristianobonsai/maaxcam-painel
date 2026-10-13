@@ -1,6 +1,9 @@
 // rotas.mjs - respostas FICTICIAS da API para o capitulo "Primeiros passos" (cliente "Padaria Exemplo").
 // Nada aqui pode ser real: a varredura (robo/seguranca.mjs) roda nos testes e na integracao.
 import { deflateSync } from 'node:zlib'
+import { rotasLote2 } from './rotas-lote2.mjs'
+import { rotasLote3 } from './rotas-lote3.mjs'
+import { rotasLote4 } from './rotas-lote4.mjs'
 
 const CLIENTE = {
   user_id: 'demo-cliente',
@@ -18,15 +21,25 @@ const CLIENTE = {
 const CAMERAS_INICIAIS = [
   { camera_id: 'MAADEMO1', name: 'Entrada', enabled: true, is_streaming: true, youtube_relay_active: false,
     group_name: null, plan: 'pro', location: 'Centro', project: 'Padaria Exemplo', brand: 'Intelbras', cloud: '',
-    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-entrada01', playback_id: 'demo-pb-1' },
+    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-entrada01', playback_id: 'demo-pb-1', lat: -27.5954, lng: -48.548 },
   { camera_id: 'MAADEMO2', name: 'Estacionamento', enabled: true, is_streaming: false, youtube_relay_active: false,
     group_name: null, plan: 'basico', location: 'Centro', project: 'Padaria Exemplo', brand: 'Hikvision', cloud: '',
-    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-estac02', playback_id: 'demo-pb-2' },
+    youtube_key: '', quality_tier: '1080p', stream_key: 'demo-estac02', playback_id: 'demo-pb-2', lat: -27.5961, lng: -48.5448 },
 ]
 
 export function estadoInicial() {
-  return { cameras: CAMERAS_INICIAIS.map((c) => ({ ...c })), proximo: 3 }
+  // seguranca: dominios/IPs/tokens por camera; seq: ids deles; cenario: 'atencao' liga o aviso do Dashboard
+  // cartao/integracao: configuracao por camera (criada na 1a leitura); monitoramento: 'problemas' | 'duplicada'
+  return { cameras: CAMERAS_INICIAIS.map((c) => ({ ...c })), proximo: 3, seguranca: {}, seq: 1, cartao: {}, integracao: {} }
 }
+
+const segDe = (estado, id) => (estado.seguranca[id] ||= { domains: [], ips: [], tokens: [] })
+
+// cameras com problema, como o painel mostra no Dashboard (so no cenario 'atencao')
+const PROBLEMAS = [
+  { camera_id: 'MAADEMO2', name: 'Estacionamento', status_geral: 'fora_do_ar', drops_24h: 0 },
+  { camera_id: 'MAADEMO1', name: 'Entrada', status_geral: 'instavel', drops_24h: 7 },
+]
 
 const rtmpUrl = (c) => `rtmp://ingest.livebybit.com/live/${c.stream_key}`
 const hlsUrl = (c) => `https://play.livebybit.com/v2/hls/${c.playback_id}.m3u8`
@@ -40,14 +53,18 @@ const capsDoPlano = (c) => {
 const NAO_ENCONTRADA = { status: 404, json: { detail: 'Câmera não encontrada' } }
 const comCamera = (estado, id, fazer) => { const c = achar(estado, id); return c ? fazer(c) : NAO_ENCONTRADA }
 
-function seguranca(c) {
+function seguranca(c, estado) {
+  const s = segDe(estado, c.camera_id)
   return {
-    camera_id: c.camera_id, name: c.name, rtmp_url: rtmpUrl(c), hls_url: hlsUrl(c), stream_privacy: 'public',
+    camera_id: c.camera_id, name: c.name, rtmp_url: rtmpUrl(c), hls_url: hlsUrl(c), stream_privacy: c.stream_privacy || 'public',
     playback_id: c.playback_id, preview_token: '', relay_running: false, youtube_key: c.youtube_key || '',
-    tokens: [], ips: [], domains: [], in_group: false, in_active_group: false, has_audio: false, audio_name: '',
+    tokens: s.tokens.map((t) => ({ ...t })), ips: s.ips.map((i) => ({ ...i })), domains: s.domains.map((d) => ({ ...d })),
+    in_group: false, in_active_group: false, has_audio: false, audio_name: '',
     caps: capsDoPlano(c),
   }
 }
+
+const CAMPOS_EDITAVEIS = ['name', 'brand', 'cloud', 'project', 'enabled', 'quality_tier', 'plan', 'youtube_key']
 
 // PNG solido (zlib + CRC) para a "foto" da camera: sem imagem real.
 function crc32(buf) {
@@ -79,7 +96,12 @@ const HTML_EMBED = '<!doctype html><html><body style="margin:0;background:#0b122
 
 export function rotas(estado) {
   return [
-    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: CLIENTE }) },
+    // grupos de transmissao so aparecem no menu quando o cenario "grupos" esta ligado (rotas-lote3.mjs)
+    { metodo: 'GET', padrao: /^\/api\/me$/, resposta: () => ({ json: {
+      ...CLIENTE, can_use_groups: !!estado.grupos_ativos, permissions: { ...CLIENTE.permissions, can_create_groups: !!estado.grupos_ativos },
+      // cenario "convidado" (Minha conta): quem entra como convidado tem o dono da conta preenchido
+      ...(estado.me_convidado ? { owner_id: 'demo-dono', owner_email: 'dono@exemplo.com' } : {}),
+    } }) },
     { metodo: 'GET', padrao: /^\/api\/cameras\?mine=1$/, resposta: () => ({ json: estado.cameras.map((c) => ({ ...c })) }) },
     {
       metodo: 'POST', padrao: /^\/api\/cameras$/,
@@ -87,7 +109,7 @@ export function rotas(estado) {
         const n = estado.proximo++
         const c = { camera_id: `MAADEMO${n}`, name: (corpo?.name || 'Nova câmera'), enabled: true, is_streaming: false,
           youtube_relay_active: false, group_name: null, plan: corpo?.plan || 'basico', location: '', project: corpo?.project || '',
-          brand: corpo?.brand || '', cloud: corpo?.cloud || '', youtube_key: '', quality_tier: corpo?.quality_tier || '1080p',
+          brand: corpo?.brand || '', cloud: corpo?.cloud || '', youtube_key: '', lat: null, lng: null, quality_tier: corpo?.quality_tier || '1080p',
           stream_key: `demo-nova${String(n).padStart(2, '0')}`, playback_id: `demo-pb-${n}` }
         estado.cameras.push(c)
         return { json: { camera_id: c.camera_id, name: c.name, stream_key: c.stream_key, rtmp_url: rtmpUrl(c),
@@ -99,8 +121,55 @@ export function rotas(estado) {
       resposta: (m) => comCamera(estado, m[1], (c) => ({ json: { ...c } })),
     },
     {
+      metodo: 'PUT', padrao: /^\/api\/cameras\/([^/?]+)$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        for (const k of CAMPOS_EDITAVEIS) if (corpo && k in corpo) c[k] = corpo[k]
+        return { json: { ...c } }
+      }),
+    },
+    {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/security$/,
-      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: seguranca(c) })),
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: seguranca(c, estado) })),
+    },
+    {
+      metodo: 'PUT', padrao: /^\/api\/cameras\/([^/?]+)\/security\/privacy$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        c.stream_privacy = corpo?.stream_privacy === 'private' ? 'private' : 'public'
+        return { json: { stream_privacy: c.stream_privacy } }
+      }),
+    },
+    {
+      metodo: 'POST', padrao: /^\/api\/cameras\/([^/?]+)\/security\/domains$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        const d = { id: estado.seq++, domain: String(corpo?.domain || '').trim() }
+        segDe(estado, c.camera_id).domains.push(d)
+        return { json: d }
+      }),
+    },
+    {
+      metodo: 'POST', padrao: /^\/api\/cameras\/([^/?]+)\/security\/ips$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        const i = { id: estado.seq++, cidr: String(corpo?.cidr || '').trim(), label: String(corpo?.label || '').trim() }
+        segDe(estado, c.camera_id).ips.push(i)
+        return { json: i }
+      }),
+    },
+    {
+      metodo: 'POST', padrao: /^\/api\/cameras\/([^/?]+)\/security\/tokens$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        const n = estado.seq++
+        const t = { id: n, label: String(corpo?.label || '').trim(), token: `demo-tk${String(n).padStart(2, '0')}a1b2c3d4e5f6a7b8` }
+        segDe(estado, c.camera_id).tokens.push(t)
+        return { json: t }
+      }),
+    },
+    {
+      metodo: 'DELETE', padrao: /^\/api\/cameras\/([^/?]+)\/security\/(domains|ips|tokens)\/(\d+)$/,
+      resposta: (m) => comCamera(estado, m[1], (c) => {
+        const s = segDe(estado, c.camera_id)
+        s[m[2]] = s[m[2]].filter((x) => String(x.id) !== m[3])
+        return { json: { ok: true } }
+      }),
     },
     {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/caps$/,
@@ -110,9 +179,14 @@ export function rotas(estado) {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/snapshot\.jpg/,
       resposta: () => ({ imagem: pngSolido(320, 180, [30, 41, 59]) }),
     },
-    { metodo: 'GET', padrao: /^\/api\/groups$/, resposta: () => ({ json: [] }) },
-    { metodo: 'GET', padrao: /^\/api\/monitoring\?mine=1$/, resposta: () => ({ json: [] }) },
+    {
+      metodo: 'GET', padrao: /^\/api\/monitoring\?mine=1$/,
+      resposta: () => ({ json: estado.cenario === 'atencao' ? PROBLEMAS.map((p) => ({ ...p })) : [] }),
+    },
     { metodo: 'GET', padrao: /^\/embed\/[^/?]+/, resposta: () => ({ html: HTML_EMBED }) },
     { metodo: 'POST', padrao: /^\/auth\/v1\/otp(\?.*)?$/, resposta: () => ({ json: {} }) },
+    ...rotasLote2(estado, comCamera),
+    ...rotasLote3(estado, comCamera),
+    ...rotasLote4(estado),
   ]
 }
