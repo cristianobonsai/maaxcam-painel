@@ -19,7 +19,7 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'input[placeholder^="Ex.: Loja Centro"]', numero: 'direita' },
-        { por: 'css', nome: 'input[placeholder^="Comece a digitar"]', numero: 'direita' },
+        { por: 'css', nome: 'input[placeholder^="Comece a digitar"]', numero: 'esquerda' },
         { por: 'css', nome: 'div.h-72.w-full', numero: 'direita' },
         { papel: 'button', nome: 'Salvar localização', numero: 'direita' },
       ],
