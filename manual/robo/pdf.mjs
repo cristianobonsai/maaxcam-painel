@@ -75,7 +75,7 @@ strong { color: #0f172a; }
 code { font: 9pt "DejaVu Sans Mono", Menlo, Consolas, monospace; background: #f1f5f9; padding: 0 3pt; border-radius: 2pt; }
 a { color: #2563eb; text-decoration: none; }
 figure { margin: 10pt 0 12pt; break-inside: avoid; text-align: center; }
-figure img { display: block; width: 100%; height: auto; border: .75pt solid #cbd5e1; border-radius: 5pt; }
+figure img { display: block; width: auto; max-width: 100%; height: auto; max-height: 88mm; margin: 0 auto; border: .75pt solid #cbd5e1; border-radius: 5pt; }
 figcaption { margin-top: 4pt; font-size: 8.5pt; font-style: italic; color: #64748b; }
 `
 
@@ -98,7 +98,7 @@ export function montarHtml({ capitulos, versao, data, inicios, baseImg, corpoApe
   <h1>Manual do Usuário</h1>
   <p class="sub">Guia passo a passo do painel de retransmissão de câmeras: como cadastrar, configurar e acompanhar as suas câmeras.</p>
   <p class="versao">Versão ${esc(versao)} · ${esc(data)}</p>
-  <p class="rodape">painel.livebybit.com<br>suporte@livebybit.com</p>
+  <p class="rodape">painel.livebybit.com<br>Suporte: suporte@livebybit.com<br>Contato: contato@livebybit.com</p>
 </section>`
   const toc = capitulos.map((c, i) => `<li><a href="#cap-${esc(c.id)}"><span class="n">${i + 1}</span><span class="t">${esc(c.titulo)}</span><span class="pontos"></span><span class="pag">${inicios[i]}</span></a></li>`).join('\n')
   const sumario = `<section class="sumario">

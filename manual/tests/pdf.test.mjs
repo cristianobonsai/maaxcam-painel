@@ -90,3 +90,14 @@ test('lerCapitulos le os 17 capitulos publicados, na ordem do capitulos.json, co
   }
   assert.ok(join(SRC_MANUAL, 'capitulos.json'))
 })
+
+test('capa traz os dois contatos oficiais (suporte e contato) e o endereco do painel', () => {
+  const capa = montarHtml(base).split('class="sumario"')[0]
+  assert.match(capa, /suporte@livebybit\.com/)
+  assert.match(capa, /contato@livebybit\.com/)
+  assert.match(capa, /painel\.livebybit\.com/)
+})
+
+test('prints do PDF tem altura maxima, para caber mais de um por pagina', () => {
+  assert.match(montarHtml(base), /figure img \{[^}]*max-height: \d+mm/)
+})
