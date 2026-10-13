@@ -49,11 +49,11 @@ export default {
         await page.getByText('Rotação das câmeras').first().waitFor()
       },
       destacar: [
-        { por: 'css', nome: 'button:has-text("Iniciar relay")', numero: 'esquerda' },
+        { por: 'css', nome: 'button:has-text("Iniciar relay")', numero: 'abaixo' },
         { por: 'css', nome: 'div:has(> div:text-is("Rotação das câmeras")) > div.space-y-2', numero: 'esquerda' },
         { por: 'css', nome: 'button:has-text("Adicionar câmera")', numero: 'esquerda' },
-        { por: 'css', nome: 'div[class*="rounded-lg"]:has(> div:text-is("Transmissão YouTube"))', numero: 'esquerda' },
-        { por: 'css', nome: 'div[class*="rounded-lg"]:has(> div:text-is("Áudio em loop"))', numero: 'esquerda' },
+        { por: 'css', nome: 'div[class*="rounded-lg"]:has(> div:text-is("Transmissão YouTube"))', numero: 'direita' },
+        { por: 'css', nome: 'div[class*="rounded-lg"]:has(> div:text-is("Áudio em loop"))', numero: 'direita' },
       ],
     },
     {
@@ -81,10 +81,10 @@ export default {
         await page.getByText('Aplicar áudio agora').first().waitFor()
       },
       destacar: [
-        { por: 'css', nome: 'span:has-text("Degradado")', numero: 'esquerda' },
+        { por: 'css', nome: 'div.mt-1\\.5.flex.flex-wrap.items-center.gap-2', numero: 'esquerda' },
         { por: 'css', nome: 'p:has-text("Alguma câmera está fora do rodízio")', numero: 'esquerda' },
-        { por: 'css', nome: 'span:has-text("Instável · fora do rodízio")', numero: 'abaixo' },
-        { por: 'css', nome: 'button:has-text("Parar relay")', numero: 'esquerda' },
+        { por: 'css', nome: 'span:has-text("Instável · fora do rodízio")', numero: 'acima' },
+        { por: 'css', nome: 'button:has-text("Parar relay")', numero: 'abaixo' },
         { por: 'css', nome: 'button:has-text("Aplicar áudio agora")', numero: 'esquerda' },
       ],
     },

@@ -18,7 +18,10 @@ export default {
     {
       id: 'disponibilidade', titulo: 'Relatório de Disponibilidade', contexto: 'logado', ir: '/painel/relatorios',
       legenda: 'Disponibilidade mostra, para cada câmera, a porcentagem do tempo em que ela esteve online na última semana.',
-      acao: async ({ page }) => { await page.getByText('% online').first().waitFor() },
+      acao: async ({ page }) => {
+        await page.getByText('% online').first().waitFor()
+        await preencherPeriodo(page, BLOCO('Conferencia de SLA por periodo'))
+      },
       destacar: [
         { por: 'css', nome: 'div.flex.gap-1.rounded-lg.border', numero: 'esquerda' },
         { por: 'css', nome: BLOCO('Conferencia de SLA por periodo'), numero: 'esquerda' },
@@ -37,9 +40,9 @@ export default {
         await alinharNoTopo(page, bloco, 70)
       },
       destacar: [
-        { por: 'css', nome: 'input[placeholder="ex: 4"]', numero: 'abaixo' },
+        { por: 'css', nome: 'input[placeholder="ex: 4"]', numero: 'acima' },
         { por: 'css', nome: 'table >> nth=0', numero: 'esquerda' },
-        { por: 'css', nome: 'button:text-is("Exportar PDF")', numero: 'abaixo' },
+        { por: 'css', nome: 'button:text-is("Exportar PDF")', numero: 'acima' },
       ],
     },
     {
@@ -54,8 +57,8 @@ export default {
       },
       destacar: [
         { por: 'css', nome: 'p:has-text("Total de 5 quedas")', numero: 'esquerda' },
-        { por: 'css', nome: 'table >> nth=0', numero: 'esquerda' },
-        { por: 'css', nome: 'td[colspan="3"]', numero: 'esquerda' },
+        { por: 'css', nome: 'tr:has-text("Estacionamento") >> nth=0', numero: 'esquerda' },
+        { por: 'css', nome: 'td[colspan="3"]', numero: 'direita' },
       ],
     },
     {
@@ -70,8 +73,8 @@ export default {
         await alinharNoTopo(page, bloco, 70)
       },
       destacar: [
-        { por: 'css', nome: `${BLOCO('Consultar periodo especifico')} select`, numero: 'abaixo' },
-        { por: 'css', nome: 'p:has-text("ficou")', numero: 'esquerda' },
+        { por: 'css', nome: `${BLOCO('Consultar periodo especifico')} select`, numero: 'esquerda' },
+        { por: 'css', nome: 'p:has-text("ficou")', numero: 'direita' },
         { por: 'css', nome: 'table >> nth=0', numero: 'esquerda' },
       ],
     },

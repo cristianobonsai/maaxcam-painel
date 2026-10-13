@@ -111,7 +111,8 @@ export async function executar(argv) {
   const rede = { app: 0, mock: 0, estatico: 0, abortadas: [] }
   const errosApi = []
 
-  const browser = await chromium.launch()
+  // --lang: o campo de data do Chromium usa o idioma do navegador (dd/mm/aaaa, como o cliente ve)
+  const browser = await chromium.launch({ args: ['--lang=pt-BR'] })
   const contextos = {}
   async function contexto(tipo) {
     if (contextos[tipo]) return contextos[tipo]
