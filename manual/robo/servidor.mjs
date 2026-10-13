@@ -20,7 +20,8 @@ export function servirEstatico(dir, porta) {
   const raiz = normalize(dir)
   const servidor = createServer((req, res) => {
     const { pathname } = new URL(req.url, 'http://127.0.0.1')
-    let arquivo = arquivoDe(raiz, pathname)
+    let arquivo
+    try { arquivo = arquivoDe(raiz, pathname) } catch { res.writeHead(400); res.end('requisicao invalida'); return }   // % malformado
     if (!arquivo) {
       if (extname(pathname)) { res.writeHead(404); res.end('nao encontrado'); return }
       arquivo = join(raiz, 'index.html')                                   // rota SPA

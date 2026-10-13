@@ -28,7 +28,10 @@ export function parsearArgs(argv) {
     else if (argv[i] === '--porta') r.porta = Number(argv[++i])
     else if (argv[i] === '--painel') r.painel = argv[++i]
   }
-  if (!r.cap) throw new Error('Informe o capítulo: --cap primeiros-passos')
+  // o nome do capitulo vira pasta (rmSync) e import(): so slug simples, nunca caminho nem pasta reservada do robo
+  if (!r.cap || !/^[a-z0-9-]+$/.test(r.cap) || ['build', 'falhas'].includes(r.cap)) {
+    throw new Error('Informe o capítulo (letras minúsculas, números e hífen): --cap primeiros-passos')
+  }
   return r
 }
 
@@ -83,8 +86,10 @@ export async function executar(argv) {
   const contextos = {}
   async function contexto(tipo) {
     if (contextos[tipo]) return contextos[tipo]
-    const ctx = await browser.newContext({ viewport: VIEWPORT, locale: 'pt-BR' })
+    // service workers bloqueados: senao uma requisicao feita por eles escaparia do ctx.route
+    const ctx = await browser.newContext({ viewport: VIEWPORT, locale: 'pt-BR', serviceWorkers: 'block' })
     ctx.setDefaultTimeout(10_000)
+    await ctx.routeWebSocket(/.*/, (ws) => { rede.abortadas.push(`WS ${ws.url()}`); ws.close() })   // websocket tambem nao sai
     if (tipo === 'logado') {
       await ctx.addInitScript(([chave, valor]) => localStorage.setItem(chave, valor), [CHAVE_SESSAO, JSON.stringify(sessaoFalsa())])
     }
@@ -105,9 +110,11 @@ export async function executar(argv) {
         if (r.json !== undefined) return route.fulfill({ status: r.status, contentType: 'application/json', body: JSON.stringify(r.json), headers: cors })
         return route.fulfill({ status: r.status, headers: cors })
       } catch (e) {
-        if (!(e instanceof ErroApiSemDado)) throw e
-        errosApi.push(e)
-        return route.fulfill({ status: 501, contentType: 'application/json', body: JSON.stringify({ detail: e.message }), headers: cors })
+        // qualquer falha do handler vira erro registrado (o passo quebra dizendo o que foi) + 500 para a pagina
+        if (e instanceof ErroApiSemDado) errosApi.push(e)
+        else errosApi.push(Object.assign(new Error(`erro na API de demonstração: ${e.message}`), { interno: true }))
+        return route.fulfill({ status: e instanceof ErroApiSemDado ? 501 : 500, contentType: 'application/json',
+          body: JSON.stringify({ detail: e.message }), headers: cors })
       }
     })
     contextos[tipo] = { ctx, page: await ctx.newPage() }
@@ -122,16 +129,25 @@ export async function executar(argv) {
       const ctxLoc = { relatorio, capitulo: roteiro.id, passo: passo.id, espera: 4000 }
       const loc = (alvo) => localizar(page, alvo, ctxLoc)
       const arquivo = join(capDir, nomeArquivo(roteiro.id, indice, passo.id))
+      const abortadasAntes = rede.abortadas.length
+      // requisicao bloqueada (fora da lista) ou erro da API de demonstracao NUNCA passam em silencio: o passo quebra
+      const conferirRede = () => {
+        if (errosApi.length) throw errosApi[0]
+        if (rede.abortadas.length > abortadasAntes) {
+          throw new Error(`requisição bloqueada pelo robô: ${rede.abortadas.slice(abortadasAntes).join(' | ')}`)
+        }
+      }
       try {
         if (passo.ir) await page.goto(servidor.origem + passo.ir, { waitUntil: 'domcontentloaded' })
         if (passo.acao) await passo.acao({ page, loc })
         // espera a rede aquietar, mas no maximo 3 s (players/iframes mantem atividade e nao devem travar o robo)
         await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
         await page.waitForTimeout(400)
-        if (errosApi.length) throw errosApi[0]
+        conferirRede()                                                // antes de localizar: erro de API explica o "nao achei"
         const alvos = []
         for (const a of passo.destacar) alvos.push(await loc(a))
         await destacarEFotografar(page, { alvos, arquivo, numeros: true, lados: passo.destacar.map((a) => a.numero) })
+        conferirRede()                                                // depois do print: algo falhou durante a captura
         relatorio.ok(roteiro.id, passo.id, `print ${nomeArquivo(roteiro.id, indice, passo.id)}`)
         manifest.push({ arquivo: nomeArquivo(roteiro.id, indice, passo.id), id: passo.id, titulo: passo.titulo,
           legenda: passo.legenda, destacados: passo.destacar.length })
@@ -148,7 +164,16 @@ export async function executar(argv) {
     await servidor.fechar()
   }
 
+  // requisicao tardia (depois do ultimo print) tambem conta: nada sai nem falha sem registro
+  if (errosApi.length && !relatorio.temQuebra()) {
+    const e = errosApi[0]
+    if (e instanceof ErroApiSemDado) relatorio.apiSemDado(roteiro.id, 'final', e.metodo, e.caminho)
+    else relatorio.quebra(roteiro.id, 'final', e.message)
+  }
+  const completa = manifest.length === roteiro.passos.length
   writeFileSync(join(capDir, 'manifest.json'), JSON.stringify(manifest, null, 2))
+  // status.json e o que o "publicar" confere: so rodada completa e sem quebra vai para o painel
+  writeFileSync(join(capDir, 'status.json'), JSON.stringify({ quebra: relatorio.temQuebra() || !completa, passos: manifest.length, esperados: roteiro.passos.length }))
   writeFileSync(join(saida, 'relatorio.md'), relatorio.toMarkdown())
   console.log(`[manual] rede: app=${rede.app} mock=${rede.mock} estatico=${rede.estatico} abortadas=${rede.abortadas.length}`)
   for (const u of rede.abortadas) console.log(`[manual]   abortada: ${u}`)

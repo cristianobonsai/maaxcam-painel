@@ -32,14 +32,20 @@ const rtmpUrl = (c) => `rtmp://ingest.livebybit.com/live/${c.stream_key}`
 const hlsUrl = (c) => `https://play.livebybit.com/v2/hls/${c.playback_id}.m3u8`
 const achar = (estado, id) => estado.cameras.find((c) => c.camera_id === id)
 
-const CAPS = { embed: true, youtube: true, audio: true, snapshot: true }
+// liberacoes do plano: Basico nao tem embed, YouTube, audio nem foto (as telas mostram o cadeado)
+const capsDoPlano = (c) => {
+  const livre = c.plan !== 'basico'
+  return { embed: livre, youtube: livre, audio: livre, snapshot: livre }
+}
+const NAO_ENCONTRADA = { status: 404, json: { detail: 'Câmera não encontrada' } }
+const comCamera = (estado, id, fazer) => { const c = achar(estado, id); return c ? fazer(c) : NAO_ENCONTRADA }
 
 function seguranca(c) {
   return {
     camera_id: c.camera_id, name: c.name, rtmp_url: rtmpUrl(c), hls_url: hlsUrl(c), stream_privacy: 'public',
     playback_id: c.playback_id, preview_token: '', relay_running: false, youtube_key: c.youtube_key || '',
     tokens: [], ips: [], domains: [], in_group: false, in_active_group: false, has_audio: false, audio_name: '',
-    caps: CAPS,
+    caps: capsDoPlano(c),
   }
 }
 
@@ -90,13 +96,16 @@ export function rotas(estado) {
     },
     {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)$/,
-      resposta: (m) => ({ json: { ...achar(estado, m[1]) } }),
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: { ...c } })),
     },
     {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/security$/,
-      resposta: (m) => ({ json: seguranca(achar(estado, m[1])) }),
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: seguranca(c) })),
     },
-    { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/caps$/, resposta: () => ({ json: CAPS }) },
+    {
+      metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/caps$/,
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: capsDoPlano(c) })),
+    },
     {
       metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/snapshot\.jpg/,
       resposta: () => ({ imagem: pngSolido(320, 180, [30, 41, 59]) }),

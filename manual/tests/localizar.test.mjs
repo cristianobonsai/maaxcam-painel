@@ -24,6 +24,25 @@ test('escolherCandidato: exato, unico, ambiguo e nenhum', () => {
   assert.equal(escolherCandidato('X', ['X', 'X']).motivo, 'ambiguo')          // duplicata exata nao e adivinhada
 })
 
+test('autoajuste so aceita candidato com a MESMA primeira palavra (nunca troca a funcao do botao)', () => {
+  assert.equal(escolherCandidato('Ativar câmera', ['Desativar câmera']).motivo, 'nenhum')
+  assert.equal(escolherCandidato('Iniciar', ['Reiniciar']).motivo, 'nenhum')
+  assert.equal(escolherCandidato('Excluir câmera', ['Incluir câmera']).motivo, 'nenhum')
+  assert.equal(escolherCandidato('Remover câmera', ['Mover câmera']).motivo, 'nenhum')
+  const ok = escolherCandidato('Nova câmera', ['Nova camara'])
+  assert.deepEqual([ok.indice, ok.motivo], [0, 'unico'])
+})
+
+test('localizar usa correspondencia EXATA para nomes em texto (nao por pedaco) e livre para regex', async () => {
+  const chamadas = []
+  const pagina = { getByRole(papel, opcoes) { chamadas.push(opcoes); return { count: async () => 1 } } }
+  const ctx = { relatorio: { ajuste() {} }, capitulo: 'c', passo: 'p' }
+  await localizar(pagina, { papel: 'button', nome: 'Copiar' }, ctx)
+  await localizar(pagina, { papel: 'textbox', nome: /^Nome/ }, ctx)
+  assert.equal(chamadas[0].exact, true)
+  assert.equal(chamadas[1].exact, undefined)
+})
+
 // ---- pagina falsa (so o que o localizador usa do Playwright) ----
 function elemento(texto, visivel = true) {
   return { texto, innerText: async () => texto, isVisible: async () => visivel, getAttribute: async () => null }

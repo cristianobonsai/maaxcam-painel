@@ -45,6 +45,7 @@ export default function ManualUsuario() {
                 <li key={c.id}>
                   <button
                     onClick={() => setAtual(c.id)}
+                    aria-current={atual === c.id ? 'page' : undefined}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm font-medium ${
                       atual === c.id
                         ? 'bg-blue-500/10 text-white border-l-2 border-blue-500'

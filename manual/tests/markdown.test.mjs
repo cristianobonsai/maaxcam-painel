@@ -43,6 +43,7 @@ test('mdParaHtml: so links http(s) ou internos viram <a>', () => {
   assert.match(mdParaHtml('[site](https://livebybit.com)'), /<a href="https:\/\/livebybit\.com" target="_blank" rel="noopener noreferrer">site<\/a>/)
   assert.match(mdParaHtml('[painel](/painel/cameras)'), /<a href="\/painel\/cameras"/)
   assert.ok(!mdParaHtml('[x](javascript:alert(1))').includes('<a '))
+  assert.ok(!mdParaHtml('[x](//evil.com/p)').includes('<a '))                         // protocolo relativo nao vira link
 })
 
 test('texto.md: sem dado real nem palavra proibida e referencia exatamente os 8 prints do roteiro', () => {

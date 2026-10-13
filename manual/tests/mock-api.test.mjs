@@ -66,6 +66,24 @@ test('rotas da tela Gerenciar devolvem os campos que a tela le', () => {
   assert.equal(m.responder('POST', '/auth/v1/otp?redirect_to=http%3A%2F%2F127.0.0.1%3A4173%2Fpainel', {}).status, 200)
 })
 
+test('caps (liberacoes do plano) seguem o plano da camera: Basico bloqueia embed/youtube/audio/foto', () => {
+  const m = novoMock()
+  const pro = m.responder('GET', '/api/cameras/MAADEMO1/security').json.caps       // MAADEMO1 = Pro
+  assert.deepEqual(pro, { embed: true, youtube: true, audio: true, snapshot: true })
+  const basico = m.responder('GET', '/api/cameras/MAADEMO2/security').json.caps    // MAADEMO2 = Basico
+  assert.deepEqual(basico, { embed: false, youtube: false, audio: false, snapshot: false })
+  assert.deepEqual(m.responder('GET', '/api/cameras/MAADEMO2/caps').json, basico)
+  const nova = m.responder('POST', '/api/cameras', { name: 'Portão', plan: 'basico' }).json
+  assert.deepEqual(m.responder('GET', `/api/cameras/${nova.camera_id}/caps`).json, basico)
+})
+
+test('camera inexistente: 404 (nao 200 vazio nem excecao)', () => {
+  const m = novoMock()
+  for (const caminho of ['/api/cameras/NAOEXISTE', '/api/cameras/NAOEXISTE/security', '/api/cameras/NAOEXISTE/caps']) {
+    assert.equal(m.responder('GET', caminho).status, 404, caminho)
+  }
+})
+
 test('snapshot devolve um PNG valido', () => {
   const r = novoMock().responder('GET', '/api/cameras/MAADEMO1/snapshot.jpg')
   assert.ok(Buffer.isBuffer(r.imagem))

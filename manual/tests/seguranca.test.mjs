@@ -45,6 +45,13 @@ test('varrerTexto: texto limpo nao tem violacao', () => {
   assert.deepEqual(varrerTexto('cliente@exemplo.com, 203.0.113.9, rtmp://ingest.livebybit.com/live/demo-AbC'), [])
 })
 
+test('varrerTexto: plural e variacoes das palavras proibidas tambem sao acusados', () => {
+  for (const t of ['leitura de placas', 'Placas', 'ALPR', 'alpr', 'LPRs'.replace('s', '')]) {
+    assert.ok(varrerTexto(t).length >= 1, t)
+  }
+  assert.deepEqual(varrerTexto('A aplicação mostra a replicação.'), [])        // sem falso positivo em palavras comuns
+})
+
 test('varrerTexto: acusa e-mail real, IP real, chave do supabase e palavras proibidas', () => {
   assert.equal(varrerTexto('joao@gmail.com').length, 1)
   assert.equal(varrerTexto('177.138.193.187').length, 1)

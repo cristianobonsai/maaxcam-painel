@@ -39,6 +39,6 @@ export function varrerTexto(texto) {
     if (!m[0].startsWith('203.0.113.')) violacoes.push(`IP: ${m[0]}`)
   }
   if (/sb_(publishable|secret)/i.test(texto)) violacoes.push('chave do supabase')
-  for (const m of texto.matchAll(/\b(placa|lpr|carbigdata)\b/gi)) violacoes.push(`palavra proibida: ${m[0]}`)
+  for (const m of texto.matchAll(/\b(placas?|a?lpr|carbigdata)\b/gi)) violacoes.push(`palavra proibida: ${m[0]}`)
   return violacoes
 }

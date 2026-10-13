@@ -9,6 +9,9 @@ test('parsearArgs: cap, porta e painel com padroes', () => {
   assert.deepEqual(parsearArgs(['--cap', 'x']), { cap: 'x', porta: 4173, painel: '..' })
   assert.equal(parsearArgs(['--cap', 'x', '--painel', '/opt/painel']).painel, '/opt/painel')
   assert.throws(() => parsearArgs([]), /--cap/)
+  for (const ruim of ['../capitulos/primeiros-passos', 'build', 'falhas', 'A B', '', 'x/y']) {
+    assert.throws(() => parsearArgs(['--cap', ruim]), /--cap/, ruim)                  // nada de caminho nem nome reservado
+  }
 })
 
 test('nomeArquivo: nome estavel com dois digitos', () => {
@@ -37,6 +40,15 @@ test('roteiro de Primeiros passos: 8 passos com ids unicos, contexto valido e al
       assert.ok(a.por ? ['texto', 'css'].includes(a.por) : !!a.papel, p.id)
       assert.ok(a.numero === undefined || ['esquerda', 'direita', 'acima', 'abaixo'].includes(a.numero), p.id)
     }
+  }
+})
+
+test('o codigo-fonte do roteiro e dos dados ficticios nao tem dado real (constantes digitadas na tela)', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { fileURLToPath } = await import('node:url')
+  for (const rel of ['../capitulos/primeiros-passos/roteiro.mjs', '../dados/rotas.mjs']) {
+    const fonte = readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
+    assert.deepEqual(varrerTexto(fonte), [], rel)
   }
 })
 

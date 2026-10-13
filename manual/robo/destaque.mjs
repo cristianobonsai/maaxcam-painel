@@ -51,7 +51,7 @@ function remover() {
   document.querySelectorAll('[data-manual-destaque]').forEach((e) => e.remove())
 }
 
-/** alvos: Locators do Playwright; arquivo: caminho do PNG (viewport 1280x800 definido no contexto). */
+/** alvos: Locators do Playwright; arquivo: caminho do PNG (viewport 1440x900 definido no contexto). */
 export async function destacarEFotografar(page, { alvos, arquivo, numeros = true, lados = [] }) {
   const vp = typeof page.viewportSize === 'function' ? page.viewportSize() : null
   const tela = vp ? { largura: vp.width, altura: vp.height } : undefined

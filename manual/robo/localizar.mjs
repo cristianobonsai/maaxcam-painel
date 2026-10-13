@@ -39,9 +39,11 @@ export function escolherCandidato(alvo, textos, limiar = 0.7) {
   const exatos = textos.map((t, i) => (normalizar(t) === normalizar(alvo) ? i : -1)).filter((i) => i >= 0)
   if (exatos.length === 1) return { indice: exatos[0], motivo: 'exato', pontuacao: 1 }
   if (exatos.length > 1) return { indice: null, motivo: 'ambiguo', pontuacao: 1 }
+  // so aceita candidato que comece com a MESMA palavra: "Ativar" nunca vira "Desativar" (troca a funcao do botao)
+  const primeira = (s) => normalizar(s).split(' ')[0]
   const parecidos = textos
     .map((t, i) => ({ i, p: similaridade(alvo, t) }))
-    .filter((x) => x.p >= limiar)
+    .filter((x) => x.p >= limiar && primeira(textos[x.i]) === primeira(alvo))
   if (parecidos.length === 1) return { indice: parecidos[0].i, motivo: 'unico', pontuacao: parecidos[0].p }
   if (parecidos.length > 1) return { indice: null, motivo: 'ambiguo', pontuacao: Math.max(...parecidos.map((x) => x.p)) }
   return { indice: null, motivo: 'nenhum', pontuacao: 0 }
@@ -52,7 +54,8 @@ const textoDoAlvo = (nome) => (typeof nome === 'string' ? nome : nome.source.rep
 function construirLocator(page, papel, nome, alvo) {
   if (alvo.por === 'texto') return page.getByText(nome)
   if (alvo.por === 'css') return page.locator(nome)
-  return page.getByRole(papel, { name: nome })
+  // nome em texto = correspondencia EXATA (nao "contem"); regex continua livre
+  return page.getByRole(papel, typeof nome === 'string' ? { name: nome, exact: true } : { name: nome })
 }
 
 const pausa = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

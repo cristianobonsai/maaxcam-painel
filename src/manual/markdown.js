@@ -9,7 +9,7 @@ function inline(texto, base) {
   let t = esc(texto)
   t = t.replace(/!\[([^\]]*)\]\(img:([a-z0-9-]+)\)/g,
     (_, alt, id) => `<img src="${base}${id}.png" alt="${alt}" loading="lazy" onerror="this.style.display='none'" class="manual-img" />`)
-  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g,
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/(?!\/)[^)\s]*)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
   t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>')
