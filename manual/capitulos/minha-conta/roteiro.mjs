@@ -4,6 +4,7 @@ import { aplicarCenarioConta } from '../../dados/rotas-lote4.mjs'
 import { alinharNoTopo } from '../../robo/ajudantes.mjs'
 
 const ACEITE = 'div.rounded-lg:has(a[href="/termos.pdf"])'
+const ACEITE_OK = 'div.rounded-lg:has-text("Termos aceitos em")'
 const ZONA_PERIGO = 'div.mt-8.rounded-xl'
 
 export default {
@@ -40,10 +41,10 @@ export default {
       acao: async ({ page }) => {
         await page.getByRole('button', { name: 'Salvar dados de cobrança' }).click()
         await page.getByText('Termos aceitos em').first().waitFor()
-        await alinharNoTopo(page, ACEITE, 430)
+        await alinharNoTopo(page, ACEITE_OK, 430)
       },
       destacar: [
-        { por: 'css', nome: ACEITE, numero: 'esquerda' },
+        { por: 'css', nome: ACEITE_OK, numero: 'esquerda' },
         { por: 'css', nome: 'span:text-is("✓ Salvo")', numero: 'direita' },
       ],
     },
