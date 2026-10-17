@@ -69,6 +69,27 @@ test('monitoramento da camera: padrao saudavel; cenarios problemas e duplicada; 
   limpo([ok, sem, p, d])
 })
 
+test('monitoramento: cenarios cronica e cronica-economico; PUT do resumo semanal liga e desliga', () => {
+  const m = novoMock()
+  assert.equal(m.responder('GET', '/api/cameras/MAADEMO1/monitoring').json.chronic, undefined)
+  m.estado().monitoramento = 'cronica'
+  const c = m.responder('GET', '/api/cameras/MAADEMO1/monitoring').json.chronic
+  assert.equal(c.level, 'cuidado')
+  assert.equal(c.economy, false)
+  assert.equal(c.summary_on, true)
+  assert.equal(c.can_edit, true)
+  assert.ok(c.drops_week > 0 && c.days_bad > 0 && c.what_to_check.length >= 3)
+  assert.deepEqual(m.responder('PUT', '/api/cameras/MAADEMO1/chronic-summary', { on: false }).json, { summary_on: false })
+  assert.equal(m.responder('GET', '/api/cameras/MAADEMO1/monitoring').json.chronic.summary_on, false)
+  assert.deepEqual(m.responder('PUT', '/api/cameras/MAADEMO1/chronic-summary', { on: true }).json, { summary_on: true })
+  m.estado().monitoramento = 'cronica-economico'
+  const e = m.responder('GET', '/api/cameras/MAADEMO1/monitoring').json.chronic
+  assert.equal(e.level, 'economico')
+  assert.equal(e.economy, true)
+  assert.equal(m.responder('PUT', '/api/cameras/NAOEXISTE/chronic-summary', { on: false }).status, 404)
+  limpo([c, e])
+})
+
 test('cartoes: GET /card traz itens de introducao e offline; PUT /card/items grava; preview e uma imagem SVG', () => {
   const m = novoMock()
   const c = m.responder('GET', '/api/cameras/MAADEMO1/card').json

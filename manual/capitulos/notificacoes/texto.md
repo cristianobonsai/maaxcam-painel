@@ -102,3 +102,9 @@ Nas mensagens de **sem sinal**, **continua sem sinal** e **conexão oscilando**,
 Ao tocar em um botão de silenciar, abre uma página pedindo que você **confirme**. Nada muda antes de você confirmar, e a mesma página tem a opção de **desfazer**. Você também pode silenciar e reativar pelo painel, em **Gerenciar → Monitoramento** (veja o capítulo **Gerenciar: Monitoramento**).
 
 **Silenciar vale só para os avisos.** O estado e o histórico da câmera continuam no painel. Os convidados recebem os mesmos avisos, mas **sem os botões de silenciar**.
+
+## 10. Resumo semanal de uma câmera que oscila
+
+Se uma câmera fica **sem sinal várias vezes por semana**, passamos a acompanhá-la de perto e o dono da conta recebe uma mensagem acolhedora, por **e-mail** (sempre, no e-mail da conta) e pelos canais que você configurou aqui. Ela chega **no máximo uma vez por dia**, junta todas as câmeras da conta em uma só mensagem e o resumo semanal sai na **segunda-feira, às 10h**, respeitando o seu **horário de silêncio**. A mensagem traz quantas vezes a câmera ficou sem sinal, em quantos dos 7 dias, o horário mais comum e o que costuma resolver. Quando a câmera estabiliza, avisamos também.
+
+Para parar de receber o resumo de uma câmera, use o botão **Parar de receber o resumo desta câmera** na própria mensagem (abre uma página para confirmar, com a opção de desfazer) ou o botão na aba **Monitoramento** da câmera (veja o capítulo **Gerenciar: Monitoramento**). **Parar o resumo não desliga os avisos de queda**, que seguem como você configurou. Os convidados não recebem esse resumo.

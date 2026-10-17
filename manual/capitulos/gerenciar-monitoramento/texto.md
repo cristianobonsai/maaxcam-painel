@@ -57,3 +57,19 @@ Esses botões aparecem para o dono da conta e para os convidados com permissão 
 Com os avisos silenciados, a linha mostra **Silenciados até** a data (**1**), ou **Silenciados** quando for sem prazo. Para voltar a receber, clique em **Reativar** (**2**).
 
 **Silenciar vale só para os avisos.** O estado da câmera e o histórico continuam aparecendo normalmente aqui na aba. Você também pode silenciar direto na mensagem de aviso, pelos botões que chegam no Telegram e no e-mail (veja o capítulo **Notificações**).
+
+## 5. Quando estamos acompanhando a câmera
+
+![Faixa azul "Estamos acompanhando esta câmera" e o resumo semanal](img:gerenciar-monitoramento-06-acompanhando)
+
+Quando uma câmera fica **sem sinal várias vezes por semana**, nós passamos a acompanhá-la de perto. Na aba aparece a faixa azul **Estamos acompanhando esta câmera** (**2**), que mostra quantas vezes ela ficou sem sinal na última semana, em quantos dos 7 dias, e uma lista do que costuma resolver: conferir o roteador e o cabo de rede, trocar o Wi-Fi por cabo, ver se a internet do local cai nesses horários e atualizar o firmware do equipamento.
+
+Junto vem a linha **Resumo semanal desta câmera** (**1**). Toda **segunda-feira, às 10h**, o dono da conta recebe um resumo curto, por e-mail e pelos canais que estiverem configurados em **Notificações**, com os números da semana e as mesmas dicas. Se preferir não receber o resumo de uma câmera, clique em **Parar de receber o resumo semanal** (**3**). O botão passa a dizer **Receber o resumo semanal**, para você voltar a receber quando quiser. Também dá para parar direto pelo botão que vem na própria mensagem.
+
+**Parar o resumo não desliga os avisos de queda:** eles continuam como você configurou em **Notificações**. O botão aparece para o dono da conta e para os convidados com permissão de editar as notificações. Quando a câmera ficar **7 dias seguidos estável**, a faixa some sozinha e enviamos uma mensagem avisando. Se quiser ajuda para olhar a câmera, fale com o nosso suporte.
+
+## 6. Modo econômico
+
+![Aviso do modo econômico](img:gerenciar-monitoramento-07-modo-economico)
+
+Se a câmera segue oscilando por muitas semanas, para manter o serviço estável para você e para os outros clientes **reduzimos temporariamente** a frequência da foto automática e dos reinícios da transmissão para o YouTube dessa câmera (**1**). **A imagem e o link seguem funcionando normalmente.** Quando ela ficar **7 dias estável**, tudo volta ao normal sozinho, sem você precisar pedir nada.

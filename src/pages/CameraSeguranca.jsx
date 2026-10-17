@@ -103,6 +103,17 @@ function MonitorPanel({ id }) {
     } catch (e) { setNoticeErr(msg(e)) }
     finally { setNoticeBusy(false) }
   }
+  // [CRÔNICAS] parar/retomar o resumo semanal desta câmera (Etapa 3B)
+  const [chronicBusy, setChronicBusy] = useState(false)
+  const [chronicErr, setChronicErr] = useState('')
+  const setChronicSummary = async (on) => {
+    setChronicBusy(true); setChronicErr('')
+    try {
+      const res = await api.put(`/api/cameras/${id}/chronic-summary`, { on })
+      setMon(prev => (prev && prev.chronic ? { ...prev, chronic: { ...prev.chronic, summary_on: res.summary_on } } : prev))
+    } catch (e) { setChronicErr(msg(e)) }
+    finally { setChronicBusy(false) }
+  }
 
   if (loading) return <p className="text-sm text-slate-400">Carregando monitoramento…</p>
   if (err) return <p className="text-sm text-red-400">{err}</p>
@@ -138,6 +149,7 @@ function MonitorPanel({ id }) {
   const hist = mon.diag?.enabled ? (mon.history || []) : null
   const histCor = { queda: 'text-red-300', volta: 'text-emerald-300', troca_ip: 'text-orange-300', bloqueio: 'text-orange-300', rodizio: 'text-orange-300', plataforma: 'text-slate-400' }
 
+  const chronic = mon.chronic || null
   const notice = mon.notice || null
   const noticeText = !notice || notice.mode === 'off' ? 'Ligados'
     : notice.mode === 'sempre' ? 'Silenciados'
@@ -165,7 +177,37 @@ function MonitorPanel({ id }) {
           {mostraSaude && <Row label="Rodízio do grupo" dot={saude.c} text={saude.t} />}
           <Row label="Ajustes (configuração)" dot={ajustes.c} text={ajustes.t} />
           {notice && <Row label="Avisos desta câmera" dot={notice.mode === 'off' ? 'green' : 'yellow'} text={noticeText} />}
+          {chronic && <Row label="Resumo semanal desta câmera" dot={chronic.summary_on ? 'green' : 'gray'} text={chronic.summary_on ? 'Ligado' : 'Desligado'} />}
         </div>
+        {chronic && (
+          <div className="rounded-md bg-sky-500/10 border border-sky-500/30 text-sky-100 text-sm px-3 py-2 space-y-2">
+            <div>
+              <strong>Estamos acompanhando esta câmera.</strong> Na última semana ela ficou sem sinal <strong>{chronic.drops_week} {chronic.drops_week === 1 ? 'vez' : 'vezes'}</strong>, em <strong>{chronic.days_bad} dos 7 dias</strong>. Queremos que ela funcione bem para você, por isso estamos acompanhando de perto.
+            </div>
+            {chronic.economy && (
+              <div>
+                Para manter o serviço estável, <strong>reduzimos temporariamente</strong> a frequência da foto automática e dos reinícios da transmissão para o YouTube desta câmera. <strong>A imagem e o link seguem funcionando normalmente.</strong> Quando ela ficar 7 dias estável, tudo volta ao normal sozinho.
+              </div>
+            )}
+            {(chronic.what_to_check || []).length > 0 && (
+              <>
+                <div className="font-medium">O que costuma resolver:</div>
+                <ul className="list-disc pl-5 space-y-0.5">
+                  {chronic.what_to_check.map((w, i) => <li key={i}>{w}</li>)}
+                </ul>
+              </>
+            )}
+            {chronic.can_edit && (
+              <div>
+                <button type="button" disabled={chronicBusy} className={noticeBtn} onClick={() => setChronicSummary(!chronic.summary_on)}>
+                  {chronic.summary_on ? 'Parar de receber o resumo semanal' : 'Receber o resumo semanal'}
+                </button>
+              </div>
+            )}
+            {chronicErr && <p className="text-xs text-red-300">{chronicErr}</p>}
+            <p className="text-xs text-sky-200/70">Precisa de ajuda? Escreva para suporte@livebybit.com.</p>
+          </div>
+        )}
         {notice && (
           <div className="space-y-2">
             {notice.can_edit && (

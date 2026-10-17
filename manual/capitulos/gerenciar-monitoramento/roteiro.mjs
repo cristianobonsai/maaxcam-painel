@@ -78,5 +78,34 @@ export default {
         { papel: 'button', nome: 'Reativar', numero: 'direita' },
       ],
     },
+    {
+      id: 'acompanhando', titulo: 'Estamos acompanhando esta câmera', contexto: 'logado',
+      legenda: 'Quando a câmera cai com frequência, o painel mostra que estamos acompanhando e o que costuma resolver.',
+      acao: async ({ page, loc, mock }) => {
+        mock.estado().avisos = {}
+        mock.estado().monitoramento = 'cronica'
+        await page.reload()
+        await abrirMonitoramento({ page, loc })
+        await page.getByText('Estamos acompanhando esta câmera.').first().waitFor()
+      },
+      destacar: [
+        { por: 'css', nome: LINHA('Resumo semanal desta câmera'), numero: 'esquerda' },
+        { por: 'css', nome: 'div[class*="bg-sky-500/10"]:has-text("Estamos acompanhando esta câmera.")', numero: 'esquerda' },
+        { papel: 'button', nome: 'Parar de receber o resumo semanal', numero: 'direita' },
+      ],
+    },
+    {
+      id: 'modo-economico', titulo: 'Modo econômico', contexto: 'logado',
+      legenda: 'Se a câmera continua oscilando por muito tempo, reduzimos temporariamente a foto automática e os reinícios do YouTube. A imagem segue normal.',
+      acao: async ({ page, loc, mock }) => {
+        mock.estado().monitoramento = 'cronica-economico'
+        await page.reload()
+        await abrirMonitoramento({ page, loc })
+        await page.getByText('reduzimos temporariamente').first().waitFor()
+      },
+      destacar: [
+        { por: 'css', nome: 'div[class*="bg-sky-500/10"]:has-text("reduzimos temporariamente")', numero: 'esquerda' },
+      ],
+    },
   ],
 }
