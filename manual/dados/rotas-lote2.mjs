@@ -41,6 +41,7 @@ function monitoramento(c, cenario, aviso = 'off', resumoLigado = true) {
     m.ingest = { duplicate: true, ip_blocked: '203.0.113.7', since_ts: TS_EXEMPLO, attempts: 12 }
   }
   if (cenario === 'cronica' || cenario === 'cronica-economico') {
+    Object.assign(m, { estabilidade: 'instavel', drops_24h: 9 })      // camera que oscila: tambem aparece instavel nas ultimas 24 h
     m.chronic = { level: cenario === 'cronica' ? 'cuidado' : 'economico', drops_week: 38, days_bad: 6,
       what_to_check: CRONICA_CONFERIR, economy: cenario === 'cronica-economico', summary_on: resumoLigado, can_edit: true }
   }
