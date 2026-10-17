@@ -16,7 +16,11 @@ function avisoPublico(modo) {
   return { mode: modo, muted_until: modo === '7d' ? TS_SILENCIO_ATE : null, muted_forever: modo === 'sempre', can_edit: true }
 }
 
-function monitoramento(c, cenario, aviso = 'off') {
+// "O que costuma resolver" do bloco `chronic` (mesmo texto que o servidor devolve)
+const CRONICA_CONFERIR = ['Conferir o roteador e o cabo de rede da câmera', 'Trocar o Wi-Fi por cabo, se for o caso',
+  'Ver se a internet do local cai nesses horários', 'Atualizar o firmware do equipamento']
+
+function monitoramento(c, cenario, aviso = 'off', resumoLigado = true) {
   const no_ar = !!c.is_streaming
   const m = {
     tipo: c.youtube_key ? 'youtube' : 'hls',
@@ -35,6 +39,10 @@ function monitoramento(c, cenario, aviso = 'off') {
   }
   if (cenario === 'duplicada') {
     m.ingest = { duplicate: true, ip_blocked: '203.0.113.7', since_ts: TS_EXEMPLO, attempts: 12 }
+  }
+  if (cenario === 'cronica' || cenario === 'cronica-economico') {
+    m.chronic = { level: cenario === 'cronica' ? 'cuidado' : 'economico', drops_week: 38, days_bad: 6,
+      what_to_check: CRONICA_CONFERIR, economy: cenario === 'cronica-economico', summary_on: resumoLigado, can_edit: true }
   }
   return m
 }
@@ -140,7 +148,14 @@ export function rotasLote2(estado, comCamera) {
 
     // monitoramento
     { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/monitoring$/,
-      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: monitoramento(c, estado.monitoramento, (estado.avisos ||= {})[c.camera_id] || 'off') })) },
+      resposta: (m) => comCamera(estado, m[1], (c) => ({ json: monitoramento(c, estado.monitoramento, (estado.avisos ||= {})[c.camera_id] || 'off',
+        (estado.resumoCronica ||= {})[c.camera_id] !== false) })) },
+    // resumo semanal da camera cronica (parar / retomar)
+    { metodo: 'PUT', padrao: /^\/api\/cameras\/([^/?]+)\/chronic-summary$/,
+      resposta: (m, corpo) => comCamera(estado, m[1], (c) => {
+        (estado.resumoCronica ||= {})[c.camera_id] = corpo?.on !== false
+        return { json: { summary_on: corpo?.on !== false } }
+      }) },
     // avisos da camera (silenciar / reativar)
     { metodo: 'GET', padrao: /^\/api\/cameras\/([^/?]+)\/notice$/,
       resposta: (m) => comCamera(estado, m[1], (c) => ({ json: avisoPublico((estado.avisos ||= {})[c.camera_id] || 'off') })) },
