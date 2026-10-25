@@ -101,8 +101,18 @@ function Biblioteca({ config, assets, reload }) {
       const key = `${Date.now()}-${Math.random()}`
       setUploads((u) => [...u, { key, name: file.name, pct: 0, error: '' }])
       try {
-        await api.uploadRaw(`/api/file-lives/assets?kind=${kind}&filename=${encodeURIComponent(file.name)}`, file,
-          (p) => setUploads((u) => u.map((x) => (x.key === key ? { ...x, pct: p } : x))))
+        // fila de conversão cheia (429): espera uma vaga e tenta de novo, em vez de recusar o resto da seleção
+        for (let tentativa = 0; ; tentativa++) {
+          try {
+            await api.uploadRaw(`/api/file-lives/assets?kind=${kind}&filename=${encodeURIComponent(file.name)}`, file,
+              (p) => setUploads((u) => u.map((x) => (x.key === key ? { ...x, pct: p, waiting: false } : x))))
+            break
+          } catch (e) {
+            if (!(e instanceof ApiError) || e.status !== 429 || tentativa >= 60) throw e
+            setUploads((u) => u.map((x) => (x.key === key ? { ...x, pct: 0, waiting: true } : x)))
+            await new Promise((r) => setTimeout(r, 10000))
+          }
+        }
         setUploads((u) => u.filter((x) => x.key !== key))
       } catch (e) {
         setUploads((u) => u.map((x) => (x.key === key ? { ...x, error: errMsg(e) } : x)))
@@ -158,7 +168,7 @@ function Biblioteca({ config, assets, reload }) {
                   <span className="truncate">{u.name}</span>
                   {u.error
                     ? <button className="text-slate-400 underline" onClick={() => setUploads((x) => x.filter((y) => y.key !== u.key))}>fechar</button>
-                    : <span>{Math.round(u.pct * 100)}%</span>}
+                    : <span>{u.waiting ? 'Aguardando vaga na fila de conversão…' : `${Math.round(u.pct * 100)}%`}</span>}
                 </div>
                 {u.error
                   ? <p className="mt-1 text-xs text-red-300">{u.error}</p>
