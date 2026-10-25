@@ -60,6 +60,27 @@ export const api = {
   put: (path, body) => apiFetch(path, { method: 'PUT', body: JSON.stringify(body ?? {}) }),
   del: (path) => apiFetch(path, { method: 'DELETE' }),
   upload: (path, formData) => apiFetch(path, { method: 'POST', body: formData }),
+  // Envio de arquivo grande com o corpo CRU (bytes do arquivo) e barra de progresso (onProgress recebe 0..1).
+  // Mesmo token e mesmo formato de erro (ApiError) do apiFetch.
+  uploadRaw: (path, file, onProgress) => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${API_BASE}${path}`)
+    const token = getAccessToken()
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream')
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total) }
+    xhr.onerror = () => reject(new ApiError('Falha de conexão com a API.', 0))
+    xhr.onabort = () => reject(new ApiError('Envio cancelado.', 0))
+    xhr.onload = () => {
+      let body = null
+      try { body = JSON.parse(xhr.responseText) } catch {}
+      if (xhr.status === 401) return reject(new ApiError('Sessão expirada ou inválida. Faça login de novo.', 401))
+      if (xhr.status === 404) return reject(new ApiError('Não encontrado.', 404))
+      if (xhr.status < 200 || xhr.status >= 300) return reject(new ApiError(body?.detail || `Erro ${xhr.status}.`, xhr.status))
+      resolve(body)
+    }
+    xhr.send(file)
+  }),
   // Busca um recurso binário (ex.: pré-visualização de imagem) com autenticação,
   // devolvendo um Blob. Útil pra <img src={URL.createObjectURL(blob)}>, já que
   // uma tag <img> sozinha não manda o header Authorization.

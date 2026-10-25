@@ -26,6 +26,7 @@ const ICONS = {
   conta: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM3 21a9 9 0 0 1 18 0',
   relatorios: 'M3 3v18h18M18 17V9M13 17V5M8 17v-3',
   manual: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+  lives: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM10 9l5 3-5 3Z',
 }
 export default function Layout() {
   const navigate = useNavigate()
@@ -33,6 +34,7 @@ export default function Layout() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [canUseGroups, setCanUseGroups] = useState(false)
   const [canReports, setCanReports] = useState(false)
+  const [canFileLives, setCanFileLives] = useState(false)
   const [open, setOpen] = useState(false)
   useEffect(() => {
     let active = true
@@ -49,6 +51,8 @@ export default function Layout() {
         }
       } catch { /* silencioso */ }
     })()
+    // Lives de arquivos: o item só aparece para contas liberadas (qualquer erro/404 = oculto)
+    api.get('/api/file-lives/config').then(() => { if (active) setCanFileLives(true) }).catch(() => {})
     return () => { active = false }
   }, [])
   async function handleLogout() {
@@ -59,6 +63,7 @@ export default function Layout() {
     { to: '/painel', label: 'Dashboard', icon: ICONS.dashboard, end: true },
     { to: '/painel/cameras', label: 'Câmeras', icon: ICONS.cameras },
     ...(canUseGroups ? [{ to: '/painel/grupos', label: 'Grupo de transmissão', icon: ICONS.grupos }] : []),
+    ...(canFileLives ? [{ to: '/painel/lives-arquivos', label: 'Lives de arquivos', icon: ICONS.lives }] : []),
     { to: '/painel/mapa', label: 'Mapa', icon: ICONS.map },
     { to: '/painel/notificacoes', label: 'Notificações', icon: ICONS.notif },
     { to: '/painel/faturamento', label: 'Faturamento', icon: ICONS.faturamento },

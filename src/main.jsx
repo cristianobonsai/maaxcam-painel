@@ -19,6 +19,7 @@ import Relatorios from './pages/Relatorios.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 import MinhaConta from './pages/MinhaConta.jsx'
 import ManualUsuario from './pages/ManualUsuario.jsx'
+import LivesArquivos from './pages/LivesArquivos.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/painel/cameras/:id/seguranca" element={<CameraSeguranca />} />
             <Route path="/painel/admin" element={<Admin />} />
             <Route path="/painel/grupos" element={<Grupos />} />
+            <Route path="/painel/lives-arquivos" element={<LivesArquivos />} />
             <Route path="/painel/notificacoes" element={<Notificacoes />} />
             <Route path="/painel/logs" element={<Logs />} />
             <Route path="/painel/faturamento" element={<Faturamento />} />
