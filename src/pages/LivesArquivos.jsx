@@ -146,7 +146,7 @@ function Biblioteca({ config, assets, reload }) {
         </div>
         <button className={BTN_PRIMARY} onClick={() => inputRef.current?.click()}>{kind === 'video' ? 'Enviar vídeo' : 'Enviar músicas'}</button>
         <input ref={inputRef} type="file" accept={accept} multiple={multiple} className="hidden"
-          onChange={(e) => { const f = e.target.files; e.target.value = ''; sendFiles(kind, f) }} />
+          onChange={(e) => { const f = Array.from(e.target.files || []); e.target.value = ''; sendFiles(kind, f) }} />
       </div>
       {items.length === 0
         ? <p className="py-4 text-center text-sm text-slate-500">Nenhum arquivo ainda.</p>
@@ -293,12 +293,14 @@ function MinhaLive({ live, assets, config, reload }) {
               </div>
             ) : (
               <div className="flex gap-2">
-                <input className={INPUT} type="password" autoComplete="off" placeholder="Cole a chave aqui" value={keyInput} onChange={(e) => setKeyInput(e.target.value)} />
+                <input className={INPUT} type="password" autoComplete="off" placeholder="Só a chave, ex.: abcd-efgh-ijkl-mnop" value={keyInput} onChange={(e) => setKeyInput(e.target.value)} />
                 <button className={BTN_GHOST} disabled={busy || !keyInput.trim()}
                   onClick={async () => { await save({ youtube_key: keyInput.trim() }); setKeyInput(''); setEditKey(false) }}>Salvar</button>
               </div>
             )}
-            <p className="mt-1 text-xs text-slate-500">A chave não volta a aparecer na tela depois de salva.</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Cole só a <strong className="text-slate-300">chave de transmissão</strong> (no YouTube Studio: Transmitir ao vivo → Transmissão → "Chave de transmissão"). Não precisa do endereço do servidor — se colar o endereço completo, usamos só a chave. Ela não volta a aparecer na tela depois de salva.
+            </p>
           </div>
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs text-slate-400">Vídeo (roda em repetição)</label>
