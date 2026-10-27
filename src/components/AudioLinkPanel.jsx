@@ -36,14 +36,17 @@ export default function AudioLinkPanel({ kind, id, running = false, onSaved }) {
   const [busy, setBusy] = useState(false)
   const [teste, setTeste] = useState(null)
   const [msg, setMsg] = useState(null)
+  const [erroCarga, setErroCarga] = useState('')
   const vivo = useRef(true)
 
   const carregar = useCallback(async () => {
     try {
       const d = await api.get(base)
-      if (vivo.current) setInfo(d)
+      if (vivo.current) { setInfo(d); setErroCarga('') }
     } catch (e) {
-      if (vivo.current && e.status === 404) setIndisponivel(true)
+      if (!vivo.current) return
+      if (e.status === 404) setIndisponivel(true)
+      else setErroCarga(e.message || 'Não consegui carregar o áudio por link.')
     }
   }, [base])
 
@@ -101,7 +104,10 @@ export default function AudioLinkPanel({ kind, id, running = false, onSaved }) {
   }
 
   async function remover() {
-    if (!window.confirm('Remover o link de áudio ao vivo? A transmissão volta a usar o áudio gravado ou o da câmera.')) return
+    const aviso = running
+      ? (kind === 'camera' ? ' Com a câmera no ar, a transmissão reinicia por cerca de 1 minuto.' : ' Com o grupo no ar, vale quando o grupo reiniciar.')
+      : ''
+    if (!window.confirm('Remover o link de áudio ao vivo? A transmissão volta a usar o áudio gravado ou o da câmera.' + aviso)) return
     setBusy(true); setMsg(null)
     try {
       const d = await api.del(base)
@@ -139,7 +145,14 @@ export default function AudioLinkPanel({ kind, id, running = false, onSaved }) {
         </div>
       )}
 
-      {!info?.has_link && !editando && (
+      {erroCarga && !info && (
+        <p className="text-xs text-red-300" data-testid="audio-link-erro">
+          {erroCarga}{' '}
+          <button onClick={carregar} className="underline text-red-200 hover:text-white">Tentar de novo</button>
+        </p>
+      )}
+
+      {info && !info.has_link && !editando && (
         <div className="space-y-1">
           <p className="text-xs text-slate-500">Toque uma rádio online ou uma fonia ao vivo no lugar do áudio gravado.</p>
           <button onClick={abrir} disabled={!info || busy}

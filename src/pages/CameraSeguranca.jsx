@@ -585,7 +585,9 @@ export default function CameraSeguranca() {
                     <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={onAudioFile} />
                   </label>
                   <p className="text-xs text-slate-500">Ao trocar ou remover, se o solo estiver no ar ele reinicia sozinho para aplicar.</p>
-                  <AudioLinkPanel kind="camera" id={id} running={!!data.relay_running} />
+                  {data.in_group
+                    ? <p className="text-xs text-slate-500">Esta câmera está num grupo: o áudio ao vivo por link se configura no próprio grupo.</p>
+                    : <AudioLinkPanel kind="camera" id={id} running={!!data.relay_running} />}
                 </>)}
               </Card>
 
