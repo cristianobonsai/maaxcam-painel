@@ -1,6 +1,8 @@
-// roteiro.mjs - capitulo "Gerenciar: Editar e Transmissão" (4 passos). Usa a camera "Entrada" (plano Pro),
+// roteiro.mjs - capitulo "Gerenciar: Editar e Transmissão" (5 passos). Usa a camera "Entrada" (plano Pro),
 // que mostra todos os quadros liberados. Dados 100 % ficticios.
+import { alinharNoTopo } from '../../robo/ajudantes.mjs'
 
+const LINK = '[data-testid="audio-link"]'
 const ABA = (nome) => ({ papel: 'button', nome })
 const CARD = (titulo) => `section:has(h2:text-is("${titulo}"))`
 
@@ -57,6 +59,26 @@ export default {
         { por: 'css', nome: 'label:has-text("Enviar áudio (.mp3)")', numero: 'esquerda' },
         { por: 'texto', nome: 'https://play.livebybit.com/v2/hls/', numero: 'esquerda' },
         { por: 'css', nome: 'code:has-text("<iframe")', numero: 'esquerda' },
+      ],
+    },
+    {
+      id: 'link-ao-vivo', titulo: 'Áudio ao vivo por link', contexto: 'logado',
+      legenda: 'Para tocar uma rádio online ou uma fonia ao vivo, cole o endereço do áudio, teste o link e salve.',
+      acao: async ({ page }) => {
+        const bloco = page.locator(LINK)
+        await bloco.scrollIntoViewIfNeeded()
+        await bloco.getByRole('button', { name: 'Usar link ao vivo' }).click()
+        await bloco.locator('input[type="url"]').fill('https://radio.exemplo.com/ao-vivo')
+        await bloco.getByRole('button', { name: 'Testar link' }).click()
+        await bloco.getByText('O link respondeu com áudio').waitFor()
+        await alinharNoTopo(page, LINK, 260)
+      },
+      destacar: [
+        { por: 'css', nome: LINK, numero: 'esquerda' },
+        { por: 'css', nome: `${LINK} input[type="url"]`, numero: 'direita' },
+        { por: 'css', nome: `${LINK} select`, numero: 'direita' },
+        { por: 'css', nome: `${LINK} button:text-is("Testar link")`, numero: 'abaixo' },
+        { por: 'css', nome: `${LINK} button:text-is("Salvar")`, numero: 'abaixo' },
       ],
     },
   ],

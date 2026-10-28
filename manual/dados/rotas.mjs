@@ -4,6 +4,7 @@ import { deflateSync } from 'node:zlib'
 import { rotasLote2 } from './rotas-lote2.mjs'
 import { rotasLote3 } from './rotas-lote3.mjs'
 import { rotasLote4 } from './rotas-lote4.mjs'
+import { rotasAudioLink } from './rotas-audio-link.mjs'
 
 const CLIENTE = {
   user_id: 'demo-cliente',
@@ -188,5 +189,6 @@ export function rotas(estado) {
     ...rotasLote2(estado, comCamera),
     ...rotasLote3(estado, comCamera),
     ...rotasLote4(estado),
+    ...rotasAudioLink(estado),
   ]
 }
