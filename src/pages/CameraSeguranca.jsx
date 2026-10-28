@@ -5,6 +5,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import LocationEditor from '../LocationEditor.jsx'
 import CartaoPanel from '../CartaoPanel.jsx'
 import IntegracaoPanel from '../IntegracaoPanel.jsx'
+import AudioLinkPanel from '../components/AudioLinkPanel.jsx'
 
 const PLAY_BASE = 'https://play.livebybit.com'
 const msg = (e) => (e instanceof ApiError ? e.message : 'Erro inesperado.')
@@ -584,6 +585,9 @@ export default function CameraSeguranca() {
                     <input type="file" accept="audio/mpeg,.mp3" className="hidden" disabled={busy} onChange={onAudioFile} />
                   </label>
                   <p className="text-xs text-slate-500">Ao trocar ou remover, se o solo estiver no ar ele reinicia sozinho para aplicar.</p>
+                  {data.in_group
+                    ? <p className="text-xs text-slate-500">Esta câmera está num grupo: o áudio ao vivo por link se configura no próprio grupo.</p>
+                    : <AudioLinkPanel kind="camera" id={id} running={!!data.relay_running} />}
                 </>)}
               </Card>
 

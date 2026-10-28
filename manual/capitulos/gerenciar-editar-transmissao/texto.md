@@ -48,8 +48,28 @@ O quadro **Link da foto (time-lapse)** (**2**), dos planos Pro e Premium, mostra
 
 ![Áudio, link HLS e iframe](img:gerenciar-editar-transmissao-04-audio-player)
 
-- **Áudio da transmissão** (**1**), planos Pro e Premium: sem áudio, a transmissão vai com som silencioso. Clique em **Enviar áudio (.mp3)** para tocar um arquivo em repetição. Depois de enviado, aparecem os botões **Trocar áudio** e **Remover**. Se a retransmissão para o YouTube estiver no ar, ela reinicia sozinha para aplicar a mudança.
+- **Áudio da transmissão** (**1**), planos Pro e Premium: sem áudio, a transmissão vai com som silencioso. Clique em **Enviar áudio (.mp3)** para tocar um arquivo em repetição. Depois de enviado, aparecem os botões **Trocar áudio** e **Remover**. Se a retransmissão para o YouTube estiver no ar, ela reinicia sozinha para aplicar a mudança. Para tocar uma rádio ou uma fonia ao vivo no lugar do arquivo, veja o item 5.
 - **URL HLS pública** (**2**): o endereço para tocar a câmera em players e aplicativos. Copie com o botão **Copiar**. Em câmera pública, o link funciona direto. Em câmera privada, só funciona com token e de um IP autorizado.
 - **Incorporar no site (iframe)** (**3**), planos Pro e Premium: o código para colocar o player da câmera dentro de uma página do seu site. Copie e cole no HTML da página. A chave real da câmera nunca aparece, só um identificador público.
 
 No plano Básico, o áudio e o iframe aparecem com cadeado.
+
+## 5. Áudio ao vivo por link
+
+![Bloco Áudio ao vivo por link com o endereço colado e o teste feito](img:gerenciar-editar-transmissao-05-link-ao-vivo)
+
+Em vez de um arquivo **.mp3**, a transmissão pode tocar um **áudio ao vivo**, como uma rádio online ou o áudio de uma torre. Isso vale para os planos Pro e Premium. No quadro **Áudio da transmissão**, logo abaixo do envio do **.mp3**, fica o bloco **Áudio ao vivo por link** (**1**):
+
+1. Clique em **Usar link ao vivo**.
+2. Cole o endereço do áudio (**2**), começando com `http://` ou `https://`.
+3. Em **Quando o link cair** (**3**), escolha o que a transmissão faz se o áudio parar: **Ficar em silêncio** ou **Usar o áudio da câmera**.
+4. Clique em **Testar link** (**4**). O painel confere se o endereço entrega áudio e mostra o formato. Se não entregar, explica o motivo.
+5. Clique em **Salvar** (**5**). Se a retransmissão para o YouTube estiver no ar, ela reinicia sozinha, por cerca de 1 minuto, para aplicar.
+
+Depois de salvo, aparece o selo **Link no ar** (verde) ou **Link fora do ar desde HH:MM** (âmbar), o endereço com usuário e senha escondidos e os botões **Trocar link** e **Remover link**.
+
+- O link tem **prioridade** sobre o áudio **.mp3** e sobre o áudio da câmera. Se você remover o link, a transmissão volta a usar o que estava antes.
+- Se o link cair, a transmissão segue com o que você escolheu (silêncio ou áudio da câmera) e **o vídeo continua**. Quando o link voltar, o áudio volta sozinho.
+- Funcionam endereços de áudio contínuo (MP3, AAC, Ogg). Listas `.m3u8` e páginas que pedem login não funcionam.
+- O conteúdo da rádio é responsabilidade sua: use só áudio que você tem direito de transmitir.
+- Se a câmera faz parte de um **grupo de transmissão**, o áudio por link é configurado no grupo.

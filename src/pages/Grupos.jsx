@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api, ApiError } from '../lib/api'
 import { usePermissions } from '../hooks/usePermissions'
+import AudioLinkPanel from '../components/AudioLinkPanel.jsx'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.livebybit.com'
 const EMPTY_FORM = { name: '', youtube_key: '', transition_seconds: 5, enabled: false, resolution_tier: '1080p' }
@@ -743,6 +744,11 @@ export default function Grupos() {
                             </div>
                           )}
                         </div>
+
+                        {canEditGroup(g) && (
+                          <AudioLinkPanel kind="group" id={g.id} running={!!g.relay_active}
+                            onSaved={() => { if (g.relay_active) setAudioPend((p) => ({ ...p, [g.id]: true })) }} />
+                        )}
 
                         <p className="text-xs text-slate-500"><span className="font-medium text-slate-300">Exclusividade:</span> com o grupo no ar, os relays individuais dessas câmeras ficam pausados.</p>
                       </div>

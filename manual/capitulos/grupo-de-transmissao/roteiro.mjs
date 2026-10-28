@@ -1,9 +1,10 @@
-// roteiro.mjs - capitulo "Grupo de transmissão" (5 passos). Cenario "grupos": a conta tem 3 cameras Premium e 1 grupo
+// roteiro.mjs - capitulo "Grupo de transmissão" (6 passos). Cenario "grupos": a conta tem 3 cameras Premium e 1 grupo
 // ("Praças do Centro", 2 cameras). Tudo fictício; nada vai ao YouTube (o relay so muda o estado do robo).
 import { aplicarCenario } from '../../dados/rotas-lote3.mjs'
 import { alinharNoTopo } from '../../robo/ajudantes.mjs'
 
 const LISTA = 'div.mt-6.space-y-2'
+const LINK = '[data-testid="audio-link"]'
 
 export default {
   id: 'grupo-de-transmissao',
@@ -86,6 +87,25 @@ export default {
         { por: 'css', nome: 'span:has-text("Instável · fora do rodízio")', numero: 'acima' },
         { por: 'css', nome: 'button:has-text("Parar relay")', numero: 'abaixo' },
         { por: 'css', nome: 'button:has-text("Aplicar áudio agora")', numero: 'esquerda' },
+      ],
+    },
+    {
+      id: 'link-ao-vivo', titulo: 'Áudio ao vivo por link', contexto: 'logado',
+      legenda: 'No grupo, cole o endereço do áudio ao vivo e teste o link. Ele entra no ar quando o grupo reinicia.',
+      acao: async ({ page }) => {
+        const bloco = page.locator(LINK)
+        await bloco.scrollIntoViewIfNeeded()
+        await bloco.getByRole('button', { name: 'Usar link ao vivo' }).click()
+        await bloco.locator('input[type="url"]').fill('https://radio.exemplo.com/ao-vivo')
+        await bloco.getByRole('button', { name: 'Testar link' }).click()
+        await bloco.getByText('O link respondeu com áudio').waitFor()
+        await alinharNoTopo(page, LINK, 260)
+      },
+      destacar: [
+        { por: 'css', nome: LINK, numero: 'esquerda' },
+        { por: 'css', nome: `${LINK} input[type="url"]`, numero: 'direita' },
+        { por: 'css', nome: `${LINK} button:text-is("Testar link")`, numero: 'abaixo' },
+        { por: 'css', nome: `${LINK} button:text-is("Salvar")`, numero: 'abaixo' },
       ],
     },
   ],

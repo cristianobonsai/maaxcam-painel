@@ -49,7 +49,7 @@ export default function ManualUsuario() {
         </div>
         <a href={PDF_MANUAL} target="_blank" rel="noopener noreferrer"
           className="rounded-lg border border-blue-500 bg-blue-500/10 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500/20">
-          Baixar o manual em PDF <span className="text-xs text-slate-400">(versão 3.2 · 12 MB)</span>
+          Baixar o manual em PDF <span className="text-xs text-slate-400">(versão 3.3 · 13 MB)</span>
         </a>
       </div>
 

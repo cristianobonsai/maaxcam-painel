@@ -46,7 +46,7 @@ Dentro do grupo você controla tudo:
   - ver o **cartão** da câmera (por exemplo "Cartão 5s · Ativo" ou "Sem cartão") e o estado dela (**Estável**, **Offline** ou **Instável**).
 - **Adicionar câmera** (**3**) coloca mais uma câmera na rotação (veja o item 4).
 - **Transmissão YouTube** (**4**) mostra se a chave está **Configurada**. Para definir ou trocar a chave, use **Editar**.
-- **Áudio em loop** (**5**) permite enviar um arquivo **.mp3** que toca em repetição durante a transmissão do grupo.
+- **Áudio em loop** (**5**) permite enviar um arquivo **.mp3** que toca em repetição durante a transmissão do grupo. Logo abaixo fica o bloco **Áudio ao vivo por link**, para tocar uma rádio online ou uma fonia ao vivo (veja o item 6).
 
 Quando o grupo está no ar, as câmeras dele deixam de transmitir sozinhas para o YouTube (as transmissões individuais ficam pausadas). Quando você para o grupo, elas voltam ao normal.
 
@@ -71,3 +71,22 @@ Com o grupo no ar, o painel avisa quando algo pede a sua atenção:
 - A câmera que saiu do rodízio mostra um aviso (**3**), por exemplo **Instável · fora do rodízio · volta em ~12 min**. Ela volta sozinha quando a conexão se estabiliza.
 - **Parar relay** (**4**) desliga a transmissão do grupo.
 - **Aplicar áudio agora (reinicia o grupo)** (**5**) aparece quando o grupo está no ar. Ao enviar um áudio novo, ele só passa a tocar quando o grupo reinicia, o que acontece sozinho a cada 11 horas. Se quiser que o áudio novo toque já, use esse botão. **Cuidado:** o grupo reinicia e a transmissão no YouTube fica fora do ar por cerca de 1 a 2 minutos.
+
+## 6. Áudio ao vivo por link
+
+![Bloco Áudio ao vivo por link no grupo, com o endereço colado e o teste feito](img:grupo-de-transmissao-06-link-ao-vivo)
+
+Em vez de um arquivo **.mp3**, o grupo pode tocar um **áudio ao vivo**, como uma rádio online ou o áudio de uma torre. O bloco **Áudio ao vivo por link** (**1**) fica na tela **Gerenciar** do grupo, abaixo de **Áudio em loop**, e aparece para quem tem permissão de editar o grupo.
+
+1. Clique em **Usar link ao vivo**.
+2. Cole o endereço do áudio (**2**), começando com `http://` ou `https://`.
+3. Clique em **Testar link** (**3**). O painel confere se o endereço entrega áudio e mostra o formato. Se não entregar, explica o motivo.
+4. Clique em **Salvar** (**4**).
+
+Depois de salvo, aparece o selo **Link no ar** (verde) ou **Link fora do ar desde HH:MM** (âmbar), o endereço com usuário e senha escondidos e os botões **Trocar link** e **Remover link**.
+
+- Com o grupo no ar, o link novo só passa a tocar quando o grupo reinicia. Para aplicar já, use **Aplicar áudio agora (reinicia o grupo)**, com o corte de cerca de 1 a 2 minutos explicado no item 5.
+- O link tem **prioridade** sobre o áudio em loop. Se você remover o link, o grupo volta a usar o arquivo **.mp3**.
+- Se o link cair, o grupo fica em **silêncio** e **o vídeo continua**. Quando o link voltar, o áudio volta sozinho.
+- Funcionam endereços de áudio contínuo (MP3, AAC, Ogg). Listas `.m3u8` e páginas que pedem login não funcionam.
+- O conteúdo da rádio é responsabilidade sua: use só áudio que você tem direito de transmitir.
